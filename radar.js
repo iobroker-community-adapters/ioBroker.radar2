@@ -673,7 +673,7 @@ function getUWZ() {
             wt = wt == '' ? "No warnings" : wt;
             if (wt != wlast) {
                 wlast = wt;
-                _I(`UWZ found the following warnings: ${wt}`);
+                _I(`UWZ found the following (changed) warnings: ${wt}`);
                 if(numuwz>0) {
                     return pSeriesP(Object.keys(w), (x) => x<numuwz ? makeState('UWZ_Warnings.warning'+x,w[x]): Promise.resolve())
                         .then(() => {
