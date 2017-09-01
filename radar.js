@@ -105,17 +105,23 @@ function pRepeatP(nretry, fn, arg) {
 
 */
 
-var PgetObjectList = c2pP(adapter.objects.getObjectList),
-    PgetForeignObject = c2pP(adapter.getForeignObject),
-    PsetForeignObject = c2pP(adapter.setForeignObject),
-    PgetForeignObjects = c2pP(adapter.getForeignObjects),
-    PgetForeignState = c2pP(adapter.getForeignState),
-    PgetState = c2pP(adapter.getState),
-    PsetState = c2pP(adapter.setState),
-    PgetObject = c2pP(adapter.getObject),
-    PsetObject = c2pP(adapter.setObject),
-    PcreateState = c2pP(adapter.createState),
-    PextendObject = c2pP(adapter.extendObject);
+const P = {}
+
+function makePs() {
+    P.getObjectList = c2pP(adapter.objects.getObjectList),
+    P.getForeignObject = c2pP(adapter.getForeignObject),
+    P.setForeignObject = c2pP(adapter.setForeignObject),
+    P.getForeignObjects = c2pP(adapter.getForeignObjects),
+    P.getForeignState = c2pP(adapter.getForeignState),
+    P.getState = c2pP(adapter.getState),
+    P.setState = c2pP(adapter.setState),
+    P.getObject = c2pP(adapter.getObject),
+    P.deleteState = c2pP(adapter.deleteState),
+    P.delObject = c2pP(adapter.delObject),
+    P.setObject = c2pP(adapter.setObject),
+    P.createState = c2pP(adapter.createState),
+    P.extendObject = c2pP(adapter.extendObject);
+}
 
 var isStopping = false;
 const scanList = new Map();
@@ -141,7 +147,7 @@ function stop(dostop) {
 
 adapter.on('message', obj => processMessage(obj));
 
-adapter.on('ready', () => main());
+adapter.on('ready', () => main(makePs()));
 
 adapter.on('unload', () => stop(false));
 
@@ -169,15 +175,11 @@ function processMessage(obj) {
 
 
 const objects = new Map();
-//const pSetState = c2pP(adapter.setState);
-function pSetState(id, val, ack) {
-    //    _D(`pSetState: ${id} = ${val} with ${ack}`);
-    return c2pP(adapter.setState)(id, val, ack ? true : false);
-}
 
-function makeState(id, value) {
+function makeState(id, value, ack) {
+    ack = ack === undefined || !!ack;
     if (objects.has(id))
-        return pSetState(id, value, true);
+        return P.setState(id, value, ack);
     _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
     var st = {
         common: {
@@ -193,10 +195,10 @@ function makeState(id, value) {
     };
     if (id.endsWith('Percent'))
         st.common.unit = "%";
-    return c2pP(adapter.extendObject)(id, st)
+    return P.extendObject(id, st)
         .then(x => {
             objects.set(id, x);
-            return pSetState(id, value, false);
+            return P.setState(id, value, ack);
         })
         .catch(err => _D(`MS ${_O(err)}:=extend`, id));
 
@@ -337,7 +339,7 @@ function scanExtIP() {
     return getIP('http://icanhazip.com/?x=2')
         .then(() => getIP('http://wtfismyip.com/text'))
         .then(() => sameip < 1 ? getIP('http://nst.sourceforge.net/nst/tools/ip.php') : Promise.resolve(sameip))
-        .then(() => c2pP(adapter.getState)('ExternalNetwork.IP4'))
+        .then(() => P.getState('ExternalNetwork.IP4'))
         .then(x => x, err => Promise.resolve())
         .then(state => {
             if (state && state.val)
@@ -410,8 +412,27 @@ function scanHP(item) {
 var oldWhoHere = null,
     bts = new Map(),
     ips = new Map(),
-    vendors = new Map();
+    vendors = new Map(),
+    arps = {},
+    unkn = {};
 
+function checkArps(ip) {
+    ip = ip.trim();
+    if (arps[ip]) {
+        delete arps[ip];
+        return true;
+    }
+    return false;
+}
+
+function checkUnkn(ip) {
+    ip = ip.trim().toUpperCase();
+    if (arps[ip]) {
+        delete arps[ip];
+        return true;
+    }
+    return false;
+}
 
 function checkCache(item, cache, funP) {
     return new Promise((_res, _rej) => {
@@ -430,7 +451,8 @@ function scanAll() {
     for (let item of scanList.values())
         item.ipHere = item.btHere = false;
 
-    let arps = {};
+    arps = {};
+    unkn = {};
 
     return Promise.all([doBtv ?
         pExec(`${btbindir}bluetoothview /scomma ${btbindir}btf.txt`)
@@ -451,7 +473,6 @@ function scanAll() {
     myNoble(scanDelay - 25000)
         .then(data => {
             let found = 0;
-            let unkn = {};
             for (let key of scanList.values()) {
                 if (data[key.bluetooth]) {
                     delete data[key.bluetooth];
@@ -466,11 +487,10 @@ function scanAll() {
                 return checkCache(d, bts, mac => pGet('http://api.macvendors.com/' + mac).then(x => x.trim(), err => 'N/A'))
                     .then(x => e.vendor = x)
                     .then(() => unkn[d] = e)
-                    .then(() => _D(`Noble found also unknown: ${_O(e)}`))
+//                    .then(() => _D(`Noble found also unknown: ${_O(e)}`))
                     .then(() => delete e['address'])
                     ;
-            }).then(() => _D(`Noble found ${found} from list and returned ${Object.keys(data).length} more not on list: ${_O(unkn)}`))
-            .then(() => makeState('AllUnknownBTs', JSON.stringify(unkn)));
+            });
         }, err => false),
     doMac ? pExec('arp-scan -lgq --retry=7')
         .then(res => res && res.match(/(\d*\.){3}\d*\s*([\dA-F]{2}\:){5}[\dA-F]{2}/gi))
@@ -496,8 +516,7 @@ function scanAll() {
                     return s;
                 })
                 .catch(err => _D(`${_O(err)}`));
-        }, 10))
-        .then(res => makeState('AllUnknownIPs', JSON.stringify(arps))) : wait(5),
+        }, 10)) : wait(5),
     pSeriesP(scanList.values(), item => {
         //            _D(`key ${key} obj ${_O(key)} = ${_O(obj[key])}`);
         let all = [];
@@ -537,6 +556,8 @@ function scanAll() {
                             })
                         ));
         */
+        if (item.hasBT)
+            checkUnkn(item.bluetooth);
         if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
             all.push(pExec('hcitool name ' + item.bluetooth)
                 .then(stdout => {
@@ -586,6 +607,13 @@ function scanAll() {
                 cnt = cnt > 0 ? -1 : cnt - 1;
                 anw = cnt >= -delayAway;
             }
+            if (item.rip) {
+                if (Array.isArray(item.rip))
+                    for (let ip of item.rip)
+                        checkArps(ip);
+                else 
+                    checkArps(item.rip);
+            }
             item.anwesend = anw;
             item.cnt = cnt;
             if (anw) {
@@ -610,7 +638,9 @@ function scanAll() {
             return makeState('countHere', countHere)
                 .then(res => makeState('allHere', allhere))
                 .then(res => makeState('whoHere', whoHere));
-        });
+        }).then(() => _D(`Noble found unknown BT's: ${_O(unkn)}, unknown IP's: ${arps}`))
+        .then(() => makeState('AllUnknownBTs', JSON.stringify(unkn)))
+        .then(res => makeState('AllUnknownIPs', JSON.stringify(arps)));
     }, err => _W(`Scan devices returned error: ${_O(err)}`));
 }
 
@@ -620,32 +650,37 @@ function isMacBt(str) {
 
 var ain = '',
     wlast = null,
-    lang = '';
+    lang = '',
+    numuwz = 0,
+    delayuwz =0,
+    longuwz = false;
 
 function getUWZ() {
     pGet('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz)
         .then(body => JSON.parse(body))
         .then(data => {
-            var w = data ? data.results : null;
+            var w = data && data.results;
             if (!w)
                 return Promise.reject('UWZ data err: ' + _O(data));
-            return w.map(i => (lang == 'de' ? i.payload.translationsLongText.DE : i.payload.longText) + ': ' + i.payload.levelName);
+//            _W(`${_O(w,5)}`);
+            return w.map(i => (lang == 'de' ? 
+                (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) 
+                : (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
         })
         .then(w => {
-            let wt = w.join('\n'),
-                wl = w.length,
-                m = parseInt(adapter.config.numuwz);
+            let wl = w.length,
+                wt = w.join(numuwz<0 ? '<br>\n': '\n');
             wt = wt == '' ? "No warnings" : wt;
             if (wt != wlast) {
                 wlast = wt;
                 _I(`UWZ found the following warnings: ${wt}`);
-                if(m>0) {
-                    return pSeriesP(Object.keys(w), (x) => x<m ? makeState('UWZ_Warnings.warning'+x,w[x]): Promise.resolve())
+                if(numuwz>0) {
+                    return pSeriesP(Object.keys(w), (x) => x<numuwz ? makeState('UWZ_Warnings.warning'+x,w[x]): Promise.resolve())
                         .then(() => {
                             let n = wl,
                                 l = [];
 
-                            while(n<m)
+                            while(n<numuwz)
                                 l.push(n++);
                             return pSeriesP(l,(x) => makeState('UWZ_Warnings.warning'+x,''));
                         })
@@ -734,6 +769,12 @@ function main() {
                 item.printer = item.ip && item.name.startsWith('HP-');
                 item.hasECB = item.ip && item.name.startsWith('ECB-');
                 item.hasIP = item.ip && item.ip.length > 2;
+                if (item.hasIP && !item.ip.toUpperCase().startsWith('HTTP')) {
+                    if (!item.ip.match(/^(\d+\.){3}\d+/)) 
+                        c2pP(dns.resolve)(item.ip).then(x => item.rip = x);
+                    else
+                        item.rip = item.ip;
+                }
                 if (!(item.hasIP || item.hasBT))
                     return Promise.resolve(_W(`Invalid Device should have IP or BT set ${_O(item)}`));
                 scanList.set(item.name, item);
@@ -741,11 +782,14 @@ function main() {
                 return Promise.resolve(item.id);
             }, 50);
         }).then(() => parseInt(adapter.config.external) > 0 ? scanExtIP() : Promise.resolve())
-        .then(() => PgetObjectList({ include_docs: true }))
+        .then(() => P.getObjectList({ include_docs: true }))
         .then(res => {
             var r = {};
             if (!adapter.config.delayuwz || parseInt(adapter.config.delayuwz)<=0)
-                return Promise.resolve();
+                return Promise.resolve(_I(`No UWZ warning because of Delay is ${adapter.config.delayuwz}`));
+            delayuwz =  parseInt(adapter.config.delayuwz); 
+            numuwz =  parseInt(adapter.config.numuwz);
+            longuwz = Boolean(adapter.config.longuwz)
             res.rows.map(i => r[i.doc._id] = i.doc)
             if(r['system.config'] && r['system.config'].common.language) 
                 lang = r['system.config'].common.language;
@@ -760,22 +804,22 @@ function main() {
         }, err => doUwz = null)
         .then(res => {
             _I(`radar adapter initialized ${scanList.size} devices, ExternalNetwork = ${adapter.config.external}.`);
-            _I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}) and doUwz(${doUwz},${adapter.config.delayuwz},${adapter.config.numuwz},${lang}).`);
+            _I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
             scanTimer = setInterval(scanAll, scanDelay);
             if (parseInt(adapter.config.external) > 0)
                 setInterval(scanExtIP, parseInt(adapter.config.external) * 1000);
             return scanAll(); // scan first time and generate states if they do not exist yet
         })
-        .then(res => PgetObjectList({ startkey: ain, endkey: ain + '\u9999' }))
+        .then(res => P.getObjectList({ startkey: ain, endkey: ain + '\u9999' }))
         .then(res => pSeriesP(res.rows, item => {  // clean all states which are not part of the list
             //            _I(`Check ${_O(item)}`);
             let id = item.id.slice(ain.length);
             if (objects.has(id))
                 return Promise.resolve();
             //            _I(`Delete ${_O(item)}`);
-            return c2pP(adapter.deleteState)(id)
+            return P.deleteState(id)
                 .then(x => _D(`Del State: ${id}`), err => _D(`Del State err: ${_O(err)}`)) ///TC
-                .then(y => c2pP(adapter.delObject)(id))
+                .then(y => P.delObject(id))
                 .then(x => _D(`Del Object: ${id}`), err => _D(`Del Object err: ${_O(err)}`)) ///TC
         }, 10))
         .catch(err => {

@@ -47,12 +47,18 @@ Für Unwetterwarnungen muss im ioBroker-admin der Längen- und Breitengrad konfi
 Es kann das Intervall (in Sekunden) zwischen den Abfragen angegeben werden, default ist 30 Minuten (1800 Sekunden). 
 Wenn der Wert von Max Messages >0 ist dann werden genau so viele states erzeugt die entweder leer sind oder Meldungen enthalten.
 Wenn 0 angegeben wird (als default) wird nur ein State erzeugt welcher dann für jede Meldung eine Zeile enthält.
-Jede Meldung besteht aus dem Meldungs-Text und am Ende eine severity-einstufung. 
+Jede Meldung besteht aus dem Meldungs-Text und am Ende eine severity-einstufung.
+Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte mit Gewitter) oder kurze Warnungstext angezeigt wird.
 
 ## Important/Wichtig
 * Adapter requires node >= v4.3.*!
 
 ## Changelog
+### 1.1.2 
+* when number of UWS messages is <0 then do not and use <br> as line separator for easy web display
+* Added new long or short text selector in adapter config
+* Changed AllUnknownIP/BTs behaviour to exclude if possible known or double values
+
 ### 1.1.1
 * Added UWZ Weather warning
 * Changed listing of unkown IP's and BT's to remove double entries

@@ -1,7 +1,7 @@
 {
   "name": "iobroker.radar",
   "description": "Radar adapter for IP and Bluetooth, it also can scan HP printers ink and ECB currency to EUR",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": "frankjoke <frankjoke@hotmail.com>",
   "contributors": [
     "frankjoke <frankjoke@hotmail.com>"

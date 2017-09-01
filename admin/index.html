@@ -27,6 +27,7 @@
 <script type="text/javascript">
     var devices = [];
     systemDictionary = {
+        "Long Warning Message:": {"en": "Use long message text with description for warnings: ", "de": "Benutze langen Warnungstext mit genauer Beschreibung: "},
         "radar adapter settings": {"en": "radar adapter settings", "de": "Radar Adapter-Einstellungen"},
         "radar settings":         {"en": "radar settings",         "de": "Radar-Einstellungen"},
         "Device setup":        {"en": "individual device setup",  "de": "Individuelle Suchobjekt-Einstellungen"},
@@ -123,7 +124,8 @@
         <tr><td class="translate">Printer Delay:</td><td><input class="value number" id="printerdelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">External Network Scan Delay:</td><td><input class="value number" id="external" type="input" size="5"/></td></tr>
         <tr><td class="translate">UWZ Delay:</td><td><input class="value number" id="delayuwz" type="input" size="5"/></td></tr>
-        <tr><td class="translate">Max UWZ vars:</td><td><input class="value number" id="numuwz" type="input" size="5"/></td></tr>
+        <tr><td class="translate">Max UWZ vars:</td><td><input class="value" id="numuwz" type="input" size="5"/></td></tr>
+        <tr><td class="translate">Long Warning Message:</td><td><input class="value" id="longuwz" type="checkbox"/></td></tr>
     </table>
     <h4 class="translate">Device setup</h4>
     <table id="devices"></table><div id="pager-devices"></div>
