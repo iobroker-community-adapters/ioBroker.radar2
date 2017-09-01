@@ -55,7 +55,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 
 ## Changelog
 ### 1.1.2 
-* when number of UWS messages is <0 then do not and use <br> as line separator for easy web display
+* when number of UWS messages is <0 then do not use a newline but \<br\> as line separator for easy web display
 * Added new long or short text selector in adapter config
 * Changed AllUnknownIP/BTs behaviour to exclude if possible known or double values
 
