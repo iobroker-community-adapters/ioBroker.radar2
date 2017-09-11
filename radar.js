@@ -1,15 +1,10 @@
 /**
- *
  *      iobroker radar Adapter
- *
  *      (c) 2016- <frankjoke@hotmail.com>
- *
  *      MIT License
- *
  */
 /* eslint-env node,es6 */
-/* jshint -W097 */// jshint strict:false
-/*jslint node: true */
+// jshint node:true, esversion:6, strict:global, undef:true, unused:true
 "use strict";
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 const adapter = utils.adapter('radar');
@@ -25,16 +20,33 @@ const dns = require('dns');
 var noble = null;
 const exec = require('child_process').exec;
 
-function _O(obj, level) { return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' '); }
+function _O(obj, level) {
+    return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
+}
 
 // function _J(str) { try { return JSON.parse(str); } catch (e) { return {'error':'JSON Parse Error of:'+str}}} 
-function _N(fun) { return setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); } // move fun to next schedule keeping arguments
-function _D(l, v) { adapter.log.debug(l); return v === undefined ? l : v; }
-function _I(l, v) { adapter.log.info(l); return v === undefined ? l : v; }
-function _W(l, v) { adapter.log.warn(l); return v === undefined ? l : v; }
+function _N(fun) {
+    return setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1)));
+} // move fun to next schedule keeping arguments
+function _D(l, v) {
+    adapter.log.debug(l);
+    return v === undefined ? l : v;
+}
+
+function _I(l, v) {
+    adapter.log.info(l);
+    return v === undefined ? l : v;
+}
+
+function _W(l, v) {
+    adapter.log.warn(l);
+    return v === undefined ? l : v;
+}
 
 
-function wait(time, arg) { return new Promise(res => setTimeout(res, time, arg)) }
+function wait(time, arg) {
+    return new Promise(res => setTimeout(res, time, arg));
+}
 
 function pSeriesP(obj, promfn, delay) { // fun gets(item) and returns a promise
     delay = delay || 0;
@@ -80,7 +92,7 @@ function c2pP(f) {
 function c1pP(f) {
     return function () {
         const args = Array.prototype.slice.call(arguments);
-        return new Promise((res, rej) => {
+        return new Promise((res) => {
             args.push((result) => _N(res, result));
             f.apply(this, args);
         });
@@ -105,21 +117,21 @@ function pRepeatP(nretry, fn, arg) {
 
 */
 
-const P = {}
+const P = {};
 
 function makePs() {
-    P.getObjectList = c2pP(adapter.objects.getObjectList),
-    P.getForeignObject = c2pP(adapter.getForeignObject),
-    P.setForeignObject = c2pP(adapter.setForeignObject),
-    P.getForeignObjects = c2pP(adapter.getForeignObjects),
-    P.getForeignState = c2pP(adapter.getForeignState),
-    P.getState = c2pP(adapter.getState),
-    P.setState = c2pP(adapter.setState),
-    P.getObject = c2pP(adapter.getObject),
-    P.deleteState = c2pP(adapter.deleteState),
-    P.delObject = c2pP(adapter.delObject),
-    P.setObject = c2pP(adapter.setObject),
-    P.createState = c2pP(adapter.createState),
+    P.getObjectList = c2pP(adapter.objects.getObjectList);
+    P.getForeignObject = c2pP(adapter.getForeignObject);
+    P.setForeignObject = c2pP(adapter.setForeignObject);
+    P.getForeignObjects = c2pP(adapter.getForeignObjects);
+    P.getForeignState = c2pP(adapter.getForeignState);
+    P.getState = c2pP(adapter.getState);
+    P.setState = c2pP(adapter.setState);
+    P.getObject = c2pP(adapter.getObject);
+    P.deleteState = c2pP(adapter.deleteState);
+    P.delObject = c2pP(adapter.delObject);
+    P.setObject = c2pP(adapter.setObject);
+    P.createState = c2pP(adapter.createState);
     P.extendObject = c2pP(adapter.extendObject);
 }
 
@@ -139,7 +151,7 @@ function stop(dostop) {
     if (scanTimer)
         clearInterval(scanTimer);
     scanTimer = null;
-    _W('Adapter disconnected and stopped');
+    _W('Adapter disconnected and stopped with '+dostop);
     //    if (dostop)
     //        process.exit();
     //        adapter.stop();
@@ -155,15 +167,18 @@ function processMessage(obj) {
     if (obj && obj.command) {
         _D(`process Message ${_O(obj)}`);
         switch (obj.command) {
-            case 'ping': {
-                // Try to connect to mqtt broker
-                if (obj.callback && obj.message) {
-                    ping.probe(obj.message, { log: adapter.log.debug }, function (err, result) {
-                        adapter.sendTo(obj.from, obj.command, res, obj.callback);
-                    });
+            case 'ping':
+                {
+                    // Try to connect to mqtt broker
+                    if (obj.callback && obj.message) {
+                        ping.probe(obj.message, {
+                            log: adapter.log.debug
+                        }, function (err, result) {
+                            adapter.sendTo(obj.from, obj.command, res, obj.callback);
+                        });
+                    }
+                    break;
                 }
-                break;
-            }
         }
     }
     adapter.getMessage(function (err, obj) {
@@ -276,7 +291,7 @@ function pGet(url, retry) {
                 //                error = new Error(`Invalid content-type. Expected application/json but received ${contentType}`);
             }
             if (error) {
-                res.resume();                 // consume response data to free up memory
+                res.resume(); // consume response data to free up memory
                 return reject(error);
             }
 
@@ -311,12 +326,12 @@ function xmlParseString(body) {
         return item;
     }
     return (c2pP(new xml2js.Parser({
-        explicitArray: false,
-        trim: true,
-        tagNameProcessors: [tagnames],
-        //                attrNameProcessors: [tagnames],
-        valueProcessors: [parseNumbers]
-    })
+            explicitArray: false,
+            trim: true,
+            tagNameProcessors: [tagnames],
+            //                attrNameProcessors: [tagnames],
+            valueProcessors: [parseNumbers]
+        })
         .parseString))(body);
 }
 
@@ -381,28 +396,28 @@ function scanHP(item) {
         //        .then(result => _I(`parser ${_O(result,3)}`,result))
         .then(result => result["ConsumableConfigDyn"] ? result["ConsumableConfigDyn"] : result)
         .then(result => pSeriesP(result["ConsumableInfo"], item => {
-            //            _I(`parser ${_O(item)}`);
-            if (item["ConsumableTypeEnum"] != "ink")
-                return Promise.resolve('No Ink');
-            let p = "P" + item["ConsumableStation"],
-                lc = item["ConsumableLabelCode"],
-                idnc = idn + lc + '.',
-                d = item["Installation"] ? item["Installation"]["Date"] : null,
-                l = parseInt(item["ConsumablePercentageLevelRemaining"]),
-                ci = item["ConsumableIcon"],
-                s = ci["Shape"],
-                fc = ci["FillColor"],
-                rgb = fc["Blue"] | (fc["Green"] << 8) | (fc["Red"] << 16),
-                n = item["ConsumableSelectibilityNumber"];
-            rgb = '#' + (0x1000000 + rgb).toString(16).slice(1);
-            let ss = `${p} = ${lc},${d ? d + ',' : ''} ${l}%, ${n}, ${rgb}, ${s}`;
-            colors.push(ss);
-            if (l <= 10)
-                below10.push(lc);
-            return makeState(idnc + 'fillPercent', l)
-                .then(res => makeState(idnc + 'color', rgb))
-                .then(res => makeState(idnc + 'text', ss));
-        })
+                //            _I(`parser ${_O(item)}`);
+                if (item["ConsumableTypeEnum"] != "ink")
+                    return Promise.resolve('No Ink');
+                let p = "P" + item["ConsumableStation"],
+                    lc = item["ConsumableLabelCode"],
+                    idnc = idn + lc + '.',
+                    d = item["Installation"] ? item["Installation"]["Date"] : null,
+                    l = parseInt(item["ConsumablePercentageLevelRemaining"]),
+                    ci = item["ConsumableIcon"],
+                    s = ci["Shape"],
+                    fc = ci["FillColor"],
+                    rgb = fc["Blue"] | (fc["Green"] << 8) | (fc["Red"] << 16),
+                    n = item["ConsumableSelectibilityNumber"];
+                rgb = '#' + (0x1000000 + rgb).toString(16).slice(1);
+                let ss = `${p} = ${lc},${d ? d + ',' : ''} ${l}%, ${n}, ${rgb}, ${s}`;
+                colors.push(ss);
+                if (l <= 10)
+                    below10.push(lc);
+                return makeState(idnc + 'fillPercent', l)
+                    .then(res => makeState(idnc + 'color', rgb))
+                    .then(res => makeState(idnc + 'text', ss));
+            })
             .then(arg => makeState(idn + 'anyBelow10', below10.length > 0))
             .then(arg => makeState(_D(idn + 'whoBelow10'), below10.join(', ')))
             .then(arg => _D(`HP Printer inks found:${colors.length}`))
@@ -456,21 +471,25 @@ function scanAll() {
 
     return Promise.all([doBtv ?
         pExec(`${btbindir}bluetoothview /scomma ${btbindir}btf.txt`)
-            .then(stdout => wait(300, stdout))
-            .then(stdout => c2pP(fs.readFile)(`${btbindir}btf.txt`, 'utf8'))
-            .then(data => wait(100, data))
-            .then(data => {
-                try { fs.unlinkSync(`${btbindir}btf.txt`); } catch (e) { return ''; }
-                return data;
-            })
-            .then(data => {
-                for (let item of scanList.values())
-                    if (data.toUpperCase().indexOf(item.bluetooth) > 0) {
-                        _D(`doBtv found  ${item.name}`);
-                        item.btHere = true;
-                    }
-            }) : wait(10),
-    myNoble(scanDelay - 25000)
+        .then(stdout => wait(300, stdout))
+        .then(stdout => c2pP(fs.readFile)(`${btbindir}btf.txt`, 'utf8'))
+        .then(data => wait(100, data))
+        .then(data => {
+            try {
+                fs.unlinkSync(`${btbindir}btf.txt`);
+            } catch (e) {
+                return '';
+            }
+            return data;
+        })
+        .then(data => {
+            for (let item of scanList.values())
+                if (data.toUpperCase().indexOf(item.bluetooth) > 0) {
+                    _D(`doBtv found  ${item.name}`);
+                    item.btHere = true;
+                }
+        }) : wait(10),
+        myNoble(scanDelay - 25000)
         .then(data => {
             let found = 0;
             for (let key of scanList.values()) {
@@ -481,18 +500,17 @@ function scanAll() {
                     ++found;
                 }
             }
-            return pSeriesP(Object.keys(data),(d) => { 
+            return pSeriesP(Object.keys(data), (d) => {
                 var e = data[d];
-//                _W(`process not found ${d} ${a}`);
+                //                _W(`process not found ${d} ${a}`);
                 return checkCache(d, bts, mac => pGet('http://api.macvendors.com/' + mac).then(x => x.trim(), err => 'N/A'))
                     .then(x => e.vendor = x)
                     .then(() => unkn[d] = e)
-//                    .then(() => _D(`Noble found also unknown: ${_O(e)}`))
-                    .then(() => delete e['address'])
-                    ;
+                    //                    .then(() => _D(`Noble found also unknown: ${_O(e)}`))
+                    .then(() => delete e['address']);
             });
         }, err => false),
-    doMac ? pExec('arp-scan -lgq --retry=7')
+        doMac ? pExec('arp-scan -lgq --retry=7')
         .then(res => res && res.match(/(\d*\.){3}\d*\s*([\dA-F]{2}\:){5}[\dA-F]{2}/gi))
         .then(res => pSeriesP(res, item => {
             const s = item.split('\t');
@@ -517,74 +535,74 @@ function scanAll() {
                 })
                 .catch(err => _D(`${_O(err)}`));
         }, 10)) : wait(5),
-    pSeriesP(scanList.values(), item => {
-        //            _D(`key ${key} obj ${_O(key)} = ${_O(obj[key])}`);
-        let all = [];
-        if (item.hasECB) {
-            if (printerCount === 0)
-                all.push(scanECB(item));
-        } else if (item.hasIP && !item.ipHere)
-            if (item.ip.toUpperCase().startsWith('HTTP'))
-                all.push(pGet(item.ip).then(x => true, e => false).then(x => item.ipHere = x || item.ipHere));
-            else
-                all.push(c1pP(ping.sys.probe)(item.ip)
-                    .then(res => {
-                        //                        _I(`${item.name}:${item.ip} = ${res}`);
-                        if (!res && doFping)
-                            return pExec('fping ' + item.ip)
-                                .then(stdout => / is alive/.test(stdout) || res, false);
-                        return res;
-                    })
-                    .then(iph => {
-                        //                        _I(`IP ${item.name}:${item.ip} = ${iph}`);
-                        if (iph) {
-                            item.ipHere = true;
-                            if (item.printer && printerCount === 0)
-                                return scanHP(item);
-                        }
-                        return iph;
-                    })
-                );
+        pSeriesP(scanList.values(), item => {
+            //            _D(`key ${key} obj ${_O(key)} = ${_O(obj[key])}`);
+            let all = [];
+            if (item.hasECB) {
+                if (printerCount === 0)
+                    all.push(scanECB(item));
+            } else if (item.hasIP && !item.ipHere)
+                if (item.ip.toUpperCase().startsWith('HTTP'))
+                    all.push(pGet(item.ip).then(x => true, e => false).then(x => item.ipHere = x || item.ipHere));
+                else
+                    all.push(c1pP(ping.sys.probe)(item.ip)
+                        .then(res => {
+                            //                        _I(`${item.name}:${item.ip} = ${res}`);
+                            if (!res && doFping)
+                                return pExec('fping ' + item.ip)
+                                    .then(stdout => / is alive/.test(stdout) || res, false);
+                            return res;
+                        })
+                        .then(iph => {
+                            //                        _I(`IP ${item.name}:${item.ip} = ${iph}`);
+                            if (iph) {
+                                item.ipHere = true;
+                                if (item.printer && printerCount === 0)
+                                    return scanHP(item);
+                            }
+                            return iph;
+                        })
+                    );
 
-        /*
-                    if (doMac && item.hasMAC)
-                        all.push(pSeriesP(item.hasMAC, mac => pExec('arp-scan -lgq  --retry=5 --destaddr='+ mac)
-                            .then(ret => {
-                                item.ipHere = item.ipHere || ret.toUpperCase().indexOf(mac)>0; 
-        //                        _I(`arp-scan for ${item.id}  ${item.ipHere} returned ${ret}`);
-                                return Promise.resolve();                        
-                            })
-                        ));
-        */
-        if (item.hasBT)
-            checkUnkn(item.bluetooth);
-        if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
-            all.push(pExec('hcitool name ' + item.bluetooth)
-                .then(stdout => {
-                    let bth = stdout > "";
-                    if (bth) {
-                        item.btname = stdout.trim();
-                        item.btHere = true;
-                        _D(`hcitool found ${item.name} as ${item.btname}`);
-                    }
-                    return bth;
-                }, err => false)
-                .then(bt => item.btHere = bt)
-                .then(bt => !bt ? wait(200)
-                    .then(x => pExec('!l2ping -c1 ' + item.bluetooth))
-                    .then(op => op, x => _D(x, pExec('!l2ping -c1 ' + item.bluetooth)))
-                    .then(op => op.length > 0 ?
-                        _D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true))
-                        : _D(`l2ping for ${item.name} returned nothing!`, false),
-                    x => _D(`l2ping for ${item.name} err: "${x}"`, false))
-                    : false)
-                .catch(x => x)
-                .then(x => wait(100))
-            );
-        }
-        return Promise.all(all)
-            .then(obj => item.name, err => _D(`err in ${item.name}: ${_O(err)}`));
-    }, 50).then(res => res, err => _D(`err ${_O(err)}`, err))
+            /*
+                        if (doMac && item.hasMAC)
+                            all.push(pSeriesP(item.hasMAC, mac => pExec('arp-scan -lgq  --retry=5 --destaddr='+ mac)
+                                .then(ret => {
+                                    item.ipHere = item.ipHere || ret.toUpperCase().indexOf(mac)>0; 
+            //                        _I(`arp-scan for ${item.id}  ${item.ipHere} returned ${ret}`);
+                                    return Promise.resolve();                        
+                                })
+                            ));
+            */
+            if (item.hasBT)
+                checkUnkn(item.bluetooth);
+            if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
+                all.push(pExec('hcitool name ' + item.bluetooth)
+                    .then(stdout => {
+                        let bth = stdout > "";
+                        if (bth) {
+                            item.btname = stdout.trim();
+                            item.btHere = true;
+                            _D(`hcitool found ${item.name} as ${item.btname}`);
+                        }
+                        return bth;
+                    }, err => false)
+                    .then(bt => item.btHere = bt)
+                    .then(bt => !bt ? wait(200)
+                        .then(x => pExec('!l2ping -c1 ' + item.bluetooth))
+                        .then(op => op, x => _D(x, pExec('!l2ping -c1 ' + item.bluetooth)))
+                        .then(op => op.length > 0 ?
+                            _D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) :
+                            _D(`l2ping for ${item.name} returned nothing!`, false),
+                            x => _D(`l2ping for ${item.name} err: "${x}"`, false)) :
+                        false)
+                    .catch(x => x)
+                    .then(x => wait(100))
+                );
+            }
+            return Promise.all(all)
+                .then(obj => item.name, err => _D(`err in ${item.name}: ${_O(err)}`));
+        }, 50).then(res => res, err => _D(`err ${_O(err)}`, err))
     ]).then(res => {
         //            _D(`Promise all  returned ${res}  ${res}:${_O(res)}`);
         if (++printerCount >= printerDelay) ///TBC
@@ -592,55 +610,55 @@ function scanAll() {
         whoHere = [];
         let allhere = [];
         return pSeriesP(scanList.values(), (item) => {
-            //            for(let item of scanList.values()) {
-            //                _I(`item=${_O(item)}:`);
-            const here = item.ipHere || item.btHere;
-            let cnt = item.cnt === undefined ? -delayAway : parseInt(item.cnt);
-            let anw = false;
-            //                _I(`${item.name}:cnt=${cnt}, here=${here}`);
-            if (item.hasECB)
-                return Promise.resolve();
-            if (here) {
-                cnt = cnt < 0 ? 0 : cnt + 1;
-                anw = true;
-            } else {
-                cnt = cnt > 0 ? -1 : cnt - 1;
-                anw = cnt >= -delayAway;
-            }
-            if (item.rip) {
-                if (Array.isArray(item.rip))
-                    for (let ip of item.rip)
-                        checkArps(ip);
-                else 
-                    checkArps(item.rip);
-            }
-            item.anwesend = anw;
-            item.cnt = cnt;
-            if (anw) {
-                allhere.push(item.id);
-                if (item.name == item.id)
-                    whoHere.push(item.id);
-            }
-            _D(`${item.id}=${_O(item)}`);
-            const idn = item.id;
-            return makeState(idn + '.count', cnt)
-                .then(res => makeState(idn + '.here', anw))
-                .then(res => item.hasIP ? makeState(idn + '.ipHere', item.ipHere) : false)
-                .then(res => item.hasBT ? makeState(idn + '.btHere', item.btHere) : false);
-        }).then(() => {
-            countHere = whoHere.length;
-            whoHere = whoHere.join(', ');
-            if (oldWhoHere != whoHere) {
-                oldWhoHere = whoHere;
-                _I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${whoHere}`);
-            }
-            allhere = allhere.join(', ');
-            return makeState('countHere', countHere)
-                .then(res => makeState('allHere', allhere))
-                .then(res => makeState('whoHere', whoHere));
-        }).then(() => _D(`Noble found unknown BT's: ${_O(unkn)}, unknown IP's: ${arps}`))
-        .then(() => makeState('AllUnknownBTs', JSON.stringify(unkn)))
-        .then(res => makeState('AllUnknownIPs', JSON.stringify(arps)));
+                //            for(let item of scanList.values()) {
+                //                _I(`item=${_O(item)}:`);
+                const here = item.ipHere || item.btHere;
+                let cnt = item.cnt === undefined ? -delayAway : parseInt(item.cnt);
+                let anw = false;
+                //                _I(`${item.name}:cnt=${cnt}, here=${here}`);
+                if (item.hasECB)
+                    return Promise.resolve();
+                if (here) {
+                    cnt = cnt < 0 ? 0 : cnt + 1;
+                    anw = true;
+                } else {
+                    cnt = cnt > 0 ? -1 : cnt - 1;
+                    anw = cnt >= -delayAway;
+                }
+                if (item.rip) {
+                    if (Array.isArray(item.rip))
+                        for (let ip of item.rip)
+                            checkArps(ip);
+                    else
+                        checkArps(item.rip);
+                }
+                item.anwesend = anw;
+                item.cnt = cnt;
+                if (anw) {
+                    allhere.push(item.id);
+                    if (item.name == item.id)
+                        whoHere.push(item.id);
+                }
+                _D(`${item.id}=${_O(item)}`);
+                const idn = item.id;
+                return makeState(idn + '.count', cnt)
+                    .then(res => makeState(idn + '.here', anw))
+                    .then(res => item.hasIP ? makeState(idn + '.ipHere', item.ipHere) : false)
+                    .then(res => item.hasBT ? makeState(idn + '.btHere', item.btHere) : false);
+            }).then(() => {
+                countHere = whoHere.length;
+                whoHere = whoHere.join(', ');
+                if (oldWhoHere != whoHere) {
+                    oldWhoHere = whoHere;
+                    _I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${whoHere}`);
+                }
+                allhere = allhere.join(', ');
+                return makeState('countHere', countHere)
+                    .then(res => makeState('allHere', allhere))
+                    .then(res => makeState('whoHere', whoHere));
+            }).then(() => _D(`Noble found unknown BT's: ${_O(unkn)}, unknown IP's: ${arps}`))
+            .then(() => makeState('AllUnknownBTs', JSON.stringify(unkn)))
+            .then(res => makeState('AllUnknownIPs', JSON.stringify(arps)));
     }, err => _W(`Scan devices returned error: ${_O(err)}`));
 }
 
@@ -652,7 +670,7 @@ var ain = '',
     wlast = null,
     lang = '',
     numuwz = 0,
-    delayuwz =0,
+    delayuwz = 0,
     longuwz = false;
 
 function getUWZ() {
@@ -662,30 +680,30 @@ function getUWZ() {
             var w = data && data.results;
             if (!w)
                 return Promise.reject('UWZ data err: ' + _O(data));
-//            _W(`${_O(w,5)}`);
-            return w.map(i => (lang == 'de' ? 
-                (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) 
-                : (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
+            //            _W(`${_O(w,5)}`);
+            return w.map(i => (lang == 'de' ?
+                (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) :
+                (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
         })
         .then(w => {
             let wl = w.length,
-                wt = w.join(numuwz<0 ? '<br>\n': '\n');
+                wt = w.join(numuwz < 0 ? '<br>\n' : '\n');
             wt = wt == '' ? "No warnings" : wt;
             if (wt != wlast) {
                 wlast = wt;
                 _I(`UWZ found the following (changed) warnings: ${wt}`);
-                if(numuwz>0) {
-                    return pSeriesP(Object.keys(w), (x) => x<numuwz ? makeState('UWZ_Warnings.warning'+x,w[x]): Promise.resolve())
+                if (numuwz > 0) {
+                    return pSeriesP(Object.keys(w), (x) => x < numuwz ? makeState('UWZ_Warnings.warning' + x, w[x]) : Promise.resolve())
                         .then(() => {
                             let n = wl,
                                 l = [];
 
-                            while(n<numuwz)
+                            while (n < numuwz)
                                 l.push(n++);
-                            return pSeriesP(l,(x) => makeState('UWZ_Warnings.warning'+x,''));
+                            return pSeriesP(l, (x) => makeState('UWZ_Warnings.warning' + x, ''));
                         })
-                } else  
-                    return makeState('UWZ_Warning',wlast);
+                } else
+                    return makeState('UWZ_Warning', wlast);
             }
         })
         .catch(e => _W(`Error in getUWZ: ${e}`))
@@ -770,7 +788,7 @@ function main() {
                 item.hasECB = item.ip && item.name.startsWith('ECB-');
                 item.hasIP = item.ip && item.ip.length > 2;
                 if (item.hasIP && !item.ip.toUpperCase().startsWith('HTTP')) {
-                    if (!item.ip.match(/^(\d+\.){3}\d+/)) 
+                    if (!item.ip.match(/^(\d+\.){3}\d+/))
                         c2pP(dns.resolve)(item.ip).then(x => item.rip = x);
                     else
                         item.rip = item.ip;
@@ -782,16 +800,18 @@ function main() {
                 return Promise.resolve(item.id);
             }, 50);
         }).then(() => parseInt(adapter.config.external) > 0 ? scanExtIP() : Promise.resolve())
-        .then(() => P.getObjectList({ include_docs: true }))
+        .then(() => P.getObjectList({
+            include_docs: true
+        }))
         .then(res => {
             var r = {};
-            if (!adapter.config.delayuwz || parseInt(adapter.config.delayuwz)<=0)
+            if (!adapter.config.delayuwz || parseInt(adapter.config.delayuwz) <= 0)
                 return Promise.resolve(_I(`No UWZ warning because of Delay is ${adapter.config.delayuwz}`));
-            delayuwz =  parseInt(adapter.config.delayuwz); 
-            numuwz =  parseInt(adapter.config.numuwz);
+            delayuwz = parseInt(adapter.config.delayuwz);
+            numuwz = parseInt(adapter.config.numuwz);
             longuwz = Boolean(adapter.config.longuwz)
             res.rows.map(i => r[i.doc._id] = i.doc)
-            if(r['system.config'] && r['system.config'].common.language) 
+            if (r['system.config'] && r['system.config'].common.language)
                 lang = r['system.config'].common.language;
             if (r['system.config'] && r['system.config'].common.latitude) {
                 adapter.config.latitude = parseFloat(r['system.config'].common.latitude);
@@ -810,8 +830,11 @@ function main() {
                 setInterval(scanExtIP, parseInt(adapter.config.external) * 1000);
             return scanAll(); // scan first time and generate states if they do not exist yet
         })
-        .then(res => P.getObjectList({ startkey: ain, endkey: ain + '\u9999' }))
-        .then(res => pSeriesP(res.rows, item => {  // clean all states which are not part of the list
+        .then(res => P.getObjectList({
+            startkey: ain,
+            endkey: ain + '\u9999'
+        }))
+        .then(res => pSeriesP(res.rows, item => { // clean all states which are not part of the list
             //            _I(`Check ${_O(item)}`);
             let id = item.id.slice(ain.length);
             if (objects.has(id))
@@ -827,6 +850,5 @@ function main() {
             stop(true);
             throw err;
         })
-        .then(x => _I('Adapter initialization finished!'))
-        ;
+        .then(x => _I('Adapter initialization finished!'));
 }
