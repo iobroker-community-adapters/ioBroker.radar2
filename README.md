@@ -54,6 +54,9 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 * Adapter requires node >= v4.3.*!
 
 ## Changelog
+### 1.1.3 
+* Repository rename to ioBroker.radar to fulfill ioBroker requirements! 
+
 ### 1.1.2 
 * when number of UWS messages is <0 then do not use a \\n but \<br\> as line separator for easy web display
 * Added new long or short text selector in adapter config
