@@ -13,21 +13,31 @@
         "license": "MIT",
         "platform": "Javascript/Node.js",
         "mode": "daemon",
-        "availableModes": ["daemon"],
+        "availableModes": [
+            "daemon"
+        ],
         "readme": "https://github.com/frankjoke/ioBroker.radar/blob/master/README.md",
         "loglevel": "info",
         "icon": "radar.png",
-        "keywords": ["ping", "ip", "mac", "bluetooth", "radar"],
+        "keywords": [
+            "ping",
+            "ip",
+            "mac",
+            "bluetooth",
+            "radar"
+        ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar/master/admin/radar.png",
-        "type": "hardware"
+        "type": "network"
     },
     "native": {
-        "devices": [{
-            "name": "Ich",
-            "ip": "localhost",
-            "macs": "",
-            "bluetooth": ""
-        }],
+        "devices": [
+            {
+                "name": "Ich",
+                "ip": "localhost",
+                "macs": "",
+                "bluetooth": ""
+            }
+        ],
         "scandelay": 60,
         "printerdelay": 500,
         "external": 300,
@@ -36,7 +46,5 @@
         "numuwz": 0,
         "longuwz": false
     },
-    "objects": [
-
-    ]
+    "objects": []
 }
