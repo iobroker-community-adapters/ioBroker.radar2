@@ -7,7 +7,7 @@
 // jshint node:true, esversion:6, strict:global, undef:true, unused:true
 "use strict";
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
-const adapter = utils.adapter('radar');
+const adapter = utils.Adapter('radar');
 const btbindir = __dirname + '\\bin\\bluetoothview\\';
 
 const util = require('util');
