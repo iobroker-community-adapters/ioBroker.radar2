@@ -25,14 +25,14 @@
     "grunt-http": "^2.2.0",
     "grunt-jscs": "^3.0.1",
     "grunt-replace": "^1.0.1",
-    "mocha": "^3.5.3"
+    "mocha": "^4.1.0"
   },
   "bugs": {
     "url": "https://github.com/frankjoke/ioBroker.radar/issues"
   },
   "main": "radar.js",
   "scripts": {
-    "test": "node node_modules/mocha/bin/mocha"
+    "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
     "ping": "^0.2.0",
