@@ -879,7 +879,7 @@ function main() {
             } else return Promise.reject(_W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
         }, () => doUwz = null)
         .then(() => {
-            _I(`radar adapter initialized ${scanList.size} devices, ExternalNetwork = ${adapter.config.external}.`);
+            _I(`radar adapter initialized ${Object.keys(scanList).length} devices, ExternalNetwork = ${adapter.config.external}.`);
             _I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
             scanTimer = setInterval(scanAll, scanDelay);
             if (parseInt(adapter.config.external) > 0)
