@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar",
-        "version": "1.1.3",
+        "version": "1.2",
         "title": "Radar adapter for IP and Bluetooth",
         "desc": {
             "en": "This adapter can scan IP and bluetooth addresses foravailability and also get exchange rates from European Central Bank and get ing fill from HP printers",
@@ -16,6 +16,7 @@
         "availableModes": [
             "daemon"
         ],
+        "materialize": true,
         "readme": "https://github.com/frankjoke/ioBroker.radar/blob/master/README.md",
         "loglevel": "info",
         "icon": "radar.png",
@@ -39,6 +40,7 @@
             }
         ],
         "scandelay": 60,
+        "arp_scan_cmd": "--retry=4",
         "printerdelay": 500,
         "external": 300,
         "delayaway": 10,

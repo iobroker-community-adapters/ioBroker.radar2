@@ -33,7 +33,8 @@
         "Device setup":        {"en": "individual device setup",  "de": "Individuelle Suchobjekt-Einstellungen"},
         "UWZ Delay:":   {"en": "Delay in seconds between UWZ scans 0=no UWZ scan: ", "de": "Verzögerung in Sekunden zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "},
         "Max UWZ vars:":   {"en": "How many seperate messages  0=all messages together: ", "de": "Maximum Meldungen in UWZ 0=alle Meldungen zusammen: "},
-        "Scan Delay:":   {"en": "Delay in seconds between scans (>=30): ", "de": "Verzögerung in Sekunden zwischen Abfragen (>=30): "},
+        "Scan Delay:":   {"en": "Delay in seconds between scans (>=30): ", "de": "Verzögerung in Sekunden zwischen Abfragen (>=15): "},
+        "arp-scan cmdline:":   {"en": "Arp-Scan command line, need to be changed if default interface is not first", "de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."},
         "Delay Away:":   {"en": "How often should be a device not detected before it's marked as away' (>=2): ",     
                 "de": "Wie oft muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "},
         "Printer Delay:":   {"en": "Delay in scans between printer fill check (>=100): ",     
@@ -121,15 +122,16 @@
     <table>
         <tr><td class="translate">Scan Delay:</td><td><input class="value number" id="scandelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">Delay Away:</td><td><input class="value number" id="delayaway" type="input" size="5"/></td></tr>
-        <tr><td class="translate">Printer Delay:</td><td><input class="value number" id="printerdelay" type="input" size="5"/></td></tr>
+        <tr><td class="translate">arp-scan cmdline:</td><td><input class="value number" id="arp_scan_cmd" type="input" size="25"/></td></tr>
         <tr><td class="translate">External Network Scan Delay:</td><td><input class="value number" id="external" type="input" size="5"/></td></tr>
+        <tr><td class="translate">Printer Delay:</td><td><input class="value number" id="printerdelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">UWZ Delay:</td><td><input class="value number" id="delayuwz" type="input" size="5"/></td></tr>
         <tr><td class="translate">Max UWZ vars:</td><td><input class="value" id="numuwz" type="input" size="5"/></td></tr>
         <tr><td class="translate">Long Warning Message:</td><td><input class="value" id="longuwz" type="checkbox"/></td></tr>
     </table>
     <h4 class="translate">Device setup</h4>
-    <table id="devices"></table><div id="pager-devices"></div>
     <p class="translate">description</p>
+    <table id="devices"></table><div id="pager-devices"></div>
 
 </div>
 </html>

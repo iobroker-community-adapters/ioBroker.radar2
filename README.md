@@ -23,19 +23,27 @@ Er kann folgendes aufspüren oder anzeigen:
 Er benutzt Ping (und wenn installiert auf Linux auch fping und arp-scan, 'sudo apt-get install fping arp-scan' erledigt die Installation am Raspi).
 Für Bluetooth verwendet es neben Noble [http://www.nirsoft.net/utils/bluetooth_viewer.html] unter Windows und hcitool auf Linux.
 Noble ist nun optional und wenn es nicht installiert werden kann wird der Adapter trotzdem laufen.
+Wenn Probleme mit noble unter Linux auftreten weil sie ioBroker nicht als root laufen lassen dann bitte folgende Kommandos ausführen:
+```
+sudo apt-get install libcap2-bin
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```
 
-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
+IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
 Es können mehrere MAC-Adressen durch ',' getrennt angegeben werden.
+Die arp-scan Kommandozeile ist normal 'arp-scan -lgq --retry=4' und der Teil '--retry=4' kann geändert werden, entweder retry höher setzten wenn das eine oder andere Geät sehr spät antwortet oder eine andere Schnittstelle wählen falls ifconfig das notwendig macht, z.b auf '--interface enp1s0 --retry=4' wenn ein anderes interface (enp1s0 in diesem Fall) verwendet werden soll.
+
+Wenn sie Arp-scan, hcitool oder l2ping benutzen müssen sie ioBroker als root laufen lassen!!!!! Siehe [https://github.com/ioBroker/ioBroker/issues/47]
 
 Wenn ein Name mit '-' endet wird er nicht zu whoHere dazugerechnet, erscheint aber unter allHere.
 Wenn ein Gerät eine IP-Adresse hat und der Name mit `HP-` beginnt wird versucht alle 500 scans (einstellbar) den Tiuntenfüllstand vom HP-Drucker auszulesen. 
-Wenn ein Gerät mit `ECB-` beginnt werden die Wechselkurse der Eurpopäischen Zentralbank von der Seite [http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml] abgefragt. In diesem Fall wird das Feld der IP-Adresse dazu verwendet um die Kurse auszuwählen die abgefragt werden sollen, getrennt durch Beistriche oder Leerzeichen wie z.B zur Anzeige von US$ und Rubel: `USD,RUB`.
 
 Je nach settings für External Network in Sekunden (wenn 0 dann ausgeschaltet) wird die externe IP-Adresse abgefragt und als IP4 abgelegt. Wenn die Abfrage nicht gelingt (von 3 verschiedenen Servern) wird ein Status-Flag auf 0 gesetzt. Der Status kann auch 1 oder 2 sein je nachdem ob die IP von einem oder mehreren Servern zurückgegeben worden ist. Damit kann erkannt werden wenn keine Verbindung zum externen Netzwerk besteht (Status=0) und falls eine besteht die externe IPV4-Adresse ausgelesen werden was ermöglicht dass dynamisch DNS upgedated werden können.
 Default Delay ist 300 Sekunden (=5 Minuten), ich würde nicht unter 60 (1 Minute) gehen da bei jeder Abfrage 2-3 Webseiten abgefragt werden.
 
 Der Adapter generiert mit arp-scan und Noble (wenn vorhanden) nun auch AllUnknownBTs und AllUnknownIPs JSON-Variablen welche die gefundenen aber nicht im adapter gescannten IP-, MAC- und BT-Adressen listet.
 Damit können neue devices erkannt werden und potentielle scripts können checken ob sich neue Geräte am Wlan angemeldet haben.
+Bei IP-Geräten wird die MAC-Adresse, der Hersteller und die IP-Namen unter neden die Adtesse im Netz verwendbar ist angezeigt.
 Beide Variablen enthalten arrays mit den unbekannten devices. AllUnknownIPs ist ein Array von Strings die mit '; ' getrennt die gefundene IP-Adresse, die MAC-Adresse, den Hersteller (wenn bekannt) des Lan-Adapters und den Reverse-IP-Namen der IP-Adresse enthält.
 Somit sollten Geräte leicht identifiziert werden können.
 Bei AllUnknownBTs ist es ein Array von Objekten welche die BT-Adresse, den Herstellernamen falls bekannt und die Signalstärke (rssi, je niedriger desto weiter weg is das device) enthält.
@@ -52,6 +60,19 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 
 ## Important/Wichtig
 * Adapter requires node >= v4.3.*!
+
+## Changelog
+### 1.2 
+* Added arp-scan command line into configuration and added Admin v3.x style
+* changed noble to '@abandonware/noble' as default to try to get V10 compatibility
+* Removed ECB-Funtion because ECB moved to variable https site and the simple tools cannot resolve the data anymore. Hope that systemstatus adapter will be able to do so. 
+* arp-scan --retry was set to 4 to reduce traffic, it can be changed lower or higher with arp-scan command line
+* if you upgrade your radar and nothing appears in the arp-scan command line please enter `--retry=3` (or 4).
+* HTTP checks can also use HTTPS now
+* Vendor name is grabbed but maybe later than on first scan because free API allows only one vendor check/second and 1000/day. If you have 30 devices on IP or BT this means it will take about 40 seconds to grab vendors and they should be visible in 2nd or 3rd scan. The adapter caches the vendor information so no further requests happen until adapter restart or new device on BT or network.
+* For HP printers the adapter collects now all individual inks in an '.ink' subfolder to reduce the number of items/printer.
+* Please run ioBroker as root! Some functions like l2ping or arp-scan and noble may not function!
+* Reduced the minimum scan interval to 15 seconds, if not all IP's or BT's are found please increase!
 
 ## Changelog
 ### 1.1.3 
