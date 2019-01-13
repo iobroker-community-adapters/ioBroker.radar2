@@ -62,7 +62,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 * Adapter requires node >= v4.3.*!
 
 ## Changelog
-### 1.2 
+### 1.2  - Jan 2019
 * Added arp-scan command line into configuration and added Admin v3.x style
 * changed noble to '@abandonware/noble' as default to try to get V10 compatibility
 * Removed ECB-Funtion because ECB moved to variable https site and the simple tools cannot resolve the data anymore. Hope that systemstatus adapter will be able to do so. 
