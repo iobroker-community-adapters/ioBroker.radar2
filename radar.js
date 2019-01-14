@@ -874,7 +874,7 @@ function main() {
                 adapter.config.longitude = parseFloat(r['system.config'].common.longitude);
                 return pGet(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${adapter.config.latitude}&lon=${adapter.config.longitude}`, 2)
                     .then(res => JSON.parse(res)[0], e => _W(`Culd not get UWZ Area ID: ${e} for Laenge: ${adapter.config.longitude} Breite: ${adapter.config.latitude}`))
-                    .then(res => doUwz = res && res.AREA_ID ? res.AREA_ID : null)
+                    .then(res => doUwz = res && res.AREA_ID ? res.AREA_ID : null, () => doUwz=false)
                     .then(() => getUWZ(), setInterval(getUWZ, parseInt(adapter.config.delayuwz) * 1000));
             } else return Promise.reject(_W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
         }, () => doUwz = null)
