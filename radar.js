@@ -51,6 +51,8 @@ function wait(time, arg) {
 }
 
 function pSeriesP(obj, promfn, delay) { // fun gets(item) and returns a promise
+    if (!obj)
+        return Promise.resolve([]);
     delay = delay || 0;
     let p = Promise.resolve();
     const nv = [],
