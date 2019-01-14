@@ -77,6 +77,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 * For HP printers the adapter collects now all individual inks in an '.ink' subfolder to reduce the number of items/printer.
 * Please run ioBroker as root! Some functions like l2ping or arp-scan and noble may not function!
 * Reduced the minimum scan interval to 15 seconds, if not all IP's or BT's are found please increase!
+* Removed problem when no location is specified in iobroker-admin and UWZ-code cannot be found
 
 ## Changelog
 ### 1.1.3 
