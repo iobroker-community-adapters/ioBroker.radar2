@@ -23,6 +23,10 @@ Er kann folgendes aufspüren oder anzeigen:
 Er benutzt Ping (und wenn installiert auf Linux auch fping und arp-scan, 'sudo apt-get install fping arp-scan' erledigt die Installation am Raspi).
 Für Bluetooth verwendet es neben Noble [http://www.nirsoft.net/utils/bluetooth_viewer.html] unter Windows und hcitool auf Linux.
 Noble ist nun optional und wenn es nicht installiert werden kann wird der Adapter trotzdem laufen.
+Für bluetooth support unter linux bitte immer installieren:
+```
+sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+```
 Wenn Probleme mit noble unter Linux auftreten weil sie ioBroker nicht als root laufen lassen dann bitte folgende Kommandos ausführen:
 ```
 sudo apt-get install libcap2-bin
