@@ -35,7 +35,7 @@ sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 
 IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
 Es können mehrere MAC-Adressen durch ',' getrennt angegeben werden.
-Die arp-scan Kommandozeile ist normal 'arp-scan -lgq --retry=4' und der Teil '--retry=4' kann geändert werden, entweder retry höher setzten wenn das eine oder andere Geät sehr spät antwortet oder eine andere Schnittstelle wählen falls ifconfig das notwendig macht, z.b auf '--interface enp1s0 --retry=4' wenn ein anderes interface (enp1s0 in diesem Fall) verwendet werden soll.
+Die arp-scan Kommandozeile ist normal 'arp-scan -lgq --retry=4' und der Teil `--retry=4` kann geändert werden, entweder retry höher setzten wenn das eine oder andere Geät sehr spät antwortet oder eine andere Schnittstelle wählen falls ifconfig das notwendig macht, z.b auf `--interface=br0 --retry=4` wenn ein anderes interface (br0 in diesem Fall) verwendet werden soll.
 
 Wenn sie Arp-scan, hcitool oder l2ping benutzen müssen sie ioBroker als root laufen lassen!!!!! Siehe [https://github.com/ioBroker/ioBroker/issues/47]
 
