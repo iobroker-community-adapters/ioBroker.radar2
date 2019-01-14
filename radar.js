@@ -727,6 +727,8 @@ var ain = '',
     longuwz = false;
 
 function getUWZ() {
+    if (!doUwz)
+        return Promise.resolve();
     pGet('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
         .then(body => JSON.parse(body))
         .then(data => {
