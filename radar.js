@@ -648,7 +648,7 @@ function scanAll() {
                         }, () => false)
                         .then(bt => item.btHere = bt)
                         .then(bt => !bt ? wait(50)
-                            .then(() => pExec('!l2ping -c1 ' + item.bluetooth))
+                            .then(() => pExec('!sudo l2ping -c1 ' + item.bluetooth))
 //                            .then(op => op, x => _D(x, pExec('!l2ping -c1 ' + item.bluetooth)))
                             .then(op => op.length > 0 ? _D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) : _D(`l2ping for ${item.name} returned nothing!`, false),
                                 x => _D(`l2ping for ${item.name} err: "${x}"`, false)) :
@@ -806,7 +806,7 @@ function main() {
     printerDelay = adapter.config.printerdelay;
 
     if (adapter.config.arp_scan_cmd || adapter.config.arp_scan_cmd.length > 0) {
-        arpcmd = 'arp-scan -lgq ' + adapter.config.arp_scan_cmd;
+        arpcmd = 'sudo arp-scan -lgq ' + adapter.config.arp_scan_cmd;
     }
 
     _I(`radar set to scan every ${adapter.config.scandelay} sec and printers every ${printerDelay} scans.`);
@@ -815,7 +815,7 @@ function main() {
 
     pExec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
         .then(() => isApp('fping').then(x => doFping = x))
-        .then(() => isApp('arp-scan').then(x => x ? pExec('arp-scan').then(x => (_I(`radar set to arp-scan with command "${arpcmd}" on ${x}`), x>""), ()=> _W("Adapter nut running as root, cannot use arp-scan!")) : false).then(x => doMac=x))
+        .then(() => isApp('arp-scan').then(x => x ? pExec('sudo arp-scan').then(x => (_I(`radar set to arp-scan with command "${arpcmd}" on ${x}`), x>""), ()=> _W("Adapter nut running as root, cannot use arp-scan!")) : false).then(x => doMac=x))
         .then(() => isApp('hcitool').then(x => doHci = x))
         .then(() => {
             return pSeriesP(adapter.config.devices, item => {
