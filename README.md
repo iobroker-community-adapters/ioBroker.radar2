@@ -27,17 +27,28 @@ Für bluetooth support unter linux bitte immer installieren:
 ```
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
 ```
-Wenn Probleme mit noble unter Linux auftreten weil sie ioBroker nicht als root laufen lassen dann bitte folgende Kommandos ausführen:
-```
-sudo apt-get install libcap2-bin
-sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
-```
 
 IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
 Es können mehrere MAC-Adressen durch ',' getrennt angegeben werden.
 Die arp-scan Kommandozeile ist normal 'arp-scan -lgq --retry=4' und der Teil `--retry=4` kann geändert werden, entweder retry höher setzten wenn das eine oder andere Geät sehr spät antwortet oder eine andere Schnittstelle wählen falls ifconfig das notwendig macht, z.b auf `--interface=br0 --retry=4` wenn ein anderes interface (br0 in diesem Fall) verwendet werden soll.
 
 Wenn sie Arp-scan, hcitool oder l2ping benutzen müssen sie ioBroker als root laufen lassen!!!!! Siehe [https://github.com/ioBroker/ioBroker/issues/47]
+Bei neueren Installationen läuft ioBroker nicht als 'root' sondern als 'iobroker' user. In diesem Fall ist es notwendig iobroker als Benutzer für 'sudo' einzuritchen.
+Das erledigt man mit dem Kommando 
+```
+sudo visudo
+```
+Und man fügt dort in eine Zeile unter '# User privilege specification'
+```
+iobroker    ALL=(ALL:ALL) NOPASSWD: ALL
+```
+ein. visudo funktioniert am Raspi wie Nano, auf manchen anderen Rechnern wie vi.
+
+Für noble muss dann noch folgendes ausgeführt werden
+```
+sudo apt-get install libcap2-bin
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```
 
 Wenn ein Name mit '-' endet wird er nicht zu whoHere dazugerechnet, erscheint aber unter allHere.
 Wenn ein Gerät eine IP-Adresse hat und der Name mit `HP-` beginnt wird versucht alle 500 scans (einstellbar) den Tiuntenfüllstand vom HP-Drucker auszulesen. 
@@ -68,6 +79,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 ## Changelog
 ### 1.2  - Jan 2019
 * Added arp-scan command line into configuration and added Admin v3.x style
+* Allowed radar to be run as other user than root, see above what is necessary to do before installation!
 * changed noble to '@abandonware/noble' as default to try to get V10 compatibility
 * Removed ECB-Funtion because ECB moved to variable https site and the simple tools cannot resolve the data anymore. Hope that systemstatus adapter will be able to do so. 
 * arp-scan --retry was set to 4 to reduce traffic, it can be changed lower or higher with arp-scan command line
