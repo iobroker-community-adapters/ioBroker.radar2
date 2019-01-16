@@ -815,7 +815,7 @@ function main() {
 
     pExec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
         .then(() => isApp('fping').then(x => doFping = x))
-        .then(() => isApp('arp-scan').then(x => x ? pExec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${x}` : false, ()=> _W("Adapter nut running as root, cannot use arp-scan!")) : false).then(x => doMac=x))
+        .then(() => isApp('arp-scan').then(x => x ? pExec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${x.trim()}` : false, ()=> _W("Adapter nut running as root, cannot use arp-scan!")) : false).then(x => doMac=x))
         .then(() => isApp('hcitool').then(x => doHci = x))
         .then(() => {
             return pSeriesP(adapter.config.devices, item => {
