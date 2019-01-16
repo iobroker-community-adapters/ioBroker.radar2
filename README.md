@@ -20,12 +20,17 @@ Er kann folgendes aufspüren oder anzeigen:
 * ECB Umrechnungskurse zum Euro
 * UWZ Wetterwarnungen
 
-Er benutzt Ping (und wenn installiert auf Linux auch fping und arp-scan, 'sudo apt-get install fping arp-scan' erledigt die Installation am Raspi).
+Er benutzt ping und weitere tools unter linux wie auch fping und arp-scan und diese müssen mit
+```
+sudo apt-get install fping arp-scan
+```
+installiert werden.
 Für Bluetooth verwendet es neben Noble [http://www.nirsoft.net/utils/bluetooth_viewer.html] unter Windows und hcitool auf Linux.
 Noble ist nun optional und wenn es nicht installiert werden kann wird der Adapter trotzdem laufen.
-Für bluetooth support unter linux bitte immer installieren:
+Für bluetooth support unter linux bitte immer folgendes installieren:
 ```
-sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libcap2-bin
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 ```
 
 IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
@@ -43,12 +48,6 @@ Und man fügt dort in eine Zeile unter '# User privilege specification'
 iobroker    ALL=(ALL:ALL) NOPASSWD: ALL
 ```
 ein. visudo funktioniert am Raspi wie Nano, auf manchen anderen Rechnern wie vi.
-
-Für noble muss dann noch folgendes ausgeführt werden
-```
-sudo apt-get install libcap2-bin
-sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
-```
 
 Wenn ein Name mit '-' endet wird er nicht zu whoHere dazugerechnet, erscheint aber unter allHere.
 Wenn ein Gerät eine IP-Adresse hat und der Name mit `HP-` beginnt wird versucht alle 500 scans (einstellbar) den Tiuntenfüllstand vom HP-Drucker auszulesen. 
