@@ -32,6 +32,7 @@ Für bluetooth support unter linux bitte immer folgendes installieren:
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libcap2-bin
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 ```
+Bei Raspi's mit Bluetooth schlage ich vor das interne Bluetooth (und auch WLan falls der Raspi über den Netzwerkanschluss betrieben wird) auszuschalten und nur einen Bluetooth 4.0 USB-Stecker zu verwenden! Dieser ist viel besser und empfängt/sendet auf 3 mal weiteren Entfernungen!
 
 IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
 Es können mehrere MAC-Adressen durch ',' getrennt angegeben werden.
