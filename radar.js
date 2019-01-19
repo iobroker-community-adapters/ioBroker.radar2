@@ -884,7 +884,7 @@ function main() {
                             getUWZ();
                             setInterval(getUWZ, parseInt(adapter.config.delayuwz) * 1000);
                         }
-                    });
+                    }, () => doUwz = null);
             } else return Promise.reject(_W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
         }, () => doUwz = null)
         .then(() => {
