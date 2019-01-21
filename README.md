@@ -32,7 +32,11 @@ Für bluetooth support unter linux bitte immer folgendes installieren:
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libcap2-bin
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 ```
-Bei Raspi's mit Bluetooth schlage ich vor das interne Bluetooth (und auch WLan falls der Raspi über den Netzwerkanschluss betrieben wird) auszuschalten und nur einen Bluetooth 4.0 USB-Stecker zu verwenden! Dieser ist viel besser und empfängt/sendet auf 3 mal weiteren Entfernungen!
+Der BT-Adapter id (0,1,2,...) kann, wenn mehrere BT dongles verwendet werden im Adapterkonfig gesetzt werden. Somit kjann radar zum Beispiel eionen anderen Dongle verwenden als ein anderer adapter wie ble.
+
+Bei Raspi's mit Bluetooth schlage ich vor das interne Bluetooth (und auch WLan falls der Raspi über den Netzwerkanschluss betrieben wird) auszuschalten und nur einen Bluetooth 4.0 USB-Stecker zu verwenden! Dieser ist viel besser und empfängt/sendet auf 3 mal weiteren Entfernungen! Falls sie keinen USB-BT-Adapter haben kann natürlich mit verringerter Leistung der interne BT-Adapter verwendet werden.
+
+Ist nur ein BT-Adapter vorhanden ist die id immer 0!
 
 IP-MAC-Adressen können auch angegeben werden, diese werden aber nur verwendet wenn das Programm 'arp-scan' installiert ist. Am Raspi kann das mit 'sudo apt-get install arp-scan' installiert werden.
 Es können mehrere MAC-Adressen durch ',' getrennt angegeben werden.
@@ -78,6 +82,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 
 ## Changelog
 ### 1.2  - Jan 2019
+* Added possibility to select the BT-module number the adapter will use. Thius is important if you have multiple adapters running on different BT-modules!
 * Added arp-scan command line into configuration and added Admin v3.x style
 * Allowed radar to be run as other user than root, see above what is necessary to do before installation!
 * changed noble to '@abandonware/noble' as default to try to get V10 compatibility
