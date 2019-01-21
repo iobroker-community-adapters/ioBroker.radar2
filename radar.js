@@ -264,7 +264,7 @@ function myNoble(len) {
         noble.on('discover', function (per) {
             if (isStopping)
                 return res(stopNoble(idf));
-            _D(`-myNoble discovers: ${_O(per)}`);
+//            _D(`-myNoble discovers: ${_O(per)}`);
             var idt = (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN";
             idf[per.address.toUpperCase()] = {
                 address: per.address,
