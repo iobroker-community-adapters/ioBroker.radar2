@@ -52,22 +52,59 @@
 <script type="text/javascript">
 	var devices = [];
 	systemDictionary = {
-        "Long Warning Message:": {"en": "Use long message text with description for warnings: ", "de": "Benutze langen Warnungstext mit genauer Beschreibung: "},
-        "radar adapter settings": {"en": "radar adapter settings", "de": "Radar Adapter-Einstellungen"},
-        "radar settings":         {"en": "radar settings",         "de": "Radar-Einstellungen"},
-        "Device setup":        {"en": "individual device setup",  "de": "Individuelle Suchobjekt-Einstellungen"},
-        "UWZ Delay:":   {"en": "Delay in seconds between UWZ scans 0=no UWZ scan: ", "de": "Verzögerung in Sekunden zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "},
-        "Max UWZ vars:":   {"en": "How many seperate messages  0=all messages together: ", "de": "Maximum Meldungen in UWZ 0=alle Meldungen zusammen: "},
-        "Scan Delay:":   {"en": "Delay in seconds between scans (>=15): ", "de": "Verzögerung in Sekunden zwischen Abfragen (>=15): "},
-        "arp-scan cmdline:":   {"en": "Arp-Scan command line, need to be changed if default interface is not first", "de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."},
-        "Delay Away:":   {"en": "How often should be a device not detected before it's marked as away' (>=2): ",     
-                "de": "Wie oft muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "},
-        "Printer Delay:":   {"en": "Delay in scans between printer fill check (>=100): ",     
-                "de": "Verzögerung in scans zwischen Druckerfüllstand-Abfrage (>=100): "},
-        "External Network Scan Delay:":   {"en": "Delay in seconds between External Network IP scan (0 = no scan): ",     
-                "de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "},
-        "description":  {"de":"IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
-            "en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."}
+		"Long Warning Message:": {
+			"en": "Use long message text with description for warnings: ",
+			"de": "Benutze langen Warnungstext mit genauer Beschreibung: "
+		},
+		"radar adapter settings": {
+			"en": "radar adapter settings",
+			"de": "Radar Adapter-Einstellungen"
+		},
+		"radar settings": {
+			"en": "radar settings",
+			"de": "Radar-Einstellungen"
+		},
+		"Device setup": {
+			"en": "individual device setup",
+			"de": "Individuelle Suchobjekt-Einstellungen"
+		},
+		"UWZ Delay:": {
+			"en": "Delay in seconds between UWZ scans 0=no UWZ scan: ",
+			"de": "Verzögerung in Sekunden zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "
+		},
+		"Max UWZ vars:": {
+			"en": "How many seperate messages  0=all messages together: ",
+			"de": "Maximum Meldungen in UWZ 0=alle Meldungen zusammen: "
+		},
+		"Scan Delay:": {
+			"en": "Delay in seconds between scans (>=15): ",
+			"de": "Verzögerung in Sekunden zwischen Abfragen (>=15): "
+		},
+		"arp-scan cmdline:": {
+			"en": "Arp-Scan command line, need to be changed if default interface is not first",
+			"de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."
+		},
+		"Delay Away:": {
+			"en": "How often should be a device not detected before it's marked as away' (>=2): ",
+			"de": "Wie oft muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "
+		},
+		"Printer Delay:": {
+			"en": "Delay in scans between printer fill check (>=100): ",
+			"de": "Verzögerung in scans zwischen Druckerfüllstand-Abfrage (>=100): "
+		},
+		"External Network Scan Delay:": {
+			"en": "Delay in seconds between External Network IP scan (0 = no scan): ",
+			"de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "
+		},
+		"description": {
+			"de": "IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
+			"en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."
+		},
+		"BT adapter id:": {
+			"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):",
+			"en": "on Linux: number of Bluetooth adapter (0 = hci0):"
+		}
+
 	};
 
 	// the function loadSettings has to exist ...
@@ -107,7 +144,7 @@
 		//			values2table('switches', settings.switches, onChange);
 		//		} else {
 		_values2table('devices', settings.devices, onChange);
-//		_values2table('switches', settings.switches, onChange);
+		//		_values2table('switches', settings.switches, onChange);
 		//		}
 	}
 
@@ -292,10 +329,12 @@
 					if (buttons[i]) {
 						for (var b = 0; b < buttons[i].length; b++) {
 							if ((!v && buttons[i][b] === 'up') || v === values.length - 1 && buttons[i][b] === 'down') {
-								text += `<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
+								text +=
+									`<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
 								continue;
 							}
-							text += `<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
+							text +=
+								`<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
 						}
 					}
 					text += '</td>';
@@ -378,7 +417,7 @@
 			}
 		});
 		obj.devices = /* (typeof table2values === 'function') ? table2values('scenes') : */ _table2values('devices');
-//		obj.switches = /* (typeof table2values === 'function') ? table2values('switches') : */ _table2values('switches');
+		//		obj.switches = /* (typeof table2values === 'function') ? table2values('switches') : */ _table2values('switches');
 		callback(obj);
 	}
 </script>
@@ -394,13 +433,17 @@
 	</div>
 	<div class="divider"></div>
 	<div class="row" style="height: 6%">
-		<div class="col s6">
+		<div class="col s4">
 			<label class="translate">Scan Delay:</label>
 			<input class="value" id="scandelay" />
 		</div>
-		<div class="col s6">
+		<div class="col s4">
 			<label class="translate">Delay Away:</labbel>
 				<input class="value" id="delayaway" />
+		</div>
+		<div class="col s4">
+			<label class="translate">BT adapter id:</labbel>
+				<input class="value" id="btadapterid" />
 		</div>
 	</div>
 	<div class="row" style="height: 6%">

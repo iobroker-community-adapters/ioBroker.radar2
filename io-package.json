@@ -33,14 +33,21 @@
     "native": {
         "devices": [
             {
-                "name": "Ich",
+                "name": "Ich-",
                 "ip": "localhost",
+                "macs": "",
+                "bluetooth": ""
+            },
+            {
+                "name": "Fritzbox",
+                "ip": "fritz.box",
                 "macs": "",
                 "bluetooth": ""
             }
         ],
         "scandelay": 60,
         "arp_scan_cmd": "--retry=4",
+        "btadapterid": 0,
         "printerdelay": 500,
         "external": 300,
         "delayaway": 10,

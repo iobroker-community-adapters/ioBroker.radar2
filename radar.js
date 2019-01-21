@@ -264,7 +264,7 @@ function myNoble(len) {
         noble.on('discover', function (per) {
             if (isStopping)
                 return res(stopNoble(idf));
-
+            _D(`-myNoble discovers: ${_O(per)}`);
             var idt = (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN";
             idf[per.address.toUpperCase()] = {
                 address: per.address,
@@ -451,7 +451,8 @@ const bts = {},
 
 var oldWhoHere = null,
     arps = {},
-    unkn = {};
+    unkn = {},
+    hcicmd, l2cmd;
 
 function checkArps(ip) {
     ip = ip.trim();
@@ -503,7 +504,7 @@ function checkBtn(mac) {
             btn[mac] = '!Name may come later!';
 
             qmac.then(() => wait(100))
-                .then(() => pExec('hcitool name ' + mac)
+                .then(() => pExec(hcicmd + mac)
                 .then(stdout => stdout > "" ? stdout.trim() : 'Name N/A') , () => 'Name N/A').then(x => res(btn[mac] = x));
         });
     }
@@ -636,7 +637,7 @@ function scanAll() {
                 if (item.hasBT)
                     checkUnkn(item.bluetooth);
                 if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
-                    all.push(pExec('hcitool name ' + item.bluetooth)
+                    all.push(pExec(hcicmd + item.bluetooth)
                         .then(stdout => {
                             let bth = stdout > "";
                             if (bth) {
@@ -648,7 +649,7 @@ function scanAll() {
                         }, () => false)
                         .then(bt => item.btHere = bt)
                         .then(bt => !bt ? wait(50)
-                            .then(() => pExec('!sudo l2ping -c1 ' + item.bluetooth))
+                            .then(() => pExec(l2cmd + item.bluetooth))
 //                            .then(op => op, x => _D(x, pExec('!l2ping -c1 ' + item.bluetooth)))
                             .then(op => op.length > 0 ? _D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) : _D(`l2ping for ${item.name} returned nothing!`, false),
                                 x => _D(`l2ping for ${item.name} err: "${x}"`, false)) :
@@ -726,7 +727,8 @@ var ain = '',
     lang = '',
     numuwz = 0,
     delayuwz = 0,
-    longuwz = false;
+    longuwz = false,
+    btid = 0;
 
 function getUWZ() {
     if (!doUwz)
@@ -773,6 +775,21 @@ function isApp(name) {
 function main() {
     host = adapter.host;
 
+    ain = adapter.name + '.' + adapter.instance + '.';
+
+    if (!adapter.config.devices.length) {
+        _W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
+        return stop(true);
+    }
+
+    btid = Number(adapter.config.btadapterid);
+    if (isNaN(btid))
+        btid=0;
+    hcicmd = `hcitool -i hci${btid} name `;
+    l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+
+    process.env['NOBLE_HCI_DEVICE_ID'] = btid;
+
     try {
         noble = require('@abandonware/noble');
         _I("found '@abandonware/noble'");
@@ -786,12 +803,7 @@ function main() {
         }
     }
 
-    ain = adapter.name + '.' + adapter.instance + '.';
 
-    if (!adapter.config.devices.length) {
-        _W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
-        return stop(true);
-    }
 
     if (!adapter.config.scandelay || parseInt(adapter.config.scandelay) < 15)
         adapter.config.scandelay = 15;
@@ -889,7 +901,7 @@ function main() {
         }, () => doUwz = null)
         .then(() => {
             _I(`radar adapter initialized ${Object.keys(scanList).length} devices, ExternalNetwork = ${adapter.config.external}.`);
-            _I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
+            _I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
             scanTimer = setInterval(scanAll, scanDelay);
             if (parseInt(adapter.config.external) > 0)
                 setInterval(scanExtIP, parseInt(adapter.config.external) * 1000);

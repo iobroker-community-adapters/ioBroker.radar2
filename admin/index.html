@@ -42,7 +42,8 @@
         "External Network Scan Delay:":   {"en": "Delay in seconds between External Network IP scan (0 = no scan): ",     
                 "de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "},
         "description":  {"de":"IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
-            "en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."}
+            "en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."},
+        "BT adapter id:": {"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):", "en": "on Linux: number of Bluetooth adapter (0 = hci0):"}
     };
 
     function setValue(id, value, onChange) {
@@ -123,6 +124,7 @@
         <tr><td class="translate">Scan Delay:</td><td><input class="value number" id="scandelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">Delay Away:</td><td><input class="value number" id="delayaway" type="input" size="5"/></td></tr>
         <tr><td class="translate">arp-scan cmdline:</td><td><input class="value" id="arp_scan_cmd" type="input" size="25"/></td></tr>
+        <tr><td class="translate">BT adapter id:</td><td><input class="value number" id="btadapterid" type="input" size="5"/></td></tr>
         <tr><td class="translate">External Network Scan Delay:</td><td><input class="value number" id="external" type="input" size="5"/></td></tr>
         <tr><td class="translate">Printer Delay:</td><td><input class="value number" id="printerdelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">UWZ Delay:</td><td><input class="value number" id="delayuwz" type="input" size="5"/></td></tr>
