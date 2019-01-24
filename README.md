@@ -83,6 +83,7 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 ## Changelog
 ### 1.2  - Jan 2019
 * Added possibility to select the BT-module number the adapter will use. Thius is important if you have multiple adapters running on different BT-modules!
+* If you update from older version please add `--retry=4` to the arp-scan command line and set the bluetooth hci to `0`! 
 * Added arp-scan command line into configuration and added Admin v3.x style
 * Allowed radar to be run as other user than root, see above what is necessary to do before installation!
 * changed noble to '@abandonware/noble' as default to try to get V10 compatibility

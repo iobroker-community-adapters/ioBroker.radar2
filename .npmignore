@@ -1,6 +1,7 @@
 Gruntfile.js
 tasks
 test
+.vscode
 .travis.yml
 *debug.log
 appveyor.yml
