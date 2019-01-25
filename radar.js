@@ -784,8 +784,10 @@ function main() {
     }
 
     btid = Number(adapter.config.btadapterid);
-    if (isNaN(btid))
+    if (isNaN(btid)) {
+        _W(`BT interface number not defined in config, will use '0'`);
         btid=0;
+    }
     hcicmd = `hcitool -i hci${btid} name `;
     l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
@@ -804,8 +806,6 @@ function main() {
         }
     }
 
-
-
     if (!adapter.config.scandelay || parseInt(adapter.config.scandelay) < 15)
         adapter.config.scandelay = 15;
     scanDelay = adapter.config.scandelay * 1000;
@@ -818,9 +818,8 @@ function main() {
         adapter.config.printerdelay = 100;
     printerDelay = adapter.config.printerdelay;
 
-    if (adapter.config.arp_scan_cmd || adapter.config.arp_scan_cmd.length > 0) {
-        arpcmd = 'sudo arp-scan -lgq ' + adapter.config.arp_scan_cmd;
-    }
+    arpcmd = 'sudo arp-scan -lgq ' + ((adapter.config.arp_scan_cmd && adapter.config.arp_scan_cmd.length > 0) ?
+        adapter.config.arp_scan_cmd : _W(`arp-scan cmd line not configured in config! Will use '--retry=4'`,'--retry=4'));
 
     _I(`radar set to scan every ${adapter.config.scandelay} sec and printers every ${printerDelay} scans.`);
 

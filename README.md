@@ -81,6 +81,10 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 * Adapter requires node >= v4.3.*!
 
 ## Changelog
+### 1.2.1 
+* Added code to use defaults for missing adapter config for those who upgrade from 1.1.x
+
+## Changelog
 ### 1.2  - Jan 2019
 * Added possibility to select the BT-module number the adapter will use. Thius is important if you have multiple adapters running on different BT-modules!
 * If you update from older version please add `--retry=4` to the arp-scan command line and set the bluetooth hci to `0`! 
