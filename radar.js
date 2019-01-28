@@ -5,7 +5,8 @@
  *      V 2 Feb 2019
  */
 /* eslint-env node,es6 */
-/*jslint node: true */
+/*jslint node: true, bitwise: true, sub:true */
+
 "use strict";
 
 // you have to require the utils module and call adapter function
@@ -25,13 +26,17 @@ const btbindir = __dirname + '\\bin\\bluetoothview\\';
 //const util = require('util');
 //const http = require('http');
 //const https = require('https');
-const netping = require("net-ping");
+const net_ping = require("net-ping");
 const xml2js = require('xml2js');
 const ping = require('ping');
 const fs = require('fs');
 const dns = require('dns');
 const oui = require('oui');
+const assert = require('assert'),
+    dgram = require('dgram'),
+    EventEmitter = require('events').EventEmitter;
 //const noble =     require('noble'); // will be loaded later because not all machines will have it working
+
 var noble = null;
 //const exec = require('child_process').exec;
 
@@ -51,64 +56,290 @@ var arpcmd = 'arp-scan -lgq';
 
 const matchIP4 = /(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/,
     matchIP6 = /(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/;
-const ping4session = netping.createSession({
-    networkProtocol: netping.NetworkProtocol.IPv4,
-    packetSize: 16,
-    retries: 2,
-    sessionId: (process.pid % 65535),
-    timeout: 2000,
-    ttl: 128
-});
-const ping6session = netping.createSession({
-    networkProtocol: netping.NetworkProtocol.IPv6,
-    packetSize: 16,
-    retries: 2,
-    sessionId: (process.pid % 65535) - 1,
-    timeout: 2000,
-    ttl: 128
-});
 
-function netPing(ips, fun) {
-    if (A.T(ips) === 'string')
-        ips = [ips];
-    if (A.T(ips) !== 'array')
-        return Promise.reject(`Invalid argument for netPing:'${A.O(ips)}'`);
-    let pip = [];
-
-    function pres(ip) {
-        let session = matchIP4.test(ip) ? ping4session : ping6session;
-        return new Promise((res) => {
-            session.pingHost(ip, function (error, target) {
-                if (error) {
-                    if (error instanceof ping.RequestTimedOutError)
-                        A.D(target + ": Not alive");
-                    else
-                        A.D(target + ": " + error.toString());
-                    res(undefined);
-                } else
-                    res(fun(target));
+    class Network extends EventEmitter {
+        constructor() {
+            super();
+            this._init = false;
+            this._listener = dgram.createSocket('udp4');
+            this._ping4session = null;
+            this._ping6session = null;
+        }
+        init() {
+            var self = this;
+    
+            if (this._ping4session) this._ping4session.close();
+            if (this._ping6session) this._ping6session.close();
+    
+            this._ping4session = net_ping.createSession({
+                networkProtocol: net_ping.NetworkProtocol.IPv4,
+                //    packetSize: 16,
+                retries: 2,
+                //    sessionId: (process.pid % 65535),
+                timeout: 1000,
+                ttl: 10
             });
-        });
+            this._ping6session = net_ping.createSession({
+                networkProtocol: net_ping.NetworkProtocol.IPv6,
+                //    packetSize: 16,
+                retries: 2,
+                //    sessionId: (process.pid % 65535)-1,
+                timeout: 1000,
+                ttl: 10
+            });
+    
+            function parseUdp(msg) {
+                function trimNulls(str) {
+                    var idx = str.indexOf('\u0000');
+                    return (-1 === idx) ? str : str.substr(0, idx);
+                }
+    
+                function readIpRaw(msg, offset) {
+                    //            console.log(`Read IpRaw bl = ${msg.length} offset = ${offset}`)
+                    if (0 === msg.readUInt8(offset))
+                        return undefined;
+                    return '' +
+                        msg.readUInt8(offset++) + '.' +
+                        msg.readUInt8(offset++) + '.' +
+                        msg.readUInt8(offset++) + '.' +
+                        msg.readUInt8(offset++);
+                }
+    
+                function readIp(msg, offset, obj, name) {
+                    //            console.log(`Read IP = ${msg.length} offset = ${offset}, name = ${name} `)
+                    var len = msg.readUInt8(offset++);
+                    assert.strictEqual(len, 4);
+                    obj[name] = readIpRaw(msg, offset);
+                    return offset + len;
+                }
+    
+                function readString(msg, offset, obj, name) {
+                    //            console.log(`Read String bl = ${msg.length} offset = ${offset}, name = ${name} `)
+                    var len = msg.readUInt8(offset++);
+                    obj[name] = msg.toString('ascii', offset, offset + len);
+                    offset += len;
+                    return offset;
+                }
+    
+                function readAddressRaw(msg, offset, len) {
+                    var addr = '';
+                    //            console.log(`Address Raw bl = ${msg.length} offset = ${offset}, len = ${len} `)
+                    while (len-- > 0) {
+                        var b = 0;
+                        try {
+                            b = msg.readUInt8(offset++);
+                        } catch (e) {
+                            console.log(`buffer length = ${msg.length} offset = ${offset}, len = ${len}, err = ${e} `);
+    
+                        }
+                        addr += (b + 0x100).toString(16).substr(-2);
+                        if (len > 0) {
+                            addr += ':';
+                        }
+                    }
+                    return addr;
+                }
+                /*
+                function readHex(msg, offset, obj, name) {
+                     console.log(`Read Hex bl = ${msg.length} offset = ${offset}, name = ${name} `)
+                   var len = msg.readUInt8(offset++);
+                    obj[name] = readHexRaw(msg, offset, len);
+                    offset += len;
+                    return offset;
+                }
+                function readHexRaw(msg, offset, len) {
+                    console.log(`Read HexRaw bl = ${msg.length} offset = ${offset}, len = ${len} `)
+                    var data = '';
+                    while (len-- > 0) {
+                        var b = msg.readUInt8(offset++);
+                        data += (b + 0x100).toString(16).substr(-2);
+                    }
+                    return data;
+                }
+        */
+                function createHardwareAddress(t, a) {
+                    return Object.freeze({
+                        type: t,
+                        address: a
+                    });
+                }
+                var BOOTPMessageType = ['NA', 'BOOTPREQUEST', 'BOOTPREPLY'];
+                var ARPHardwareType = ['NA', 'HW_ETHERNET', 'HW_EXPERIMENTAL_ETHERNET', 'HW_AMATEUR_RADIO_AX_25', 'HW_PROTEON_TOKEN_RING', 'HW_CHAOS', 'HW_IEEE_802_NETWORKS', 'HW_ARCNET', 'HW_HYPERCHANNEL', 'HW_LANSTAR'];
+                var DHCPMessageType = ['NA', 'DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPDECLINE', 'DHCPACK', 'DHCPNAK', 'DHCPRELEASE', 'DHCPINFORM'];
+                var p = {
+                    op: BOOTPMessageType[msg.readUInt8(0)],
+                    // htype is combined into chaddr field object
+                    hlen: msg.readUInt8(2),
+                    hops: msg.readUInt8(3),
+                    xid: msg.readUInt32BE(4),
+                    secs: msg.readUInt16BE(8),
+                    flags: msg.readUInt16BE(10),
+                    ciaddr: readIpRaw(msg, 12),
+                    yiaddr: readIpRaw(msg, 16),
+                    siaddr: readIpRaw(msg, 20),
+                    giaddr: readIpRaw(msg, 24),
+                    chaddr: createHardwareAddress(
+                        ARPHardwareType[msg.readUInt8(1)],
+                        readAddressRaw(msg, 28, msg.readUInt8(2))),
+                    sname: trimNulls(msg.toString('ascii', 44, 108)),
+                    file: trimNulls(msg.toString('ascii', 108, 236)),
+                    magic: msg.readUInt32BE(236),
+                    options: {}
+                };
+                var offset = 240;
+                var code = 0;
+                while (code !== 255 && offset < msg.length) {
+                    code = msg.readUInt8(offset++);
+                    var len;
+                    switch (code) {
+                        case 0:
+                            continue; // pad
+                        case 255:
+                            break; // end
+                        case 12:
+                            { // hostName
+                                offset = readString(msg, offset, p.options, 'hostName');
+                                break;
+                            }
+                        case 50:
+                            { // requestedIpAddress
+                                offset = readIp(msg, offset, p.options, 'requestedIpAddress');
+                                break;
+                            }
+                        case 53:
+                            { // dhcpMessageType
+                                len = msg.readUInt8(offset++);
+                                assert.strictEqual(len, 1);
+                                var mtype = msg.readUInt8(offset++);
+                                assert.ok(1 <= mtype);
+                                assert.ok(8 >= mtype);
+                                p.options.dhcpMessageType = DHCPMessageType[mtype];
+                                break;
+                            }
+                        case 58:
+                            { // renewalTimeValue
+                                len = msg.readUInt8(offset++);
+                                assert.strictEqual(len, 4);
+                                p.options.renewalTimeValue = msg.readUInt32BE(offset);
+                                offset += len;
+                                break;
+                            }
+                        case 59:
+                            { // rebindingTimeValue
+                                len = msg.readUInt8(offset++);
+                                assert.strictEqual(len, 4);
+                                p.options.rebindingTimeValue = msg.readUInt32BE(offset);
+                                offset += len;
+                                break;
+                            }
+                        case 61:
+                            { // clientIdentifier
+                                len = msg.readUInt8(offset++);
+                                p.options.clientIdentifier =
+                                createHardwareAddress(
+                                    ARPHardwareType[msg.readUInt8(offset)],
+                                    readAddressRaw(msg, offset + 1, len - 1));
+                                offset += len;
+                                break;
+                            }
+                        case 81:
+                            { // fullyQualifiedDomainName
+                                len = msg.readUInt8(offset++);
+                                p.options.fullyQualifiedDomainName = {
+                                    flags: msg.readUInt8(offset),
+                                    name: msg.toString('ascii', offset + 3, offset + len)
+                                };
+                                offset += len;
+                                break;
+                            }
+                        default:
+                            {
+                                len = msg.readUInt8(offset++);
+                                //console.log('Unhandled DHCP option ' + code + '/' + len + 'b');
+                                offset += len;
+                                break;
+                            }
+                    }
+                }
+                return p;
+            }
+    
+            if (self._init) return;
+    
+            self._listener.on('message', function (msg, rinfo) {
+                try {
+                    var data = parseUdp(msg, rinfo);
+                    if (data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
+                        var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address.toUpperCase(), data.options.requestedIpAddress];
+                        //                console.log(`Request  ${req} `);
+                        self.emit('request', req);
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+            });
+            self._listener.bind(67, () => console.log('Connected'));
+        }
+        ping(ips, fun) {
+            const matchIP4 = /(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/;
+            var that = this;
+    
+            function pres(ip) {
+                ip = ip.trim();
+                let session = matchIP4.test(ip) ? that._ping4session : that._ping6session;
+                return new Promise((res) => {
+                    session.pingHost(ip, function (error, target) {
+                        if (error) {
+                            if (error instanceof net_ping.RequestTimedOutError)
+                                console.log(target + ": Not alive");
+                            else
+                                console.log(target + ": " + error.toString());
+                            res(undefined);
+                        } else
+                            res(fun(target));
+                    });
+                });
+            }
+            if (typeof ips === 'string')
+                ips = [ips];
+            if (!Array.isArray(ips))
+                return Promise.reject(`Invalid argument for network:'${JSON.stringify(ips)}'`);
+    
+            let pip = [];
+    
+            for (let i of ips) {
+                pip.push(pres(i.trim()));
+            }
+            return Promise.all(pip);
+        }
+        dnsReverse(ip) {
+            return new Promise((res,rej) => dns.reverse(ip,(err,hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? arr : null, () => null);
+        }
+        
+        dnsResolve(name) {
+            let arr = [];
+            return Promise.all([
+                new Promise((res,rej) => dns.resolve4(name,(err,hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
+                new Promise((res,rej) => dns.resolve6(name,(err,hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
+            ]).then(() => arr.length > 0 ? arr : null);
+        }
+    
+        getMacVendor(mac) {
+            let v = oui(mac),
+                vl = v && v.split('\n');
+            return v && vl && vl.length > 2 ? vl[0] + '/' + vl[2] : 'Vendor N/A';
+        }
+        
+        stop() {
+            //        clearInterval(this._tester);
+            this._init = false;
+            if (this._listener) this._listener.close();
+            if (this._ping4session) this._ping4session.close();
+            if (this._ping6session) this._ping6session.close();
+        }
     }
-    for (let i of ips) {
-        pip.push(pres(i));
-    }
-    return Promise.all(pip);
-}
-
-function stop(dostop) {
-    isStopping = true;
-    if (scanTimer)
-        clearInterval(scanTimer);
-    scanTimer = null;
-    A.W('Adapter disconnected and stopped with ' + dostop);
-    //    if (dostop)
-    //        process.exit();
-    //        adapter.stop();
-}
-
-
-A.init(adapter, main);
+    
+    A.init(adapter, main);
 
 var nobleRunning = null;
 
@@ -276,11 +507,8 @@ function scanHP(item) {
             .catch(err => A.D(`HP Printer could not find info! Err: ${A.O(err)}`)));
 }
 
-const bts = {},
-    btn = {},
-    ips = {},
-    vendors = {};
-
+const btn = {},
+    ips = {};
 
 var oldWhoHere = null,
     arps = {},
@@ -314,20 +542,6 @@ function checkCache(item, cache, funP) {
             _res(cache[item] = res));
     });
 }
-
-
-function dnsReverse(ip) {
-    return A.c2p(dns.reverse)(ip).then(arr => arr.length>0 ? arr : null, () => null);
-}
-
-function dnsResolve(name) {
-    let arr = [];
-    return Promise.all([
-            A.c2p(dns.resolve4)(name).then(x => arr = arr.concat(x), () => null),
-            A.c2p(dns.resolve6)(name).then(x => arr = arr.concat(x), () => null)
-    ]).then(() => arr.length>0 ? arr : null)
-}
-
 
 var qmac = Promise.resolve();
 
@@ -408,7 +622,7 @@ function scanAll() {
                     const s = item.split('\t');
                     s[1] = s[1].toUpperCase();
                     s.push(checkMac(s[1]));
-                    return checkCache(s[0], ips, ip => dnsReverse(ip).then(nam => Array.isArray(nam) ? nam.join('; ') : nam, () => '; DNS N/A').then(x => s.push(x)), () => false)
+                    return checkCache(s[0], ips, ip =>network.dnsReverse(ip).then(nam => Array.isArray(nam) ? nam.join('; ') : nam, () => '; DNS N/A').then(x => s.push(x)), () => false)
                         .then(() => {
                             //                            A.D(`${s}`);
                             for (let sli in scanList) {
@@ -555,6 +769,8 @@ function isMacBt(str) {
     return /^([0-9A-F]{2}\:){5}[0-9A-F]{2}$/.test(str.trim().toUpperCase());
 }
 
+const network = new Network();
+
 var ain = '',
     wlast = null,
     lang = '',
@@ -613,7 +829,7 @@ function main() {
 
     if (!A.C.devices.length) {
         A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
-        return stop(true);
+        return A.stop(true);
     }
 
     btid = Number(adapter.config.btadapterid);
@@ -694,7 +910,7 @@ function main() {
                 item.hasIP = item.ip && item.ip.length > 2;
                 if (item.hasIP && !item.hasECB && !item.ip.toUpperCase().startsWith('HTTP')) {
                     if (!item.ip.match(/^(\d+\.){3}\d+/))
-                        dnsResolve(item.ip).then(x => x ? (item.rip = x) : null);
+                        network.dnsResolve(item.ip).then(x => x ? (item.rip = x) : null);
                     else
                         item.rip = item.ip;
                 }
@@ -759,7 +975,7 @@ function main() {
         */
         .catch(err => {
             A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
-            stop(true);
+            A.stop(true);
             throw err;
         })
         .then(() => A.I('Adapter initialization finished!'));

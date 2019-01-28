@@ -35,6 +35,7 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
+    "multicast-dns": "^7.2.0",
     "net-ping": "^1.2.3",
     "oui": "^9.0.22",
     "ping": "^0.2.0",
