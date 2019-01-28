@@ -96,7 +96,6 @@ function netPing(ips, fun) {
     return Promise.all(pip);
 }
 
-
 function stop(dostop) {
     isStopping = true;
     if (scanTimer)
