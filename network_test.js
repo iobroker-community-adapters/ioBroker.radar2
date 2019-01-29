@@ -1,11 +1,17 @@
 "use strict";
 
+const MA = require('./myAdapter'),
+    A = MA.MyAdapter;
+
+
 const assert = require('assert'),
     dgram = require('dgram'),
     net_ping = require("net-ping"),
     dns = require("dns"),
     oui = require('oui'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
+    cp = require('child_process');
+
 
 class Network extends EventEmitter {
     constructor() {
@@ -90,23 +96,23 @@ class Network extends EventEmitter {
                 return addr;
             }
             /*
-            function readHex(msg, offset, obj, name) {
-                 console.log(`Read Hex bl = ${msg.length} offset = ${offset}, name = ${name} `)
-               var len = msg.readUInt8(offset++);
-                obj[name] = readHexRaw(msg, offset, len);
-                offset += len;
-                return offset;
-            }
-            function readHexRaw(msg, offset, len) {
-                console.log(`Read HexRaw bl = ${msg.length} offset = ${offset}, len = ${len} `)
-                var data = '';
-                while (len-- > 0) {
-                    var b = msg.readUInt8(offset++);
-                    data += (b + 0x100).toString(16).substr(-2);
-                }
-                return data;
-            }
-    */
+                    function readHex(msg, offset, obj, name) {
+                         console.log(`Read Hex bl = ${msg.length} offset = ${offset}, name = ${name} `)
+                       var len = msg.readUInt8(offset++);
+                        obj[name] = readHexRaw(msg, offset, len);
+                        offset += len;
+                        return offset;
+                    }
+                    function readHexRaw(msg, offset, len) {
+                        console.log(`Read HexRaw bl = ${msg.length} offset = ${offset}, len = ${len} `)
+                        var data = '';
+                        while (len-- > 0) {
+                            var b = msg.readUInt8(offset++);
+                            data += (b + 0x100).toString(16).substr(-2);
+                        }
+                        return data;
+                    }
+            */
             function createHardwareAddress(t, a) {
                 return Object.freeze({
                     type: t,
@@ -231,12 +237,11 @@ class Network extends EventEmitter {
         self._listener.bind(67, () => console.log('Connected'));
     }
     ping(ips, fun) {
-        const matchIP4 = /(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/;
         var that = this;
 
         function pres(ip) {
             ip = ip.trim();
-            let session = matchIP4.test(ip) ? that._ping4session : that._ping6session;
+            let session = Network.matchIP4.test(ip) ? that._ping4session : that._ping6session;
             return new Promise((res) => {
                 session.pingHost(ip, function (error, target) {
                     if (error) {
@@ -263,14 +268,14 @@ class Network extends EventEmitter {
         return Promise.all(pip);
     }
     dnsReverse(ip) {
-        return new Promise((res,rej) => dns.reverse(ip,(err,hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? arr : null, () => null);
+        return new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? arr : null, () => null);
     }
-    
+
     dnsResolve(name) {
         let arr = [];
         return Promise.all([
-            new Promise((res,rej) => dns.resolve4(name,(err,hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
-            new Promise((res,rej) => dns.resolve6(name,(err,hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
+            new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
+            new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
         ]).then(() => arr.length > 0 ? arr : null);
     }
 
@@ -279,7 +284,9 @@ class Network extends EventEmitter {
             vl = v && v.split('\n');
         return v && vl && vl.length > 2 ? vl[0] + '/' + vl[2] : 'Vendor N/A';
     }
-    
+
+
+
     stop() {
         //        clearInterval(this._tester);
         this._init = false;
@@ -288,8 +295,118 @@ class Network extends EventEmitter {
         if (this._ping6session) this._ping6session.close();
     }
 }
+Network.matchIP4 = /(((?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))/;
+Network.matchIP6 = /(([0-9A-F]{1,4}:){7,7}[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,7}:|([0-9A-F]{1,4}:){1,6}:[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,5}(:[0-9A-F]{1,4}){1,2}|([0-9A-F]{1,4}:){1,4}(:[0-9A-F]{1,4}){1,3}|([0-9A-F]{1,4}:){1,3}(:[0-9A-F]{1,4}){1,4}|([0-9A-F]{1,4}:){1,2}(:[0-9A-F]{1,4}){1,5}|[0-9A-F]{1,4}:((:[0-9A-F]{1,4}){1,6})|:((:[0-9A-F]{1,4}){1,7}|:)|fe80:(:[0-9A-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9A-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/i;
+Network.matchMac = /(([\dA-F]{2}\:){5}[\dA-F]{2})/i;
+
+
+class ScanCmd extends EventEmitter {
+    constructor(args, matchfun) {
+        super();
+        this._stop = this._single = false;
+        this._args = args;
+        if (this._args[0][0] === '!') {
+            this._single = true;
+            this._args[0] = this._args[0].slice(1);
+        }
+        this._matchfun = matchfun;
+        this._cmd = null;
+//        this.init();
+        return this;
+    }
+
+    init() {
+        var self = this;
+        this._cmd = null;
+        try {
+            this._cmd = cp.spawn(this._args[0], this._args.slice(1));
+            this._cmd.on('error', (e1,e2) => this.emit('error', e1,e2));
+//            console.log(this._cmd);
+        } catch (e) {
+//            console.log(e);
+            self.emit('error',`spawn error ${e}`);
+            this._cmd = null;
+        }
+        if (this._cmd) {
+            self._cmd.stdout.on('data', (data) => self._matchfun(data.toString(), self));
+
+            self._cmd.stderr.on('data', function (data) {
+                console.log(`${self._args} stderr: ${data}`);
+                self._stop = true;
+                self._cmd = null;
+            });
+
+            self._cmd.on('exit', function (code) {
+                self.emit('exit', `${self._args} exit code: ${code}`);
+                self._cmd = null;
+                if (!self._stop && !self._single)
+                    self.init();
+            });
+            self.emit('started', `started ${this._args[0]} ${this._args.slice(1).join(' ')}`);
+        }
+    }
+    get cmd() {
+        return this._cmd;
+    }
+    stop() {
+        this._stop = true;
+        this.kill();
+    }
+    kill() {
+        if (this._cmd && this._cmd.pid) {
+            var pid = this._cmd.pid;
+            if (this._args[0] === 'sudo') {
+                var ppid = cp.execSync('ps l --ppid ' + pid).toString();
+                var re = new RegExp('^\\s*\\d+\\s+\\d+\\s+(\\d+)\\s+' + pid + '\\s+', 'm');
+                re = ppid.match(re);
+                //                console.log(`will kill ${ re[1] } `);
+                if (re && re[1])
+                    pid = re[1];
+            }
+            if (pid)
+                cp.execSync(console.log((this._args[0] === 'sudo' ? 'sudo ' : '') + 'kill ' + pid));
+        }
+        this._cmd = null;
+    }
+}
+
+//cp.execSync('rfkill block bluetooth');
+//cp.execSync('rfkill unblock bluetooth');
+
+var scmd = new ScanCmd(['!arp-scan', '-lgq', '--retry=2'], (data, self) => {
+    for (let line of data.split('\n')) {
+        var res = [];
+        var m1 = line.match(Network.matchMac);
+        //        console.log(`Match: ${line}\n${m1}`);
+        if (m1 && m1[1])
+            res.push(m1[1]);
+        m1 = line.match(Network.matchIP4);
+        //        console.log(`Match: ${m1}`);
+        if (m1 && m1[1])
+            res.push(m1[1]);
+        if (res.length === 2)
+            self.emit('match', res);
+    }
+    return null;
+});
+scmd.on('error', console.log);
+scmd.on('exit', console.log);
+scmd.on('match', console.log);
+//scmd.init();
+
+
+function Ptime(promise) {
+    var start =  Date.now();
+    return promise.then(() => {
+        var end = Date.now();
+        return end-start;
+    });
+}
+
+Ptime(A.exec('sudo arp-scan -lgq --retry=3').then(res => A.I(res), err => A.E(err))).then(ms => A.I(`It took ${ms}ms`));
 
 const network = new Network();
+/*
 network.on('request', (req) => network.dnsReverse(req[3]).then((names) => console.log(`Request  ${req}= from ${network.getMacVendor(req[2])}, ${names}`)));
 network.init();
 network.ping(['::1', '::2', '192.168.178.1'], x => console.log(`Ping returned ${x}`))
@@ -297,3 +414,4 @@ network.ping(['::1', '::2', '192.168.178.1'], x => console.log(`Ping returned ${
         .then(() => network.dnsResolve('fritz.box').then(x => console.log(x)))
         .then(() => network.dnsReverse('192.168.178.199').then(x => console.log(x)))
     .catch(err => console.log(err));
+*/
