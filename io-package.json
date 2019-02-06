@@ -2,7 +2,7 @@
     "common": {
         "name": "radar",
         "version": "1.9.9" ,
-        "title": "Radar adapter for IP and Bluetooth",
+        "title": "Radar for IP and Bluetooth, also Unwetterzentrale and, HP-printers and ECB",
         "desc": {
             "en": "This adapter can scan IP and bluetooth addresses foravailability and also get exchange rates from European Central Bank and get ing fill from HP printers",
             "de": "Dieser Adapter überprüft IP-Adressen und Bluetooth-Adressen auf Verfügbarkeit. Er kann auch Wechselkurse der ECB und Tintenfüllstände für HP anzeigen"
@@ -28,7 +28,8 @@
             "radar"
         ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar/master/admin/radar.png",
-        "type": "network"
+        "type": "network",
+        "compact" : true
     },
     "native": {
         "devices": [

@@ -37,13 +37,13 @@
   "dependencies": {
     "multicast-dns": "^7.2.0",
     "net-ping": "^1.2.3",
+    "node-bluetooth": "^1.2.5",
     "oui": "^9.0.22",
-    "ping": "^0.2.0",
-    "xml2js": "^0.4.17"
+    "xml2js": "^0.4.19"
   },
   "optionalDependencies": {
     "@abandonware/noble": "^1.9.2-1",
-    "noble": "^1.8.0"
+    "noble": "^1.9.1"
   },
   "eslintConfig": {
     "env": {

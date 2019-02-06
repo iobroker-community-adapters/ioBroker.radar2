@@ -10,7 +10,7 @@ Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/frankjo
 
 ==============
 
-# ioBroker radar Adapter für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
+# ioBroker radar für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
 Mit diesem Adapter kann man testen ob Geräte via Netzwerk oder Bluetooth verfügbar sind.
 
 Er kann folgendes aufspüren oder anzeigen:

@@ -15,35 +15,29 @@ const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
 // adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.template.0
-const adapter = utils.Adapter('radar'),
-    //    assert = require('assert'),
-    MA = require('./myAdapter'),
-    A = MA.MyAdapter;
-//    moment = require('moment'),
-//const adapter = utils.Adapter('radar');
+let adapter;
+
+function startAdapter(options) {
+    options = options || {};
+    Object.assign(options, {
+        name: 'radar'
+    });
+    adapter = new utils.Adapter(options);
+    return adapter;
+}
+
+const MA = require('./myAdapter'),
+    A = MA.MyAdapter,
+    Network = require('./myNetwork').Network;
+
 const btbindir = __dirname + '\\bin\\bluetoothview\\';
 
-//const util = require('util');
-//const http = require('http');
-//const https = require('https');
-const net_ping = require("net-ping");
 const xml2js = require('xml2js');
-const ping = require('ping');
-const fs = require('fs');
-const dns = require('dns');
-const oui = require('oui');
-const assert = require('assert'),
-    dgram = require('dgram'),
-    EventEmitter = require('events').EventEmitter;
-//const noble =     require('noble'); // will be loaded later because not all machines will have it working
 
-var noble = null;
-//const exec = require('child_process').exec;
-
-// function _J(str) { try { return JSON.parse(str); } catch (e) { return {'error':'JSON Parse Error of:'+str}}} 
-
-var isStopping = false;
-const scanList = {};
+const scanList = {},
+    ipList = {},
+    macList = {},
+    btList = {};
 var scanDelay = 30 * 1000; // in ms = 30 sec
 var scanTimer = null;
 var printerDelay = 100;
@@ -53,342 +47,20 @@ var countHere = 0;
 var whoHere = [];
 var host = null;
 var arpcmd = 'arp-scan -lgq';
+var doHci = true;
+var doBtv = true;
+var doArp = true;
+var doUwz = null;
 
-class Network extends EventEmitter {
-    constructor() {
-        super();
-        this._init = false;
-        this._listener = dgram.createSocket('udp4');
-        this._ping4session = null;
-        this._ping6session = null;
-        if (!Network.matchIP4) {
-            Network.matchIP4 = /(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/;
-            Network.matchIP6 = /(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/;
-        }
-    }
-    init() {
-        var self = this;
-
-        if (this._ping4session) this._ping4session.close();
-        if (this._ping6session) this._ping6session.close();
-
-        this._ping4session = net_ping.createSession({
-            networkProtocol: net_ping.NetworkProtocol.IPv4,
-            //    packetSize: 16,
-            retries: 2,
-            //    sessionId: (process.pid % 65535),
-            timeout: 1000,
-            ttl: 10
-        });
-        this._ping6session = net_ping.createSession({
-            networkProtocol: net_ping.NetworkProtocol.IPv6,
-            //    packetSize: 16,
-            retries: 2,
-            //    sessionId: (process.pid % 65535)-1,
-            timeout: 1000,
-            ttl: 10
-        });
-
-        function parseUdp(msg) {
-            function trimNulls(str) {
-                var idx = str.indexOf('\u0000');
-                return (-1 === idx) ? str : str.substr(0, idx);
-            }
-
-            function readIpRaw(msg, offset) {
-                //            console.log(`Read IpRaw bl = ${msg.length} offset = ${offset}`)
-                if (0 === msg.readUInt8(offset))
-                    return undefined;
-                return '' +
-                    msg.readUInt8(offset++) + '.' +
-                    msg.readUInt8(offset++) + '.' +
-                    msg.readUInt8(offset++) + '.' +
-                    msg.readUInt8(offset++);
-            }
-
-            function readIp(msg, offset, obj, name) {
-                //            console.log(`Read IP = ${msg.length} offset = ${offset}, name = ${name} `)
-                var len = msg.readUInt8(offset++);
-                assert.strictEqual(len, 4);
-                obj[name] = readIpRaw(msg, offset);
-                return offset + len;
-            }
-
-            function readString(msg, offset, obj, name) {
-                //            console.log(`Read String bl = ${msg.length} offset = ${offset}, name = ${name} `)
-                var len = msg.readUInt8(offset++);
-                obj[name] = msg.toString('ascii', offset, offset + len);
-                offset += len;
-                return offset;
-            }
-
-            function readAddressRaw(msg, offset, len) {
-                var addr = '';
-                //            console.log(`Address Raw bl = ${msg.length} offset = ${offset}, len = ${len} `)
-                while (len-- > 0) {
-                    var b = 0;
-                    try {
-                        b = msg.readUInt8(offset++);
-                    } catch (e) {
-                        console.log(`buffer length = ${msg.length} offset = ${offset}, len = ${len}, err = ${e} `);
-
-                    }
-                    addr += (b + 0x100).toString(16).substr(-2);
-                    if (len > 0) {
-                        addr += ':';
-                    }
-                }
-                return addr;
-            }
-            /*
-                function readHex(msg, offset, obj, name) {
-                     console.log(`Read Hex bl = ${msg.length} offset = ${offset}, name = ${name} `)
-                   var len = msg.readUInt8(offset++);
-                    obj[name] = readHexRaw(msg, offset, len);
-                    offset += len;
-                    return offset;
-                }
-                function readHexRaw(msg, offset, len) {
-                    console.log(`Read HexRaw bl = ${msg.length} offset = ${offset}, len = ${len} `)
-                    var data = '';
-                    while (len-- > 0) {
-                        var b = msg.readUInt8(offset++);
-                        data += (b + 0x100).toString(16).substr(-2);
-                    }
-                    return data;
-                }
-        */
-            function createHardwareAddress(t, a) {
-                return Object.freeze({
-                    type: t,
-                    address: a
-                });
-            }
-            var BOOTPMessageType = ['NA', 'BOOTPREQUEST', 'BOOTPREPLY'];
-            var ARPHardwareType = ['NA', 'HW_ETHERNET', 'HW_EXPERIMENTAL_ETHERNET', 'HW_AMATEUR_RADIO_AX_25', 'HW_PROTEON_TOKEN_RING', 'HW_CHAOS', 'HW_IEEE_802_NETWORKS', 'HW_ARCNET', 'HW_HYPERCHANNEL', 'HW_LANSTAR'];
-            var DHCPMessageType = ['NA', 'DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPDECLINE', 'DHCPACK', 'DHCPNAK', 'DHCPRELEASE', 'DHCPINFORM'];
-            var p = {
-                op: BOOTPMessageType[msg.readUInt8(0)],
-                // htype is combined into chaddr field object
-                hlen: msg.readUInt8(2),
-                hops: msg.readUInt8(3),
-                xid: msg.readUInt32BE(4),
-                secs: msg.readUInt16BE(8),
-                flags: msg.readUInt16BE(10),
-                ciaddr: readIpRaw(msg, 12),
-                yiaddr: readIpRaw(msg, 16),
-                siaddr: readIpRaw(msg, 20),
-                giaddr: readIpRaw(msg, 24),
-                chaddr: createHardwareAddress(
-                    ARPHardwareType[msg.readUInt8(1)],
-                    readAddressRaw(msg, 28, msg.readUInt8(2))),
-                sname: trimNulls(msg.toString('ascii', 44, 108)),
-                file: trimNulls(msg.toString('ascii', 108, 236)),
-                magic: msg.readUInt32BE(236),
-                options: {}
-            };
-            var offset = 240;
-            var code = 0;
-            while (code !== 255 && offset < msg.length) {
-                code = msg.readUInt8(offset++);
-                var len;
-                switch (code) {
-                    case 0:
-                        continue; // pad
-                    case 255:
-                        break; // end
-                    case 12:
-                        { // hostName
-                            offset = readString(msg, offset, p.options, 'hostName');
-                            break;
-                        }
-                    case 50:
-                        { // requestedIpAddress
-                            offset = readIp(msg, offset, p.options, 'requestedIpAddress');
-                            break;
-                        }
-                    case 53:
-                        { // dhcpMessageType
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 1);
-                            var mtype = msg.readUInt8(offset++);
-                            assert.ok(1 <= mtype);
-                            assert.ok(8 >= mtype);
-                            p.options.dhcpMessageType = DHCPMessageType[mtype];
-                            break;
-                        }
-                    case 58:
-                        { // renewalTimeValue
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 4);
-                            p.options.renewalTimeValue = msg.readUInt32BE(offset);
-                            offset += len;
-                            break;
-                        }
-                    case 59:
-                        { // rebindingTimeValue
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 4);
-                            p.options.rebindingTimeValue = msg.readUInt32BE(offset);
-                            offset += len;
-                            break;
-                        }
-                    case 61:
-                        { // clientIdentifier
-                            len = msg.readUInt8(offset++);
-                            p.options.clientIdentifier =
-                            createHardwareAddress(
-                                ARPHardwareType[msg.readUInt8(offset)],
-                                readAddressRaw(msg, offset + 1, len - 1));
-                            offset += len;
-                            break;
-                        }
-                    case 81:
-                        { // fullyQualifiedDomainName
-                            len = msg.readUInt8(offset++);
-                            p.options.fullyQualifiedDomainName = {
-                                flags: msg.readUInt8(offset),
-                                name: msg.toString('ascii', offset + 3, offset + len)
-                            };
-                            offset += len;
-                            break;
-                        }
-                    default:
-                        {
-                            len = msg.readUInt8(offset++);
-                            //console.log('Unhandled DHCP option ' + code + '/' + len + 'b');
-                            offset += len;
-                            break;
-                        }
-                }
-            }
-            return p;
-        }
-
-        if (self._init) return;
-
-        self._listener.on('message', function (msg, rinfo) {
-            try {
-                var data = parseUdp(msg, rinfo);
-                if (data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                    var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address.toUpperCase(), data.options.requestedIpAddress];
-                    //                console.log(`Request  ${req} `);
-                    self.emit('request', req);
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        });
-        self._listener.bind(67, () => console.log('Connected'));
-    }
-    ping(ips, fun) {
-        var that = this;
-
-        function pres(ip) {
-            ip = ip.trim();
-            let session = Network.matchIP4.test(ip) ? that._ping4session : that._ping6session;
-            return new Promise((res) => {
-                session.pingHost(ip, function (error, target) {
-                    if (error) {
-                        if (error instanceof net_ping.RequestTimedOutError)
-                            console.log(target + ": Not alive");
-                        else
-                            console.log(target + ": " + error.toString());
-                        res(undefined);
-                    } else
-                        res(fun(target));
-                });
-            });
-        }
-        if (typeof ips === 'string')
-            ips = [ips];
-        if (!Array.isArray(ips))
-            return Promise.reject(`Invalid argument for network:'${JSON.stringify(ips)}'`);
-
-        let pip = [];
-
-        for (let i of ips) {
-            pip.push(pres(i.trim()));
-        }
-        return Promise.all(pip);
-    }
-    dnsReverse(ip) {
-        return new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? arr : null, () => null);
-    }
-
-    dnsResolve(name) {
-        let arr = [];
-        return Promise.all([
-            new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
-            new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
-        ]).then(() => arr.length > 0 ? arr : null);
-    }
-
-    getMacVendor(mac) {
-        let v = oui(mac),
-            vl = v && v.split('\n');
-        return v && vl && vl.length > 2 ? vl[0] + '/' + vl[2] : 'Vendor N/A';
-    }
-
-    stop() {
-        //        clearInterval(this._tester);
-        this._init = false;
-        if (this._listener) this._listener.close();
-        if (this._ping4session) this._ping4session.close();
-        if (this._ping6session) this._ping6session.close();
-    }
+// If started as allInOne/compact mode => return function to create instance
+if (module && module.parent) {
+    module.exports = startAdapter;
+} else {
+    // or start the instance directly
+    startAdapter();
 }
 
 A.init(adapter, main);
-
-var nobleRunning = null;
-
-function myNoble(len) {
-    function stopNoble(idf) {
-        if (nobleRunning)
-            clearTimeout(nobleRunning);
-        if (!noble)
-            return {};
-        nobleRunning = null;
-        noble.removeAllListeners('discover');
-        noble.stopScanning();
-        //        A.D(util.format('Noble found %j',idf));
-        return idf;
-    }
-
-    //    A.D(`Noble= ${A.O(noble)} start ${len}`);
-
-    let idf = {};
-    if (nobleRunning) clearTimeout(nobleRunning);
-    nobleRunning = null;
-
-    if (!noble) return Promise.resolve({});
-    if (isStopping) return Promise.reject('Stopping.');
-    if (noble.state !== 'poweredOn') return Promise.reject('Noble not powered ON!');
-
-    return new Promise((res) => {
-        noble.on('discover', function (per) {
-            if (isStopping)
-                return res(stopNoble(idf));
-            //            A.D(`-myNoble discovers: ${A.O(per)}`);
-            var idt = (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN";
-            idf[per.address.toUpperCase()] = {
-                address: per.address,
-                name: idt,
-                rssi: per.rssi
-            };
-        });
-
-        noble.startScanning([], true);
-        nobleRunning = setTimeout(() => res(stopNoble(idf)), len);
-    }).catch(err => A.I(`Noble scan Err ${A.O(err)}`, err, noble = null));
-}
-
-var doFping = true;
-var doHci = true;
-var doBtv = true;
-var doMac = true;
-var doUwz = null;
 
 function xmlParseString(body) {
     function parseNumbers(str) {
@@ -415,24 +87,11 @@ function xmlParseString(body) {
 
 function scanExtIP() {
     let oldip = "";
-    let sameip = 0;
-
-    function getIP(site) {
-        return A.get(site, 2)
-            .then(chunk => {
-                const ip = chunk.trim();
-                if (ip === oldip)
-                    ++sameip;
-                else
-                    oldip = ip;
-                return Promise.resolve(sameip);
-            }, err => A.I(`MyIP Error ${A.O(err)}`, Promise.resolve(sameip)));
-    }
-
-    return getIP('http://icanhazip.com/?x=2')
-        .then(() => getIP('http://wtfismyip.com/text'))
-        .then(() => sameip < 1 ? getIP('http://nst.sourceforge.net/nst/tools/ip.php') : Promise.resolve(sameip))
-        .then(() => A.getState('_ExternalNetwork.IP4'))
+    return Network.getExtIP()
+        .then(ip => {
+            oldip = ip;
+            return A.getState('_ExternalNetwork.IP4');
+        })
         .then(x => x, () => Promise.resolve())
         .then(state => {
             var time = Date.now();
@@ -450,63 +109,73 @@ function scanExtIP() {
         }, err => A.I(`scanExtIP error ${A.O(err)}`, Promise.resolve()));
 }
 
-function scanECB(item) {
-    let idn = item.id + '.';
-    //    A.I(`ScanECB: ${item.id}`);
-    return A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2)
-        .then(body => xmlParseString(body))
-        //        .then(res => A.I(`ECB returned: ${A.O(res,5)}`,res))
-        .then(ecb => A.makeState(item.id, ecb.Envelope.Cube.Cube.$.time).then(() => ecb))
-        .then(ecb => A.seriesOf(ecb.Envelope.Cube.Cube.Cube, cur => {
-            let ccur = cur.$.currency;
-            let rate = parseFloat(cur.$.rate);
-            if (item.ip.indexOf(ccur) < 0)
-                return Promise.resolve();
-            return A.makeState(idn + ccur, rate);
-        }, 5))
-        .catch(err => A.W(`ECB error: ${A.O(err)}`));
+function scanECBs() {
+    function scanECB(item) {
+        if (item.type !== 'ECB')
+            return Promise.resolve();
+        let idn = item.id + '.';
+        //    A.I(`ScanECB: ${item.id}`);
+        return A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2)
+            .then(body => xmlParseString(body))
+            //        .then(res => A.I(`ECB returned: ${A.O(res,5)}`,res))
+            .then(ecb => A.makeState(item.id, ecb.Envelope.Cube.Cube.$.time).then(() => ecb))
+            .then(ecb =>
+                A.seriesOf(ecb.Envelope.Cube.Cube.Cube, cur => {
+                    let ccur = cur.$.currency;
+                    let rate = parseFloat(cur.$.rate);
+                    if (item.ip.indexOf(ccur) < 0)
+                        return Promise.resolve();
+                    return A.makeState(idn + ccur, rate);
+                }, 5).then(() => ecb, () => ecb))
+            .catch(err => A.W(`ECB error: ${A.O(err)}`));
+    }
+    return A.seriesOf(devices, (item) => scanECB(item), 1);
 }
 
-function scanHP(item) {
+function scanHPs() {
+    function scanHP(item) {
+        if (item.type !== 'printer')
+            return Promise.resolve();
 
-    let idn = item.id + '.';
-    let colors = [];
-    let below10 = [];
-    //    A.I(`should call ${item.ip} for printer data`);
-    return A.get('http://' + item.ip + '/DevMgmt/ConsumableConfigDyn.xml', 2)
-        .then(body => xmlParseString(body.trim()))
-        //        .then(result => A.I(`parser ${A.O(result,3)}`,result))
-        .then(result => result.ConsumableConfigDyn ? result.ConsumableConfigDyn : result)
-        .then(result => A.seriesOf(result.ConsumableInfo, item => {
-                //            A.I(`parser ${A.O(item)}`);
-                if (item.ConsumableTypeEnum !== "ink")
-                    return Promise.resolve('No Ink');
-                let p = "P" + item.ConsumableStation,
-                    lc = item.ConsumableLabelCode,
-                    idnc = idn + 'ink.' + lc + '.',
-                    d = item.Installation ? item.Installation.Date : null,
-                    l = parseInt(item.ConsumablePercentageLevelRemaining),
-                    ci = item.ConsumableIcon,
-                    s = ci.Shape,
-                    fc = ci.FillColor,
-                    rgb = fc.Blue | (fc.Green << 8) | (fc.Red << 16),
-                    n = item.ConsumableSelectibilityNumber;
-                rgb = '#' + (0x1000000 + rgb).toString(16).slice(1);
-                let ss = `${p} = ${lc},${d ? d + ',' : ''} ${l}%, ${n}, ${rgb}, ${s}`;
-                colors.push(ss);
-                if (l <= 10)
-                    below10.push(lc);
-                //                A.I(`printer ${idn} = ${below10}`);
-                return A.makeState(idnc + 'color', rgb)
-                    .then(() => A.makeState(idnc + 'text', ss));
-            })
-            //            .then(() => A.makeState(idn + 'ink', below10.length > 0))
-            //            .then(() => A.makeState(idn + 'below10' , below10.join(', ')))
-            .then(() => A.makeState(idn + 'ink', '' + below10.join(', ')))
-            //            .then(arg => `HP Printer inks found:${colors.length}`)
-            .catch(err => A.D(`HP Printer could not find info! Err: ${A.O(err)}`)));
+        let idn = item.id + '.';
+        let below10 = [];
+        //    A.I(`should call ${item.ip} for printer data`);
+        return A.get('http://' + item.ip + '/DevMgmt/ConsumableConfigDyn.xml', 2)
+            .then(body => xmlParseString(body.trim()))
+            //        .then(result => A.I(`parser ${A.O(result,3)}`,result))
+            .then(result => result.ConsumableConfigDyn ? result.ConsumableConfigDyn : result)
+            .then(result => A.seriesOf(result.ConsumableInfo, item => {
+                    //            A.I(`parser ${A.O(item)}`);
+                    item.ipHere = Date.now();
+                    if (item.ConsumableTypeEnum !== "ink")
+                        return Promise.resolve('No Ink');
+                    let p = "P" + item.ConsumableStation,
+                        lc = item.ConsumableLabelCode,
+                        idnc = idn + 'ink.' + lc,
+                        d = item.Installation ? item.Installation.Date : null,
+                        l = parseInt(item.ConsumablePercentageLevelRemaining),
+                        ci = item.ConsumableIcon,
+                        s = ci.Shape,
+                        fc = ci.FillColor,
+                        rgb = fc.Blue | (fc.Green << 8) | (fc.Red << 16),
+                        n = item.ConsumableSelectibilityNumber;
+                    rgb = '#' + (0x1000000 + rgb).toString(16).slice(1);
+                    let ss = `${p} = ${lc}, ${d ? d + ',' : ''} ${l}%, ${n}, ${rgb}, ${s}`;
+                    if (l <= 10)
+                        below10.push(lc);
+                    //                A.I(`printer ${idn} = ${below10}`);
+                    return A.makeState(idnc, ss);
+                })
+                //            .then(() => A.makeState(idn + 'ink', below10.length > 0))
+                //            .then(() => A.makeState(idn + 'below10' , below10.join(', ')))
+                .then(() => A.makeState(item.id, '' + new Date()))
+                .then(() => A.makeState(idn + 'ink', '' + below10.join(', ')))
+                //            .then(arg => `HP Printer inks found:${colors.length}`)
+                .catch(err => A.D(`HP Printer could not find info! Err: ${A.O(err)}`)));
+    }
+    return A.seriesOf(devices, (item) => scanHP(item), 1);
+
 }
-
 const btn = {},
     ips = {};
 
@@ -543,30 +212,24 @@ function checkCache(item, cache, funP) {
     });
 }
 
-var qmac = Promise.resolve();
 
-function checkMac(mac) {
-    let v = oui(mac),
-        vl = v && v.split('\n');
-    return v && vl && vl.length > 2 ? vl[0] + '/' + vl[2] : 'Vendor N/A';
+function foundIpMac(ip) {
+    if (Network.matchMac.test(ip)) {
+        if (macList[ip]) {
+            macList[ip].ipHere = new Date();
+        }
+    } else if (ipList[ip]) {
+        ipList[ip].ipHere = new Date();
+    }
 }
 
-function checkBtn(mac) {
-    if (!btn[mac]) {
-        qmac = new Promise((res) => {
-            btn[mac] = '!Name may come later!';
-
-            qmac.then(() => A.exec(hcicmd + mac)
-                .then(stdout => stdout > "" ? stdout.trim() : 'Name N/A'), () => 'Name N/A').then(x => res(btn[mac] = x));
-        });
+function foundBt(mac) {
+    if (btList[mac]) {
+        btList[mac].btHere = new Date();
     }
-    return Promise.resolve(btn[mac]);
 }
 
 function scanAll() {
-    if (isStopping) // do not start scan if stopping...
-        return;
-
     A.D(`Would now start scan for devices! ${printerCount === 0 ? 'Would also scan for printer ink now!' : 'printerCount=' + printerCount}`);
 
     for (let item in scanList)
@@ -576,142 +239,140 @@ function scanAll() {
     unkn = {};
 
     return Promise.all(
-        [doBtv ?
-            A.exec(`${btbindir}bluetoothview /scomma ${btbindir}btf.txt`)
-            .then(() => A.wait(100))
-            .then(() => A.c2p(fs.readFile)(`${btbindir}btf.txt`, 'utf8'))
-            .then(data => A.wait(100, data))
-            .then(data => {
-                try {
-                    fs.unlinkSync(`${btbindir}btf.txt`);
-                } catch (e) {
-                    return '';
-                }
-                return data;
-            })
-            .then(data => {
-                for (let item in scanList)
-                    if (data.toUpperCase().indexOf(scanList[item].bluetooth) > 0) {
-                        A.D(`doBtv found  ${scanList[item].name}`);
-                        scanList[item].btHere = true;
-                    }
-            }) : A.wait(10),
-            myNoble(scanDelay / 3)
-            .then(data => A.seriesIn(data, x => data[x].name === 'NaN' ? checkBtn(x).then(n => data[x].name = n) : Promise.resolve(data[x].name)).then(() => data))
-            .then(data => {
-                let found = 0;
-                for (let key in scanList) {
-                    if (data[scanList[key].bluetooth]) {
-                        delete data[scanList[key].bluetooth];
-                        A.D(`Noble found  ${scanList[key].name}`);
-                        scanList[key].btHere = true;
-                        ++found;
-                    }
-                }
-                return A.seriesOf(Object.keys(data), (d) => {
-                    var e = data[d];
-                    e.vendor = checkMac(d);
-                    unkn[d] = e;
-                    delete e.address;
-                    return Promise.resolve(0);
-                });
-            }, () => false),
-            (doMac ? A.exec(arpcmd)
-                .then(res => res && res.match(/(\d*\.){3}\d*\s*([\dA-F]{2}\:){5}[\dA-F]{2}/gi))
-                .then(res => A.seriesOf(res, item => {
-                    const s = item.split('\t');
-                    s[1] = s[1].toUpperCase();
-                    s.push(checkMac(s[1]));
-                    return checkCache(s[0], ips, ip => network.dnsReverse(ip).then(nam => Array.isArray(nam) ? nam.join('; ') : nam, () => '; DNS N/A').then(x => s.push(x)), () => false)
-                        .then(() => {
-                            //                            A.D(`${s}`);
-                            for (let sli in scanList) {
-                                let sl = scanList[sli];
-                                let here = false;
-                                if (s[0] === sl.ip)
-                                    sl.ipHere = here = true;
-                                if (sl.hasMAC)
-                                    for (let m of sl.hasMAC)
-                                        if (s[1] === m)
-                                            sl.ipHere = here = true;
-                                if (!here)
-                                    arps[s[0]] = s.slice(1).join('; ');
-                            }
-                            return s;
-                        })
-                        .catch(err => A.D(`arpcmd err: ${A.O(err)}`));
-
-                }, 5)) : A.wait(5)),
-            A.seriesInOI(scanList, item => {
-                //              A.D(`key ${item} obj ${A.O(item)} = ${A.O(item)}`);
-                let all = [];
-                if (item.hasECB) {
-                    if (printerCount === 0)
-                        all.push(scanECB(item));
-                } else if (item.hasIP && !item.ipHere)
-                    if (item.ip.toUpperCase().startsWith('HTTP'))
-                        all.push(A.get(item.ip, 2).then(() => true, () => false).then(x => item.ipHere = x || item.ipHere));
-                    else
-                        all.push(A.c1p(ping.sys.probe)(item.ip)
-                            .then(res => {
-                                //                        A.I(`${item.name}:${item.ip} = ${res}`);
-                                if (!res && doFping)
-                                    return A.exec('fping ' + item.ip)
-                                        .then(stdout => / is alive/.test(stdout) || res, false);
-                                return res;
-                            })
-                            .then(iph => {
-                                //                        A.I(`IP ${item.name}:${item.ip} = ${iph}`);
-                                if (iph) {
-                                    item.ipHere = true;
-                                    if (item.printer && printerCount === 0)
-                                        return scanHP(item);
+        [
+            /* (doBtv ?
+                           A.exec(`${btbindir}bluetoothview /scomma ${btbindir}btf.txt`)
+                           .then(() => A.wait(10))
+                           .then(() => A.c2p(fs.readFile)(`${btbindir}btf.txt`, 'utf8'))
+                           .then(data => A.wait(10, data))
+                           .then(data => {
+                               try {
+                                   fs.unlinkSync(`${btbindir}btf.txt`);
+                               } catch (e) {
+                                   return '';
+                               }
+                               return data;
+                           })
+                           .then(data => {
+                               for (let item in scanList)
+                                   if (data.toUpperCase().indexOf(scanList[item].bluetooth) > 0) {
+                                       A.D(`doBtv found  ${scanList[item].name}`);
+                                       scanList[item].btHere = true;
+                                   }
+                           }) : A.wait(3)), */
+            (A.ownKeys(btList).length ? bluetooth.startNoble(scanDelay * 0.7) : A.wait(4)),
+            /*
+                        .then(data => A.seriesIn(data, x => data[x].name === 'NaN' ? (data[x].name = Network.getMacVendor(x)) : Promise.resolve(data[x].name)).then(() => data))
+                        .then(data => {
+                            let found = 0;
+                            for (let key in scanList) {
+                                if (data[scanList[key].bluetooth]) {
+                                    delete data[scanList[key].bluetooth];
+                                    A.D(`Noble found  ${scanList[key].name}`);
+                                    scanList[key].btHere = true;
+                                    ++found;
                                 }
-                                return iph;
-                            })
-                        );
-
-                /*
-                            if (doMac && item.hasMAC)
-                                all.push(A.seriesOf(item.hasMAC, mac => A.exec('arp-scan -lgq  --retry=5 --destaddr='+ mac)
-                                    .then(ret => {
-                                        item.ipHere = item.ipHere || ret.toUpperCase().indexOf(mac)>0; 
-                //                        A.I(`arp-scan for ${item.id}  ${item.ipHere} returned ${ret}`);
-                                        return Promise.resolve();                        
-                                    })
-                                ));
-                */
-                if (item.hasBT)
-                    checkUnkn(item.bluetooth);
-                if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
-                    all.push(A.exec(hcicmd + item.bluetooth)
-                        .then(stdout => {
-                            let bth = stdout > "";
-                            if (bth) {
-                                btn[item.bluetooth] = item.btname = stdout.trim();
-                                item.btHere = true;
-                                A.D(`hcitool found ${item.name} as ${item.btname}`);
                             }
-                            return bth;
-                        }, () => false)
-                        .then(bt => item.btHere = bt)
-                        .then(bt => !bt ? A.wait(50)
-                            .then(() => A.exec(l2cmd + item.bluetooth))
-                            //                            .then(op => op, x => A.D(x, A.exec('!l2ping -c1 ' + item.bluetooth)))
-                            .then(op => op.length > 0 ? A.D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) : A.D(`l2ping for ${item.name} returned nothing!`, false),
-                                x => A.D(`l2ping for ${item.name} err: "${x}"`, false)) :
-                            false)
-                        .then(() => A.wait(50))
-                    );
-                }
-                return Promise.all(all).then(() => item.name, err => A.D(`err in ${item.name}: ${A.O(err)}`));
-            }, 50).then(res => res, err => A.D(`err ${A.O(err)}`, err))
+                            return A.seriesOf(Object.keys(data), (d) => {
+                                var e = data[d];
+                                e.vendor = Network.getMacVendor(d);
+                                unkn[d] = e;
+                                delete e.address;
+                                return Promise.resolve(0);
+                            });
+                        }, () => false),
+                        */
+            (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ? network.arpScan(arpcmd)
+                /*
+                               .then(res => res && res.match(/(\d*\.){3}\d*\s*([\dA-F]{2}\:){5}[\dA-F]{2}/gi))
+                               .then(res => A.seriesOf(res, item => {
+                                   const s = item.split('\t');
+                                   s[1] = s[1].toUpperCase();
+                                   s.push(Network.getMacVendor(s[1]));
+                                   return checkCache(s[0], ips, ip => network.dnsReverse(ip).then(nam => Array.isArray(nam) ? nam.join('; ') : nam, () => '; DNS N/A').then(x => s.push(x)), () => false)
+                                       .then(() => {
+                                           //                            A.D(`${s}`);
+                                           for (let sli in scanList) {
+                                               let sl = scanList[sli];
+                                               let here = false;
+                                               if (s[0] === sl.ip)
+                                                   sl.ipHere = here = true;
+                                               if (sl.hasMAC)
+                                                   for (let m of sl.hasMAC)
+                                                       if (s[1] === m)
+                                                           sl.ipHere = here = true;
+                                               if (!here)
+                                                   arps[s[0]] = s.slice(1).join('; ');
+                                           }
+                                           return s;
+                                       })
+                                       .catch(err => A.D(`arpcmd err: ${A.O(err)}`));
+
+                               }, 5))  */
+                :
+                A.wait(5))
+            /*
+                       A.seriesInOI(scanList, item => {
+                           //              A.D(`key ${item} obj ${A.O(item)} = ${A.O(item)}`);
+                           let all = [];
+                           if (item.isECB) {
+                               //                    if (printerCount === 0)
+                               //                        all.push(scanECB(item));
+                           } else if (item.hasIP && !item.ipHere)
+                               if (item.ip.toUpperCase().startsWith('HTTP'))
+                                   all.push(A.get(item.ip, 2).then(() => true, () => false).then(x => item.ipHere = x || item.ipHere));
+                               else
+                                   all.push(network.ping(item.ip)
+                                       .then(iph => {
+                                           //                        A.I(`IP ${item.name}:${item.ip} = ${iph}`);
+                                           if (iph) {
+                                               item.ipHere = true;
+                                               //                                    if (item.isPrinter && printerCount === 0)
+                                               //                                        return scanHP(item);
+                                           }
+                                           return iph;
+                                       })
+                                   );
+
+                           
+                                       if (doArp && item.hasMAC)
+                                           all.push(A.seriesOf(item.hasMAC, mac => A.exec('arp-scan -lgq  --retry=5 --destaddr='+ mac)
+                                               .then(ret => {
+                                                   item.ipHere = item.ipHere || ret.toUpperCase().indexOf(mac)>0; 
+                           //                        A.I(`arp-scan for ${item.id}  ${item.ipHere} returned ${ret}`);
+                                                   return Promise.resolve();                        
+                                               })
+                                           ));
+                           
+                           if (item.hasBT)
+                               checkUnkn(item.bluetooth);
+                           if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
+                               all.push(A.exec(hcicmd + item.bluetooth)
+                                   .then(stdout => {
+                                       let bth = stdout > "";
+                                       if (bth) {
+                                           btn[item.bluetooth] = item.btname = stdout.trim();
+                                           item.btHere = true;
+                                           A.D(`hcitool found ${item.name} as ${item.btname}`);
+                                       }
+                                       return bth;
+                                   }, () => false)
+                                   .then(bt => item.btHere = bt)
+                                   .then(bt => !bt ? A.wait(50).then(() => A.exec(l2cmd + item.bluetooth)) : "")
+                                   .then(op => op.length > 0 ? A.D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) : false, () => false)
+                                   .then(() => A.wait(10))
+                               );
+                           }
+                           return Promise.all(all).then(() => item.name, err => A.D(`err in ${item.name}: ${A.O(err)}`));
+                       }, 50).then(res => res, err => A.D(`err ${A.O(err)}`, err))
+                       */
         ]).then(() => {
         //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
         if (++printerCount >= printerDelay) ///TBC
             printerCount = 0;
         whoHere = [];
         let allhere = [];
+        let notHere = [];
         return A.seriesInOI(scanList, (item) => {
                 //            for(let item of scanList.values()) {
                 //                A.I(`item=${A.O(item)}:`);
@@ -719,7 +380,7 @@ function scanAll() {
                 let cnt = item.cnt === undefined ? -delayAway : parseInt(item.cnt);
                 let anw = false;
                 //                A.I(`${item.name}:cnt=${cnt}, here=${here}`);
-                if (item.hasECB)
+                if (item.isECB)
                     return Promise.resolve();
                 if (here) {
                     cnt = cnt < 0 ? 0 : cnt + 1;
@@ -741,43 +402,45 @@ function scanAll() {
                     allhere.push(item.id);
                     if (item.name === item.id)
                         whoHere.push(item.id);
-                }
-                A.D(`${item.id}=${A.O(item)}`);
+                } else if (item.hasBT || item.hasIP) notHere.push(item.id);
+                //                A.D(`${item.id}=${A.O(item)}`);
                 const idn = item.id;
                 return A.makeState(idn + '.count', cnt)
                     .then(() => A.makeState(item.id, anw))
                     .then(() => item.hasIP ? A.makeState(idn + '.ipHere', item.ipHere) : false)
                     .then(() => item.hasBT ? A.makeState(idn + '.btHere', item.btHere) : false);
             }).then(() => {
-                countHere = whoHere.length;
-                whoHere = whoHere.join(', ');
-                if (oldWhoHere !== whoHere) {
-                    oldWhoHere = whoHere;
-                    A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${whoHere}`);
+                if (Array.isArray(whoHere)) {
+                    countHere = whoHere.length;
+                    whoHere = whoHere.join(', ');
+                    if (oldWhoHere !== whoHere) {
+                        oldWhoHere = whoHere;
+                        A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${whoHere}`);
+                    }
                 }
                 allhere = allhere.join(', ');
+                A.D(`radar found here (${allhere}) and not here (${notHere})`);
                 return A.makeState('_countHere', countHere)
                     .then(() => A.makeState('_allHere', allhere))
+                    .then(() => A.makeState('_notHere', notHere))
                     .then(() => A.makeState('_whoHere', whoHere));
-            }).then(() => A.D(`Noble found unknown BT's: ${A.O(unkn)}, unknown IP's: ${A.O(arps)}`))
+            }).then(() => A.D(`Noble found unknown BT's: ${A.ownKeysSorted(unkn)}, unknown IP's: ${A.ownKeysSorted(arps)}`), () => null)
             .then(() => A.seriesIn(unkn, (mac) => A.makeState('_UnknownBTs.' + mac, A.O(unkn[mac]))).then(() => A.makeState('_UnknownBTs', A.O(A.ownKeysSorted(unkn)))))
             .then(() => A.seriesIn(arps, (ip) => A.makeState('_UnknownIPs.' + ip.split('.').join('_'), A.O(arps[ip]))).then(() => A.makeState('_UnknownIPs', A.O(A.ownKeysSorted(arps)))));
     }, err => A.W(`Scan devices returned error: ${A.O(err)}`));
 }
 
-function isMacBt(str) {
-    return /^([0-9A-F]{2}\:){5}[0-9A-F]{2}$/.test(str.trim().toUpperCase());
-}
-
 const network = new Network();
+const bluetooth = new Bluetooth();
+network.init(false);
 
-var ain = '',
-    wlast = null,
+var wlast = null,
     lang = '',
     numuwz = 0,
     delayuwz = 0,
     longuwz = false,
-    btid = 0;
+    btid = 0,
+    devices = null;
 
 function getUWZ() {
     if (!doUwz)
@@ -817,15 +480,12 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
-function isApp(name) {
-    return A.exec('!which ' + name).then(x => x.length >= name.length, () => false);
-}
-
 function main() {
-    host = adapter.host;
-    A.debug = true;
+    function isApp(name) {
+        return A.exec('!which ' + name).then(x => x.length >= name.length, () => false);
+    }
 
-    ain = A.ains + '.';
+    host = adapter.host;
 
     if (!A.C.devices.length) {
         A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
@@ -840,24 +500,22 @@ function main() {
     hcicmd = `hcitool -i hci${btid} name `;
     l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
-    process.env['NOBLE_HCI_DEVICE_ID'] = btid;
-
-    try {
-        noble = require('@abandonware/noble');
-        A.I("found '@abandonware/noble'");
-    } catch (e) {
-        try {
-            noble = require('noble');
-            A.I("found 'noble'");
-        } catch (e) {
-            A.W(`Noble not available, Error: ${A.O(e)}`);
-            noble = null;
-        }
-    }
-
+    for (let st of A.ownKeys(A.states))
+        delete A.states[st];
     if (!adapter.config.scandelay || parseInt(adapter.config.scandelay) < 15)
         adapter.config.scandelay = 15;
     scanDelay = adapter.config.scandelay * 1000;
+
+    network.on('arp-scan', (found) => (foundIpMac(found[0]), foundIpMac(found[1])));
+
+    bluetooth.init(btid, scanDelay * 0.7);
+    bluetooth.on('noble-found', (what) => {
+        what.vendor = Network.getMacVendor(what.address);
+        //        A.D(`Noble found: ${A.O(what)}`);
+        foundBt(what.address);
+    });
+
+    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
 
     if (!adapter.config.delayaway || parseInt(adapter.config.delayaway) < 2)
         adapter.config.delayaway = 2;
@@ -867,19 +525,30 @@ function main() {
         adapter.config.printerdelay = 100;
     printerDelay = adapter.config.printerdelay;
 
-    arpcmd = 'sudo arp-scan -lgq ' + ((adapter.config.arp_scan_cmd && adapter.config.arp_scan_cmd.length > 0) ?
-        adapter.config.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '--retry=4'`, '--retry=4'));
+    let as = adapter.config.arp_scan_cmd;
+    if (as && as.startsWith('!')) {
+        as = as.slice(1);
+        A.debug = true;
+    }
+
+    var numip = 0,
+        numbt = 0;
+
+    arpcmd = ((as && as.length > 0) ?
+        as : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
 
     A.I(`radar set to scan every ${adapter.config.scandelay} sec and printers every ${printerDelay} scans.`);
 
     A.I(`BT Bin Dir = '${btbindir}'`);
+    devices = adapter.config.devices;
 
-    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-        .then(() => isApp('fping').then(x => doFping = x))
-        .then(() => isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${x.trim()}` : false, () => A.W("Adapter nut running as root, cannot use arp-scan!")) : false).then(x => doMac = x))
+//    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
+    A.wait(200)
+        .then(() => isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+            .then(x => doArp = x))
         .then(() => isApp('hcitool').then(x => doHci = x))
         .then(() => {
-            return A.seriesOf(adapter.config.devices, item => {
+            return A.seriesOf(devices, item => {
                 //                A.I(`checking item ${A.O(item)}`);
                 if (item.name)
                     item.name = item.name.trim().replace(/[\s\.]/g, '_');
@@ -889,38 +558,61 @@ function main() {
                     return Promise.resolve(A.W(`Double item name '${item.name}', names cannot be used more than once!`));
                 item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
                 item.ip = item.ip ? item.ip.trim() : '';
-                item.macs = item.macs ? item.macs.trim().toUpperCase() : '';
+                item.macs = item.macs ? item.macs.trim().toLowerCase() : '';
                 item.macs.split(',').forEach(val => {
-                    const mac = val && (typeof val === 'string') ? val.trim() : null;
+                    const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
                     if (mac) {
-                        if (isMacBt(mac))
+                        if (Network.isMac(mac)) {
                             item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
-                        else
+                            if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
+                            else macList[mac] = item;
+                        } else
                             A.W(`invalid MAC address in ${item.name}: '${val}'`);
                     }
                 });
-                if (item.hasMAC && !doMac)
-                    A.W(`MAC addresses '${item.macs}' will not be scanned because no arp-scan is available!`);
-                item.bluetooth = item.bluetooth ? item.bluetooth.trim().toUpperCase() : '';
-                item.hasBT = isMacBt(item.bluetooth);
-                if (item.bluetooth !== '' && !item.hasBT)
+                item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
+                if (Network.isMac(item.bluetooth)) {
+                    if (btList[item.bluetooth])
+                        A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
+                    else {
+                        btList[item.bluetooth] = item;
+                        item.hasBT = true;
+                        item.btVendor = Network.getMacVendor(item.bluetooth);
+                        numbt++;
+                    }
+                } else if (item.bluetooth !== '')
                     A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
-                item.printer = item.ip && item.name.startsWith('HP-');
-                item.hasECB = item.ip && item.name.startsWith('ECB-');
-                item.hasIP = item.ip && item.ip.length > 2;
-                if (item.hasIP && !item.hasECB && !item.ip.toUpperCase().startsWith('HTTP')) {
-                    if (!item.ip.match(/^(\d+\.){3}\d+/))
-                        network.dnsResolve(item.ip).then(x => x ? (item.rip = x) : null);
-                    else
-                        item.rip = item.ip;
-                }
-                if (!(item.hasIP || item.hasBT))
+                if (item.ip && item.name.startsWith('HP-'))
+                    item.type = 'printer';
+                else if (item.ip && item.name.startsWith('ECB-'))
+                    item.type = 'ECB';
+                else if (item.ip.startsWith('http'))
+                    item.type = 'URL';
+                else if (Network.isIP4(item.ip) || Network.isIP6(item.ip)) {
+                    item.rip = item.ip;
+                    if (ipList[item.ip])
+                        A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
+                    else(ipList[item.ip]) = item;
+                    numip++;
+                    item.type = 'IP';
+                } else if (item.ip.length > 1) {
+                    numip++;
+                    item.type = 'IP';
+                    network.dnsResolve(item.ip).then(x => {
+                        if (x && x.length > 0) {
+                            item.rip = x;
+                            x.forEach((ip) => ipList[ip] ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
+                        }
+                        return null;
+                    });
+                } else if (!item.hasBT)
                     return Promise.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                 scanList[item.name] = item;
                 A.I(`Init item ${item.name} with ${A.O(item)}`);
                 return Promise.resolve(item.id);
             }, 50);
         }).then(() => parseInt(adapter.config.external) > 0 ? scanExtIP() : Promise.resolve())
+        .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
         .then(() => A.getObjectList({
             include_docs: true
         }))
@@ -941,7 +633,7 @@ function main() {
                     .then(res => JSON.parse(res)[0], e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${adapter.config.longitude} Breite: ${adapter.config.latitude}`, null))
                     .then(res => {
                         doUwz = res && res.AREA_ID ? res.AREA_ID : null;
-                        if (doUwz) {
+                        if (doUwz && adapter.config.delayuwz) {
                             getUWZ();
                             setInterval(getUWZ, parseInt(adapter.config.delayuwz) * 1000);
                         }
@@ -950,33 +642,37 @@ function main() {
         }, () => doUwz = null)
         .then(() => {
             A.I(`radar adapter initialized ${Object.keys(scanList).length} devices, ExternalNetwork = ${adapter.config.external}.`);
-            A.I(`radar set use of noble(${!!noble}), fping(${doFping}), doMac(${doMac}), doHci(${doHci}), doBtv(${doBtv}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
-            scanTimer = setInterval(scanAll, scanDelay);
-            if (parseInt(adapter.config.external) > 0)
-                setInterval(scanExtIP, parseInt(adapter.config.external) * 1000);
-            return scanAll(); // scan first time and generate states if they do not exist yet
+            A.I(`radar set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), doHci(${doHci}), doBtv(${doBtv}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
+            return A.Ptime(scanAll()).then(ms => {
+                A.I(`first scan took ${ms/1000} seconds`);
+                if (scanDelay <= ms)
+                    scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds!`, ms + 2000);
+                scanTimer = setInterval(scanAll, scanDelay);
+                if (parseInt(adapter.config.external) > 0)
+                    setInterval(scanExtIP, parseInt(adapter.config.external) * 1000);
+            }); // scan first time and generate states if they do not exist yet
         })
-        /*
-                .then(() => A.getObjectList({
-                    startkey: ain,
-                    endkey: ain + '\u9999'
-                }))
-                .then(res => A.seriesOf(res.rows, item => { // clean all states which are not part of the list
-                    //            A.I(`Check ${A.O(item)}`);
-                    let id = item.id.slice(ain.length);
-                    if (objects[id])
-                        return Promise.resolve();
-                    //            A.I(`Delete ${A.O(item)}`);
-                    return A.deleteState(id)
-                        .then(() => A.D(`Del State: ${id}`), err => A.D(`Del State err: ${A.O(err)}`)) ///TC
-                        .then(() => A.delObject(id))
-                        .then(() => A.D(`Del Object: ${id}`), err => A.D(`Del Object err: ${A.O(err)}`)); ///TC
-                }, 10))
-        */
+        //        .then(() => A.I(A.F(A.sstate)))
+        //        .then(() => A.I(A.F(A.ownKeysSorted(A.states))))
+        .then(() => A.getObjectList({
+            startkey: A.ain,
+            endkey: A.ain + '\u9999'
+        }))
+        .then(res => A.seriesOf(res.rows, item => { // clean all states which are not part of the list
+            //            A.I(`Check ${A.O(item)}`);
+            let id = item.id.slice(A.ain.length);
+            //            A.I(`check state ${item.id} and ${id}: ${A.states[item.id]} , ${A.states[id]}`);
+            if (A.states[item.id] || A.states[id])
+                return Promise.resolve();
+            //            A.I(`Delete ${A.O(item)}`);
+            return A.deleteState(id)
+                .then(() => A.D(`Del State: ${id}`), err => A.D(`Del State err: ${A.O(err)}`)) ///TC
+                .then(() => A.delObject(id))
+                .then(() => A.D(`Del Object: ${id}`), err => A.D(`Del Object err: ${A.O(err)}`)); ///TC
+        }, 10))
         .catch(err => {
             A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
-            A.stop(true);
-            throw err;
+            A.stop(1);
         })
         .then(() => A.I('Adapter initialization finished!'));
 }

@@ -288,7 +288,7 @@ class MyAdapter {
             slog(adapter, 'debug', str), val !== undefined ? val : str);
     }
     static F() {
-        util.format.apply(null, arguments);
+        return util.format.apply(null, arguments);
     }
     static I(l, v) {
         return (slog(adapter, 'info', l), v === undefined ? l : v);
@@ -444,6 +444,13 @@ class MyAdapter {
         });
     }
 
+    static Ptime(promise) {
+        var start = Date.now();
+        return promise.then(() => {
+            var end = Date.now();
+            return end - start;
+        });
+    }
     static O(obj, level) {
         return util.inspect(obj, {
             depth: level || 2,
@@ -486,7 +493,8 @@ class MyAdapter {
     }
 
     static ownKeys(obj) {
-        return this.T(obj) === 'object' ? Object.keys(obj).filter(k => obj.hasOwnProperty(k)) : [];
+        return this.T(obj) === 'object' ? Object.getOwnPropertyNames(obj) : [];
+//        return this.T(obj) === 'object' ? Object.keys(obj).filter(k => obj.hasOwnProperty(k)) : [];
     }
 
     static ownKeysSorted(obj) {
@@ -499,7 +507,7 @@ class MyAdapter {
         });
     }
 
-    static stop(dostop, callback) {
+    static stop(dostop, callback) { // dostop 
         if (stopping) return;
         stopping = true;
         if (timer)
@@ -508,8 +516,8 @@ class MyAdapter {
         this.D(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
         Promise.resolve(unload ? unload(dostop) : null)
             .then(() => callback && callback())
-            .catch(this.W)
-            .then(() => dostop ? this.E("Adapter will exit in lates 2 sec!", setTimeout(process.exit, 2000, 55)) : null);
+            .catch(e => this.W(e))
+            .then(() => dostop ? this.E(`Adapter will exit in lates 1 sec with code ${dostop}!`, setTimeout(ret => adapter.terminate ? adapter.terminate(ret) : process.exit(ret), 1000, dostop < 0 ? 0 : dostop)) : null);
     }
 
     static seriesOf(obj, promfn, delay) { // fun gets(item) and returns a promise
@@ -763,7 +771,7 @@ class MyAdapter {
         } else return this.reject(this.W(`Invalid makeState id: ${this.O(id)}`));
         if ((!define || typeof ido !== 'object') && (states[id] || states[this.ain + id]))
             return this.changeState(id, value, ack, always);
-        //    this.D(`Make State ${id} and set value to:${this.O(value)} ack:${ack}`); ///TC
+//        this.D(`Make State ${id} and set value to:${this.O(value)} ack:${ack}`); ///TC
         const st = {
             common: {
                 name: id, // You can add here some description
@@ -787,6 +795,7 @@ class MyAdapter {
             st.common.role = st.common.role.replace(/^value/, 'level');
         //    this.I(`will create state:${id} with ${this.O(st)}`);
         addSState(id, this.ain + id);
+        states[this.ain + id] = st;
         return this.extendObject(id, st, null)
             //            .then(x => states[id] = x)
             .then(() => st.common.state === 'state' ? this.changeState(id, value, ack, always) : true)
