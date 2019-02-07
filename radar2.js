@@ -227,31 +227,33 @@ function foundIpMac(what) {
     let found = false;
     if (what.macAddress && Network.isMac(what.macAddress)) {
         let ip = what.macAddress.toLowerCase();
+        let item = macList[ip];
         what.getMacVendor = Network.getMacVendor(ip);
-        if (macList[ip]) {
-            macList[ip].ipHere = new Date();
+        if (item) {
+            item.ipHere = new Date();
             found = true;
-            setItem(macList[ip]);
+            setItem(item);
         } else
             ukIp[ip] = what;
     }
     if (what.ipAddress) {
         let ip = what.ipAddress.toLowerCase();
-        if (ipList[ip]) {
-            ipList[ip].ipHere = new Date();
-            setItem(ipList[ip]);
+        let item = ipList[ip];
+        if (item) {
+            item.ipHere = new Date();
+            setItem(item);
         } else if (!found)
             ukIp[ip] = what;
     }
     //    A.D(A.F('ip notf', what));
-
 }
 
 function foundBt(what) {
     const mac = what.address.toLowerCase();
-    if (btList[mac]) {
-        btList[mac].btHere = new Date();
-        setItem(btList[mac]);
+    let item = btList[mac];
+    if (item) {
+        item.btHere = new Date();
+        setItem(item);
     } else {
         what.btVendor = Network.getMacVendor(mac);
         ukBt[mac] = what;
@@ -261,12 +263,6 @@ function foundBt(what) {
 
 function scanAll() {
     A.D(`Would now start scan for devices! ${printerCount === 0 ? 'Would also scan for printer ink now!' : 'printerCount=' + printerCount}`);
-
-    for (let item in scanList)
-        scanList[item].ipHere = scanList[item].btHere = null;
-
-    arps = {};
-    unkn = {};
 
     return Promise.all(
             [
@@ -290,10 +286,10 @@ function scanAll() {
                 } else notHere.push(item.id);
             }
             let wh = whoHere.join(', ');
-//            if (oldWhoHere !== wh) {
-//                oldWhoHere = wh;
-//                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
-//            }
+            //            if (oldWhoHere !== wh) {
+            //                oldWhoHere = wh;
+            //                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
+            //            }
             allhere = allhere.join(', ');
             A.D(`radar found here (${allhere}), who here (${whoHere}) and not here (${notHere})`);
             return A.makeState('_countHere', countHere)
@@ -303,8 +299,14 @@ function scanAll() {
         }).then(() => A.D(`Noble found unknown BT's: ${A.ownKeysSorted(unkn)}, unknown IP's: ${A.ownKeysSorted(arps)}`), () => null)
         .then(() => A.seriesIn(unkn, (mac) => A.makeState('_UnknownBTs.' + mac, A.O(unkn[mac]))).then(() => A.makeState('_UnknownBTs', A.O(A.ownKeysSorted(unkn)))))
         .then(() => A.seriesIn(arps, (ip) => A.makeState('_UnknownIPs.' + ip.split('.').join('_'), A.O(arps[ip]))).then(() => A.makeState('_UnknownIPs', A.O(A.ownKeysSorted(arps)))))
-        .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`));
-    
+        .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
+        .then(() => {
+            for (let item in scanList)
+                scanList[item].ipHere = scanList[item].btHere = null;
+            ukBt = {};
+            ukIp = {};  
+        });
+
 }
 
 function getUWZ() {

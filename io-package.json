@@ -17,9 +17,9 @@
             "daemon"
         ],
         "materialize": true,
-        "readme": "https://github.com/frankjoke/ioBroker.radar/blob/master/README.md",
+        "readme": "https://github.com/frankjoke/ioBroker.radar2/blob/master/README.md",
         "loglevel": "info",
-        "icon": "radar.png",
+        "icon": "radar2.png",
         "keywords": [
             "ping",
             "ip",
@@ -27,7 +27,7 @@
             "bluetooth",
             "radar"
         ],
-        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar/master/admin/radar.png",
+        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
         "type": "network"
     },
     "native": {
