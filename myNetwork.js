@@ -39,6 +39,8 @@ class Bluetooth extends EventEmitter {
     }
 
     listPairedDevices() {
+        if (! this._device)
+            return Promise.resolve([]);
         return new Promise(res => this._device.listPairedDevices(ret => res(ret)));
     }
 
@@ -48,7 +50,7 @@ class Bluetooth extends EventEmitter {
             	return Promise.resolve([]);
         if (this._scan)
             return Promise.reject(A.W(`BT already scanning!`));
-        A.D(`start scanning!`);
+//        A.D(`start scanning!`);
         this._scan = true;
         return this._device.scan().then(res => ((self._scan = null),res));
     }
@@ -57,6 +59,9 @@ class Bluetooth extends EventEmitter {
         const self = this;
         const nid = 'NOBLE_HCI_DEVICE_ID';
         this._btid = Number(btid);
+        if (!nobleTime || nobleTime<0)
+            nobleTime = 10000;
+        this._len = parseInt(nobleTime);
 
         if (isNaN(this._btid)) {
             A.W(`BT interface number not defined in config, will use '0'`);
@@ -64,15 +69,6 @@ class Bluetooth extends EventEmitter {
         }
         this._hcicmd = `hcitool -i hci${btid} name `;
         this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
-
-        try {
-            this._nbt = require('node-bluetooth');
-            A.I("found 'node-bluetooth'");
-            this._device = new this._nbt.DeviceINQ();
-            this._device.on('found', (address, name) => self.emit('scan-found', [address, name]));
-            } catch(e) {
-                A.W('node-bluetooth not found!');
-        }
 
         process.env[nid] = btid;
 
@@ -86,52 +82,59 @@ class Bluetooth extends EventEmitter {
             } catch (e) {
                 A.W(`Noble not available, Error: ${A.O(e)}`);
                 this._noble = null;
-                return false;
             }
         }
-        this._len = parseInt(nobleTime);
-        if (!nobleTime || !this._len)
-            return false;
-        this._noble.on('stateChange', (state) => self.emit('stateChange', A.I(A.F('Noble State Change:',state),state)));
-        self._noble.on('discover', function (per) {
+        if (this._noble)  
+            this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:',state),state)));
+
+        try {
+            this._nbt = require('node-bluetooth');
+            A.I("found 'node-bluetooth'");
+            this._device = new this._nbt.DeviceINQ();
+            this._device.on('found', (address, name) => self.emit('found', {address: address, btName: name, by:'scan'}));
+            } catch(e) {
+                A.W('node-bluetooth not found!');
+        }
+//        this._noble.on('scanStart', () => A.D('Noble scan started'));
+//        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
+        this._noble.on('discover', function (per) {
             //                if (isStopping)
             //                    return res(stopNoble(idf));
-            //            A.D(`-myNoble discovers: ${A.O(per)}`);
+//                        A.D(`-myNoble discovers: ${A.O(per)}`);
             if (per && per.address)
-                self.emit('noble-found', {
+                self.emit('found', {
                     address: per.address.toLowerCase(),
-                    name: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
+                    btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
                     rssi: per.rssi,
+                    by: 'noble'
                     //                        vendor: Network.getMacVendor(per.address)
                 });
         });
+//        this._noble.stopScanning();
         return true;
     }
 
     stopNoble() {
-        if (this._nobleRunning)
-            clearTimeout(this._nobleRunning);
         this._nobleRunning = null;
-        if (!this._noble)
-            return;
-        this._noble.stopScanning();
-        A.D('Noble stopped scanning now.');
+        if (this._noble)
+            this._noble.stopScanning();
+//        A.D('Noble stopped scanning now.');
     }
 
     startNoble(len) {
         var self = this;
         if (this._nobleRunning)
             this.stopNoble();
-        if (len)
-            this._len = parseInt(len);
+//        this._noble
+        len = len || self._len;
         if (!this._noble) return Promise.resolve({});
-        //        if (isStopping) return Promise.reject('Stopping.');
-        if (this._noble.state !== 'poweredOn') return Promise.reject('Noble not powered ON!');
-        A.D(`starting noble for ${self._len/1000} seconds`);
-        return new Promise((res) => {
-
-            self._noble.startScanning([], true);
-            self._nobleRunning = setTimeout(() => res((self.stopNoble(), {})), self._len);
+//        if (this._noble.state !== 'poweredOn') return Promise.reject('Noble not powered ON!');
+        return A.retry(20,() => self._noble.state === 'poweredOn' ? Promise.resolve() : A.wait(100).then(() => Promise.reject('not powered on')))
+        .then(() => {
+//            A.D(`starting noble for ${len/1000} seconds`);
+            self._nobleRunning = true;
+            self._noble.startScanning();
+            return A.wait(len).then(() => self.stopNoble());
         }).catch(err => A.I(`Noble scan Err ${A.O(err)}`, err));
     }
 
@@ -400,7 +403,7 @@ class Network extends EventEmitter {
                 A.D(A.F(e));
             }
         });
-        this._listener.bind(67, () => A.I(`Connected for DHCP Scan!`));
+        this._listener.bind(67, () => A.D(`Connected for DHCP Scan!`));
 
     }
 
@@ -507,7 +510,7 @@ class Network extends EventEmitter {
     static getMacVendor(mac) {
         let v = oui(mac),
             vl = v && v.split('\n');
-        return v && vl && vl.length > 2 ? vl[0] + '/' + vl[2] : 'Vendor N/A';
+        return v && vl && vl.length > 2 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
     }
 
     ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 

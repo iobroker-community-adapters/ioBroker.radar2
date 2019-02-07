@@ -11,6 +11,7 @@
 
 // you have to require the utils module and call adapter function
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
+//const timeago = require('time-ago');
 
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
@@ -28,7 +29,8 @@ function startAdapter(options) {
 
 const MA = require('./myAdapter'),
     A = MA.MyAdapter,
-    Network = require('./myNetwork').Network;
+    Network = require('./myNetwork').Network,
+    Bluetooth = require('./myNetwork').Bluetooth;
 
 const btbindir = __dirname + '\\bin\\bluetoothview\\';
 
@@ -44,13 +46,27 @@ var printerDelay = 100;
 var printerCount = 0;
 var delayAway = 10;
 var countHere = 0;
-var whoHere = [];
 var host = null;
 var arpcmd = 'arp-scan -lgq';
 var doHci = true;
 var doBtv = true;
 var doArp = true;
 var doUwz = null;
+var ukBt = {};
+var ukIp = {};
+
+var oldWhoHere = null,
+    arps = {},
+    unkn = {};
+
+var wlast = null,
+    lang = '',
+    numuwz = 0,
+    delayuwz = 0,
+    longuwz = false,
+    btid = 0,
+    devices = null;
+
 
 // If started as allInOne/compact mode => return function to create instance
 if (module && module.parent) {
@@ -176,56 +192,70 @@ function scanHPs() {
     return A.seriesOf(devices, (item) => scanHP(item), 1);
 
 }
-const btn = {},
-    ips = {};
 
-var oldWhoHere = null,
-    arps = {},
-    unkn = {},
-    hcicmd, l2cmd;
+function setItem(item) {
+    let wasanw = item.anwesend;
+    let lasthere = item.lasthere;
+    let anw = true;
+    let idn = item.id;
+    const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.btHere) : item.ipHere || item.btHere;
+    if (here) {
+        item.lasthere = here;
+    } else {
+        let n = Date.now();
+        if (!lasthere)
+            lasthere = item.lasthere = new Date(n - (delayAway * 1000 * 59));
 
-function checkArps(ip) {
-    ip = ip.trim();
-    if (arps[ip]) {
-        delete arps[ip];
-        return true;
+        let d = n - lasthere.getTime();
+        //                    A.I(A.F('item ',item.name, item.lasthere, d));
+        if (d > (delayAway * 1000 * 60))
+            anw = false;
     }
-    return false;
-}
-
-function checkUnkn(ip) {
-    ip = ip.trim().toUpperCase();
-    if (arps[ip]) {
-        delete arps[ip];
-        return true;
+    if (item.lasthere === undefined)
+        item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
+    if (anw !== wasanw || lasthere !== item.lasthere) {
+        //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
+        A.makeState(idn + '.lasthere', A.dateTime(item.lasthere))
+            .then(() => A.makeState(item.id, anw))
+            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP' : '') + (item.btHere ? (item.ipHere ? ', ' : '') + 'BT' : '')));
+        //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
+        //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
     }
-    return false;
 }
 
-function checkCache(item, cache, funP) {
-    //    A.D(`CC: ${item} in ${cache[item]}`);
-    return new Promise((_res) => {
-        if (cache[item])
-            return A.N(_res, cache[item]);
-        funP(item).then(res =>
-            _res(cache[item] = res));
-    });
-}
-
-
-function foundIpMac(ip) {
-    if (Network.matchMac.test(ip)) {
+function foundIpMac(what) {
+    let found = false;
+    if (what.macAddress && Network.isMac(what.macAddress)) {
+        let ip = what.macAddress.toLowerCase();
+        what.getMacVendor = Network.getMacVendor(ip);
         if (macList[ip]) {
             macList[ip].ipHere = new Date();
-        }
-    } else if (ipList[ip]) {
-        ipList[ip].ipHere = new Date();
+            found = true;
+            setItem(macList[ip]);
+        } else
+            ukIp[ip] = what;
     }
+    if (what.ipAddress) {
+        let ip = what.ipAddress.toLowerCase();
+        if (ipList[ip]) {
+            ipList[ip].ipHere = new Date();
+            setItem(ipList[ip]);
+        } else if (!found)
+            ukIp[ip] = what;
+    }
+    //    A.D(A.F('ip notf', what));
+
 }
 
-function foundBt(mac) {
+function foundBt(what) {
+    const mac = what.address.toLowerCase();
     if (btList[mac]) {
         btList[mac].btHere = new Date();
+        setItem(btList[mac]);
+    } else {
+        what.btVendor = Network.getMacVendor(mac);
+        ukBt[mac] = what;
+        //        A.D(A.F('bt notf', what));
     }
 }
 
@@ -233,214 +263,49 @@ function scanAll() {
     A.D(`Would now start scan for devices! ${printerCount === 0 ? 'Would also scan for printer ink now!' : 'printerCount=' + printerCount}`);
 
     for (let item in scanList)
-        scanList[item].ipHere = scanList[item].btHere = false;
+        scanList[item].ipHere = scanList[item].btHere = null;
 
     arps = {};
     unkn = {};
 
     return Promise.all(
-        [
-            /* (doBtv ?
-                           A.exec(`${btbindir}bluetoothview /scomma ${btbindir}btf.txt`)
-                           .then(() => A.wait(10))
-                           .then(() => A.c2p(fs.readFile)(`${btbindir}btf.txt`, 'utf8'))
-                           .then(data => A.wait(10, data))
-                           .then(data => {
-                               try {
-                                   fs.unlinkSync(`${btbindir}btf.txt`);
-                               } catch (e) {
-                                   return '';
-                               }
-                               return data;
-                           })
-                           .then(data => {
-                               for (let item in scanList)
-                                   if (data.toUpperCase().indexOf(scanList[item].bluetooth) > 0) {
-                                       A.D(`doBtv found  ${scanList[item].name}`);
-                                       scanList[item].btHere = true;
-                                   }
-                           }) : A.wait(3)), */
-            (A.ownKeys(btList).length ? bluetooth.startNoble(scanDelay * 0.7) : A.wait(4)),
-            /*
-                        .then(data => A.seriesIn(data, x => data[x].name === 'NaN' ? (data[x].name = Network.getMacVendor(x)) : Promise.resolve(data[x].name)).then(() => data))
-                        .then(data => {
-                            let found = 0;
-                            for (let key in scanList) {
-                                if (data[scanList[key].bluetooth]) {
-                                    delete data[scanList[key].bluetooth];
-                                    A.D(`Noble found  ${scanList[key].name}`);
-                                    scanList[key].btHere = true;
-                                    ++found;
-                                }
-                            }
-                            return A.seriesOf(Object.keys(data), (d) => {
-                                var e = data[d];
-                                e.vendor = Network.getMacVendor(d);
-                                unkn[d] = e;
-                                delete e.address;
-                                return Promise.resolve(0);
-                            });
-                        }, () => false),
-                        */
-            (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ? network.arpScan(arpcmd)
-                /*
-                               .then(res => res && res.match(/(\d*\.){3}\d*\s*([\dA-F]{2}\:){5}[\dA-F]{2}/gi))
-                               .then(res => A.seriesOf(res, item => {
-                                   const s = item.split('\t');
-                                   s[1] = s[1].toUpperCase();
-                                   s.push(Network.getMacVendor(s[1]));
-                                   return checkCache(s[0], ips, ip => network.dnsReverse(ip).then(nam => Array.isArray(nam) ? nam.join('; ') : nam, () => '; DNS N/A').then(x => s.push(x)), () => false)
-                                       .then(() => {
-                                           //                            A.D(`${s}`);
-                                           for (let sli in scanList) {
-                                               let sl = scanList[sli];
-                                               let here = false;
-                                               if (s[0] === sl.ip)
-                                                   sl.ipHere = here = true;
-                                               if (sl.hasMAC)
-                                                   for (let m of sl.hasMAC)
-                                                       if (s[1] === m)
-                                                           sl.ipHere = here = true;
-                                               if (!here)
-                                                   arps[s[0]] = s.slice(1).join('; ');
-                                           }
-                                           return s;
-                                       })
-                                       .catch(err => A.D(`arpcmd err: ${A.O(err)}`));
-
-                               }, 5))  */
-                :
-                A.wait(5))
-            /*
-                       A.seriesInOI(scanList, item => {
-                           //              A.D(`key ${item} obj ${A.O(item)} = ${A.O(item)}`);
-                           let all = [];
-                           if (item.isECB) {
-                               //                    if (printerCount === 0)
-                               //                        all.push(scanECB(item));
-                           } else if (item.hasIP && !item.ipHere)
-                               if (item.ip.toUpperCase().startsWith('HTTP'))
-                                   all.push(A.get(item.ip, 2).then(() => true, () => false).then(x => item.ipHere = x || item.ipHere));
-                               else
-                                   all.push(network.ping(item.ip)
-                                       .then(iph => {
-                                           //                        A.I(`IP ${item.name}:${item.ip} = ${iph}`);
-                                           if (iph) {
-                                               item.ipHere = true;
-                                               //                                    if (item.isPrinter && printerCount === 0)
-                                               //                                        return scanHP(item);
-                                           }
-                                           return iph;
-                                       })
-                                   );
-
-                           
-                                       if (doArp && item.hasMAC)
-                                           all.push(A.seriesOf(item.hasMAC, mac => A.exec('arp-scan -lgq  --retry=5 --destaddr='+ mac)
-                                               .then(ret => {
-                                                   item.ipHere = item.ipHere || ret.toUpperCase().indexOf(mac)>0; 
-                           //                        A.I(`arp-scan for ${item.id}  ${item.ipHere} returned ${ret}`);
-                                                   return Promise.resolve();                        
-                                               })
-                                           ));
-                           
-                           if (item.hasBT)
-                               checkUnkn(item.bluetooth);
-                           if (doHci && item.hasBT && !item.bluetooth.startsWith('7C:2F:80') && !item.btHere) {
-                               all.push(A.exec(hcicmd + item.bluetooth)
-                                   .then(stdout => {
-                                       let bth = stdout > "";
-                                       if (bth) {
-                                           btn[item.bluetooth] = item.btname = stdout.trim();
-                                           item.btHere = true;
-                                           A.D(`hcitool found ${item.name} as ${item.btname}`);
-                                       }
-                                       return bth;
-                                   }, () => false)
-                                   .then(bt => item.btHere = bt)
-                                   .then(bt => !bt ? A.wait(50).then(() => A.exec(l2cmd + item.bluetooth)) : "")
-                                   .then(op => op.length > 0 ? A.D(`l2ping found ${item.name} with "${op}"`, (item.btHere = true)) : false, () => false)
-                                   .then(() => A.wait(10))
-                               );
-                           }
-                           return Promise.all(all).then(() => item.name, err => A.D(`err in ${item.name}: ${A.O(err)}`));
-                       }, 50).then(res => res, err => A.D(`err ${A.O(err)}`, err))
-                       */
-        ]).then(() => {
-        //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
-        if (++printerCount >= printerDelay) ///TBC
-            printerCount = 0;
-        whoHere = [];
-        let allhere = [];
-        let notHere = [];
-        return A.seriesInOI(scanList, (item) => {
-                //            for(let item of scanList.values()) {
-                //                A.I(`item=${A.O(item)}:`);
-                const here = item.ipHere || item.btHere;
-                let cnt = item.cnt === undefined ? -delayAway : parseInt(item.cnt);
-                let anw = false;
-                //                A.I(`${item.name}:cnt=${cnt}, here=${here}`);
-                if (item.isECB)
+            [
+                (A.ownKeys(btList).length ? Promise.all([bluetooth.startNoble(scanDelay * 0.7), bluetooth.startScan()]) : A.wait(4)),
+                (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ?
+                    network.arpScan(arpcmd).then(() => A.seriesInOI(scanList, item => item.btHere || item.ipHere ? Promise.resolve() : network.ping(item.rip).then(x => x ? (item.ipHere = new Date()) : null, () => null), 1)) :
+                    A.wait(5))
+            ]).then(() => {
+            //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
+            let whoHere = [];
+            let allhere = [];
+            let notHere = [];
+            for (let x in scanList) {
+                let item = scanList[x];
+                if (item.type !== 'IP' && item.type !== 'BT')
                     return Promise.resolve();
-                if (here) {
-                    cnt = cnt < 0 ? 0 : cnt + 1;
-                    anw = true;
-                } else {
-                    cnt = cnt > 0 ? -1 : cnt - 1;
-                    anw = cnt >= -delayAway;
-                }
-                if (item.rip) {
-                    if (Array.isArray(item.rip))
-                        for (let ip of item.rip)
-                            checkArps(ip);
-                    else
-                        checkArps(item.rip);
-                }
-                item.anwesend = anw;
-                item.cnt = cnt;
-                if (anw) {
+                if (item.anwesend) {
                     allhere.push(item.id);
                     if (item.name === item.id)
                         whoHere.push(item.id);
-                } else if (item.hasBT || item.hasIP) notHere.push(item.id);
-                //                A.D(`${item.id}=${A.O(item)}`);
-                const idn = item.id;
-                return A.makeState(idn + '.count', cnt)
-                    .then(() => A.makeState(item.id, anw))
-                    .then(() => item.hasIP ? A.makeState(idn + '.ipHere', item.ipHere) : false)
-                    .then(() => item.hasBT ? A.makeState(idn + '.btHere', item.btHere) : false);
-            }).then(() => {
-                if (Array.isArray(whoHere)) {
-                    countHere = whoHere.length;
-                    whoHere = whoHere.join(', ');
-                    if (oldWhoHere !== whoHere) {
-                        oldWhoHere = whoHere;
-                        A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${whoHere}`);
-                    }
-                }
-                allhere = allhere.join(', ');
-                A.D(`radar found here (${allhere}) and not here (${notHere})`);
-                return A.makeState('_countHere', countHere)
-                    .then(() => A.makeState('_allHere', allhere))
-                    .then(() => A.makeState('_notHere', notHere))
-                    .then(() => A.makeState('_whoHere', whoHere));
-            }).then(() => A.D(`Noble found unknown BT's: ${A.ownKeysSorted(unkn)}, unknown IP's: ${A.ownKeysSorted(arps)}`), () => null)
-            .then(() => A.seriesIn(unkn, (mac) => A.makeState('_UnknownBTs.' + mac, A.O(unkn[mac]))).then(() => A.makeState('_UnknownBTs', A.O(A.ownKeysSorted(unkn)))))
-            .then(() => A.seriesIn(arps, (ip) => A.makeState('_UnknownIPs.' + ip.split('.').join('_'), A.O(arps[ip]))).then(() => A.makeState('_UnknownIPs', A.O(A.ownKeysSorted(arps)))));
-    }, err => A.W(`Scan devices returned error: ${A.O(err)}`));
+                } else notHere.push(item.id);
+            }
+            let wh = whoHere.join(', ');
+//            if (oldWhoHere !== wh) {
+//                oldWhoHere = wh;
+//                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
+//            }
+            allhere = allhere.join(', ');
+            A.D(`radar found here (${allhere}), who here (${whoHere}) and not here (${notHere})`);
+            return A.makeState('_countHere', countHere)
+                .then(() => A.makeState('_allHere', allhere))
+                .then(() => A.makeState('_notHere', notHere))
+                .then(() => A.makeState('_whoHere', whoHere));
+        }).then(() => A.D(`Noble found unknown BT's: ${A.ownKeysSorted(unkn)}, unknown IP's: ${A.ownKeysSorted(arps)}`), () => null)
+        .then(() => A.seriesIn(unkn, (mac) => A.makeState('_UnknownBTs.' + mac, A.O(unkn[mac]))).then(() => A.makeState('_UnknownBTs', A.O(A.ownKeysSorted(unkn)))))
+        .then(() => A.seriesIn(arps, (ip) => A.makeState('_UnknownIPs.' + ip.split('.').join('_'), A.O(arps[ip]))).then(() => A.makeState('_UnknownIPs', A.O(A.ownKeysSorted(arps)))))
+        .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`));
+    
 }
-
-const network = new Network();
-const bluetooth = new Bluetooth();
-network.init(false);
-
-var wlast = null,
-    lang = '',
-    numuwz = 0,
-    delayuwz = 0,
-    longuwz = false,
-    btid = 0,
-    devices = null;
 
 function getUWZ() {
     if (!doUwz)
@@ -480,6 +345,15 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
+const network = new Network();
+const bluetooth = new Bluetooth();
+network.on('request', items => foundIpMac({
+    ipAddress: items[3],
+    macAddress: items[2],
+    hostname: items[0]
+}));
+network.init(true);
+
 function main() {
     function isApp(name) {
         return A.exec('!which ' + name).then(x => x.length >= name.length, () => false);
@@ -497,8 +371,8 @@ function main() {
         A.W(`BT interface number not defined in config, will use '0'`);
         btid = 0;
     }
-    hcicmd = `hcitool -i hci${btid} name `;
-    l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+    //    hcicmd = `hcitool -i hci${btid} name `;
+    //    l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
     for (let st of A.ownKeys(A.states))
         delete A.states[st];
@@ -506,16 +380,15 @@ function main() {
         adapter.config.scandelay = 15;
     scanDelay = adapter.config.scandelay * 1000;
 
-    network.on('arp-scan', (found) => (foundIpMac(found[0]), foundIpMac(found[1])));
+    network.on('arp-scan', found => foundIpMac({
+        ipAddress: found[0],
+        macAddress: found[1]
+    }));
 
     bluetooth.init(btid, scanDelay * 0.7);
-    bluetooth.on('noble-found', (what) => {
-        what.vendor = Network.getMacVendor(what.address);
-        //        A.D(`Noble found: ${A.O(what)}`);
-        foundBt(what.address);
-    });
+    bluetooth.on('found', what => foundBt(what));
 
-    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
+    //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
 
     if (!adapter.config.delayaway || parseInt(adapter.config.delayaway) < 2)
         adapter.config.delayaway = 2;
@@ -542,7 +415,7 @@ function main() {
     A.I(`BT Bin Dir = '${btbindir}'`);
     devices = adapter.config.devices;
 
-//    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
+    //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
     A.wait(200)
         .then(() => isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
             .then(x => doArp = x))
@@ -577,6 +450,7 @@ function main() {
                     else {
                         btList[item.bluetooth] = item;
                         item.hasBT = true;
+                        item.type = 'BT';
                         item.btVendor = Network.getMacVendor(item.bluetooth);
                         numbt++;
                     }

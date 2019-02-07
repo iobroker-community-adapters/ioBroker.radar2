@@ -494,7 +494,7 @@ class MyAdapter {
 
     static ownKeys(obj) {
         return this.T(obj) === 'object' ? Object.getOwnPropertyNames(obj) : [];
-//        return this.T(obj) === 'object' ? Object.keys(obj).filter(k => obj.hasOwnProperty(k)) : [];
+        //        return this.T(obj) === 'object' ? Object.keys(obj).filter(k => obj.hasOwnProperty(k)) : [];
     }
 
     static ownKeysSorted(obj) {
@@ -745,6 +745,17 @@ class MyAdapter {
             .catch(err => this.W(`Error in MyAdapter.setState(${id},${value},${ack}): ${err}`, this.setState(id, value, ack)));
     }
 
+    static getClass(obj) {
+        if (typeof obj === "undefined")
+            return "undefined";
+        if (obj === null)
+            return "null";
+        let ret = Object.prototype.toString.call(obj)
+            .match(/^\[object\s(.*)\]$/)[1];
+        //            this.I(this.F('get class of ',obj, ' = ', ret));
+        return ret;
+    }
+
     static myGetState(id) {
         if (states[id])
             return Promise.resolve(states[id]);
@@ -771,7 +782,7 @@ class MyAdapter {
         } else return this.reject(this.W(`Invalid makeState id: ${this.O(id)}`));
         if ((!define || typeof ido !== 'object') && (states[id] || states[this.ain + id]))
             return this.changeState(id, value, ack, always);
-//        this.D(`Make State ${id} and set value to:${this.O(value)} ack:${ack}`); ///TC
+        //        this.D(`Make State ${id} and set value to:${this.O(value)} ack:${ack}`); ///TC
         const st = {
             common: {
                 name: id, // You can add here some description
@@ -779,11 +790,12 @@ class MyAdapter {
                 write: false,
                 state: 'state',
                 role: 'value',
-                type: typeof value
+                type: this.T(value)
             },
             type: 'state',
             _id: id
         };
+        if (st.common.type==='object') st.common.type = 'mixed'; 
         for (let i in ido) {
             if (i === 'native') {
                 st.native = st.native || {};
