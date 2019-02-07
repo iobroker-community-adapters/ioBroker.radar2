@@ -1,12 +1,12 @@
 ![Logo](admin/radar.png)
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.radar.svg)](https://www.npmjs.com/package/iobroker.radar)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.radar.svg)](https://www.npmjs.com/package/iobroker.radar)
-**Tests:** Linux/Mac: [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.radar/master.svg)](https://travis-ci.org/frankjoke/ioBroker.radar)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/frankjoke/ioBroker.radar?branch=master&svg=true)](https://ci.appveyor.com/project/frankjoke/ioBroker-radar/)
+[![NPM version](http://img.shields.io/npm/v/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
+**Tests:** Linux/Mac: [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.radar2/master.svg)](https://travis-ci.org/frankjoke/ioBroker.radar2)
+Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/frankjoke/ioBroker.radar2?branch=master&svg=true)](https://ci.appveyor.com/project/frankjoke/ioBroker-radar/)
 
 
-[![NPM](https://nodei.co/npm/iobroker.radar.png?downloads=true)](https://nodei.co/npm/iobroker.radar/)
+[![NPM](https://nodei.co/npm/iobroker.radar2.png?downloads=true)](https://nodei.co/npm/iobroker.radar2/)
 
 ==============
 
@@ -78,104 +78,12 @@ Jede Meldung besteht aus dem Meldungs-Text und am Ende eine severity-einstufung.
 Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte mit Gewitter) oder kurze Warnungstext angezeigt wird.
 
 ## Important/Wichtig
-* Adapter requires node >= v4.3.*!
+* Adapter requires node > v7.1.*!
 
 ## Changelog
-### 1.2.1 
-* Added code to use defaults for missing adapter config for those who upgrade from 1.1.x
+### 0.1.0 
+* Repository rename to ioBroker.radar2 to fulfill ioBroker requirements! 
 
-## Changelog
-### 1.2  - Jan 2019
-* Added possibility to select the BT-module number the adapter will use. Thius is important if you have multiple adapters running on different BT-modules!
-* If you update from older version please add `--retry=4` to the arp-scan command line and set the bluetooth hci to `0`! 
-* Added arp-scan command line into configuration and added Admin v3.x style
-* Allowed radar to be run as other user than root, see above what is necessary to do before installation!
-* changed noble to '@abandonware/noble' as default to try to get V10 compatibility
-* Removed ECB-Funtion because ECB moved to variable https site and the simple tools cannot resolve the data anymore. Hope that systemstatus adapter will be able to do so. 
-* arp-scan --retry was set to 4 to reduce traffic, it can be changed lower or higher with arp-scan command line
-* if you upgrade your radar and nothing appears in the arp-scan command line please enter `--retry=3` (or 4).
-* HTTP checks can also use HTTPS now
-* Vendor name is grabbed but maybe later than on first scan because free API allows only one vendor check/second and 1000/day. If you have 30 devices on IP or BT this means it will take about 40 seconds to grab vendors and they should be visible in 2nd or 3rd scan. The adapter caches the vendor information so no further requests happen until adapter restart or new device on BT or network.
-* For HP printers the adapter collects now all individual inks in an '.ink' subfolder to reduce the number of items/printer.
-* Please run ioBroker as root! Some functions like l2ping or arp-scan and noble may not function!
-* Reduced the minimum scan interval to 15 seconds, if not all IP's or BT's are found please increase!
-* Removed problem when no location is specified in iobroker-admin and UWZ-code cannot be found
-
-## Changelog
-### 1.1.3 
-* Repository rename to ioBroker.radar to fulfill ioBroker requirements! 
-
-### 1.1.2 
-* when number of UWS messages is <0 then do not use a \\n but \<br\> as line separator for easy web display
-* Added new long or short text selector in adapter config
-* Changed AllUnknownIP/BTs behaviour to exclude if possible known or double values
-
-### 1.1.1
-* Added UWZ Weather warning
-* Changed listing of unkown IP's and BT's to remove double entries
-
-## Changelog
-### 1.0.2
-* Made it first official version
-
-## Changelog
-### 0.7.4 
-* More Bluetoot debug messages if debug enabled
-* l2ping problem resolved 
-
-## Changelog
-### 0.7.3 
-* Officejext 6?00 Series support für Tintenfüllstände hinzugefügt 
-* Testing enabled
-
-### 0.7.2 
-* Wenn die ip-adresse mit 'http' beginnt interpretiert radar sie als web-adresse und fragt die Adresse ab anstatt ping zu verwenden. Damit kann der Status eines Webservers (wie z.B. http://iobroker.net) geprüft werden. 
-
-## Changelog
-### 0.7.1 
-* Wenn hcitool vorhanden ist wird auch mit l2ping nach Bluetooth-Adressen gesucht. Damit wird die Verfügbarkeit von Bluetooth auf Linux weiter verbessert.  
-
-### 0.7.0 
-* Arp-scan und Noble BT scan kreieren 'AllUnknown*' Variablen die die IP/Mac-Adressen und BT-Adressen listen welche gefunden werden aber nicht in der Device-Liste sind!  
-
-### 0.6.3
-* Scan External IP und External Network Status eingeführt. 
-
-### 0.6.1
-* Der Gerätename wird überprüft und ' ' oder '.' werden durch '_' ersetzt. Damit werden keine ungültigen Datenpunkte erzeugt.
-
-### 0.6.0
-* Loglevel info loggt nur wenn sich whoHere ändert
-* HP-Printer Tintenfüllstand sollte nun auch bei OfficeJet funktionieren  
-* ECB (European Central Bank) Wechselkurse können abgefragt werden
-
-### 0.5.0
-* Der Adapter nimmt jetzt auch Netzwerk-MAC-Adressen (auch mehrere pro Gerät) 
-
-### 0.4.3
-* Bug fixes to 0.4.1
-* Der Adapter löscht auch nicht verwendete States/Objekte die der Adapter (mit dieser Instanz) erzeugt hat und die aber nicht mehr gescannt werden.
-
-### 0.4.1 
-* Habe für Windows 'Bluetoothview' integriert. Damit ist es auch ohne Noble möglich BT-Devices zu scannen.
-* BT LE (wie G-Tags) funktionieren leider nicht damit. Unter Umständen muss das Gerät 'gekoppelt' werden.
-
-### 0.3.3
-* Es werden nur die Objekte erzeugt welche IP oder BT-Adressen haben.
-* Der code verwendet jetzt Promises woimmer möglich und die Verwendung/Abhängigkeit von den Modulen 'request' und 'async' wurde eliminiert. 
-* Der Adapter startet nun auch wenn Noble nicht voll installiert ist, die Noble-BT-LE Scans sind dann einfach nicht vorhanden. 
-
-### 0.2.1
-* Implementierung von anyBelow10 wo angezeigt wird ob im Drucker irgendeine Farbe auf/unter 10% Füllstand ist.
-* Implementierung von Ausschluß aus whoHere wenn Name mit `-` endet
-
-### 0.2.0
-* First public release, working fine on Raspberry
-
-### 0.1.0
-* Ok, my first working version on Raspberry!
-
-## Install
 
 Installieren über ioBroker.admin
 
@@ -197,13 +105,13 @@ Wenn ein Gerätename mit `-` endet (z.B. `Internet-`) dann wird er nicht in whoH
 
 ## Installation
 Auf Linux sollte das tool 'fping' und arp-scan (z.B. mit `sudo apt-get install fping arp-scan`) installiert werden welches zusätzlich zum normalen ping verwendet wird.
-Auf Windows sollte das bin.zip nach node_modules\iobroker.radar extrahiert werden da eventuell node_modules\iobroker.radar\bin\bluetoothview\BluetoothView.exe von npm nicht installiert wird.
+Auf Windows sollte das bin.zip nach node_modules\iobroker.radar2 extrahiert werden da eventuell node_modules\iobroker.radar2\bin\bluetoothview\BluetoothView.exe von npm nicht installiert wird.
 
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2016, bluefox <dogafox@gmail.com>
+Copyright (c) 2018-2019, frankjoke <frankjoke@hotmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

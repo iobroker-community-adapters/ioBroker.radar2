@@ -1,12 +1,12 @@
 {
   "name": "iobroker.radar",
-  "description": "Radar adapter for IP and Bluetooth, it also can scan HP printers ink and ECB currency to EUR",
-  "version": "1.2.1" ,
+  "description": "Radar2 for IP and Bluetooth device check, it also can scan HP printers ink and ECB currency to EUR as well as UWZ weather warnings",
+  "version": "0.1.0" ,
   "author": "frankjoke <frankjoke@hotmail.com>",
   "contributors": [
     "frankjoke <frankjoke@hotmail.com>"
   ],
-  "homepage": "https://github.com/frankjoke/ioBroker.radar",
+  "homepage": "https://github.com/frankjoke/ioBroker.radar2",
   "license": "MIT",
   "keywords": [
     "iobroker",
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/frankjoke/ioBroker.radar"
+    "url": "https://github.com/frankjoke/ioBroker.radar2"
   },
   "devDependencies": {
     "chai": "^4.1.2",
@@ -28,19 +28,21 @@
     "mocha": "^4.1.0"
   },
   "bugs": {
-    "url": "https://github.com/frankjoke/ioBroker.radar/issues"
+    "url": "https://github.com/frankjoke/ioBroker.radar2/issues"
   },
-  "main": "radar.js",
+  "main": "radar2.js",
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
-    "ping": "^0.2.0",
+    "multicast-dns": "^7.2.0",
+    "net-ping": "^1.2.3",
+    "node-bluetooth": "^1.2.5",
+    "oui": "^9.0.22",
     "xml2js": "^0.4.17"
   },
   "optionalDependencies": {
-    "@abandonware/noble": "^1.9.2-1",
-    "noble": "^1.8.0"
+    "@abandonware/noble": "^1.9.2-1"
   },
   "eslintConfig": {
     "env": {

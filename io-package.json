@@ -1,11 +1,11 @@
 {
     "common": {
-        "name": "radar",
-        "version": "1.2.1" ,
-        "title": "Radar adapter for IP and Bluetooth",
+        "name": "radar2",
+        "version": "0.1.0" ,
+        "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
-            "en": "This adapter can scan IP and bluetooth addresses foravailability and also get exchange rates from European Central Bank and get ing fill from HP printers",
-            "de": "Dieser Adapter überprüft IP-Adressen und Bluetooth-Adressen auf Verfügbarkeit. Er kann auch Wechselkurse der ECB und Tintenfüllstände für HP anzeigen"
+            "en": "This adapter can scan IP and bluetooth addresses for availability/in reach and also get exchange rates from European Central Bank, Weather warning from UWZ  and get ink fill from HP printers",
+            "de": "Dieser Adapter überprüft IP-Adressen und Bluetooth-Adressen auf Verfügbarkeit/Anwesenheit. Er kann auch Wechselkurse der ECB, Unwetterwarnungen der UWZ und Tintenfüllstände für HP anzeigen"
         },
         "authors": [
             "frankjoke <frankjoke@hotmail.com>"
@@ -41,17 +41,23 @@
             {
                 "name": "Fritzbox",
                 "ip": "fritz.box",
-                "macs": "",
+                "macs": "12:34:56:78:90:12",
                 "bluetooth": ""
+            },
+            {
+                "name": "G-Tag",
+                "ip": "",
+                "macs": "",
+                "bluetooth": "01:23:45:56:78:89:90"
             }
         ],
-        "scandelay": 60,
-        "arp_scan_cmd": "--retry=4",
+        "scandelay": 20,
+        "arp_scan_cmd": "-lgq --retry=4 --timeout=400",
         "btadapterid": 0,
-        "printerdelay": 500,
-        "external": 300,
-        "delayaway": 10,
-        "delayuwz": 1800,
+        "printerdelay": 720,
+        "external": 60,
+        "delayaway": 2,
+        "delayuwz": 120,
         "numuwz": 0,
         "longuwz": false
     },
