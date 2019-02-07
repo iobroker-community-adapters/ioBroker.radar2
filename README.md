@@ -22,7 +22,7 @@ Er kann folgendes aufspüren oder anzeigen:
 
 Er benutzt ping und weitere tools unter linux wie auch fping und arp-scan und diese müssen mit
 ```
-sudo apt-get install fping arp-scan
+sudo apt-get install fping arp-scan ....
 ```
 installiert werden.
 Für Bluetooth verwendet es neben Noble [http://www.nirsoft.net/utils/bluetooth_viewer.html] unter Windows und hcitool auf Linux.
