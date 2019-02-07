@@ -25,7 +25,12 @@
             "ip",
             "mac",
             "bluetooth",
-            "radar"
+            "radar",
+            "UWZ",
+            "ECB",
+            "printer",
+            "Drucker",
+            "HP"
         ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
         "type": "network"
