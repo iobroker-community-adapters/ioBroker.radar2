@@ -65,8 +65,8 @@
 			"de": "Individuelle Suchobjekt-Einstellungen"
 		},
 		"UWZ Delay:": {
-			"en": "Delay in seconds between UWZ scans 0=no UWZ scan: ",
-			"de": "Verzögerung in Sekunden zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "
+			"en": "Delay in minutes between UWZ scans 0=no UWZ scan: ",
+			"de": "Verzögerung in Minuten zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "
 		},
 		"Max UWZ vars:": {
 			"en": "How many seperate messages  0=all messages together: ",
@@ -81,16 +81,16 @@
 			"de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."
 		},
 		"Delay Away:": {
-			"en": "How often should be a device not detected before it's marked as away' (>=2): ",
-			"de": "Wie oft muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "
+			"en": "How long (in minutes) should be a device not detected before it's marked as away' (>=2): ",
+			"de": "Wieviele Minuten muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "
 		},
 		"Printer Delay:": {
-			"en": "Delay in scans between printer fill check (>=100): ",
-			"de": "Verzögerung in scans zwischen Druckerfüllstand-Abfrage (>=100): "
+			"en": "Delay in minutes between printer fill check (>=100): ",
+			"de": "Verzögerung in Minuten zwischen Druckerfüllstand-Abfrage (>=100): "
 		},
 		"External Network Scan Delay:": {
-			"en": "Delay in seconds between External Network IP scan (0 = no scan): ",
-			"de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "
+			"en": "Delay in minutes between External Network IP scan (0 = no scan): ",
+			"de": "Verzögerung in Minuten zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "
 		},
 		"description": {
 			"de": "IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
@@ -107,6 +107,14 @@
 		"known BT addresses:": {
 			"de": "BT-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
 			"en": "BT-addresses which are known and should not generate 'unknown' entries separated by ',':"
+		},
+		"dont forget to save config!": {
+			"de": "Bitte Konfiguration speichern!",
+			"en": "Don't forget to save the config before restart of adapter!"
+		},
+		"Object configutaion list below:": {
+			"de": "Liste der konfigurierten Objekte:",
+			"en": "Object configutaion list below:"
 		}
 
 	};
@@ -479,7 +487,7 @@
 				<input class="value" id="knownBTs" />
 		</div>
 	</div>
-	<div class="row" style="height: 10%">
+	<div class="row" style="height: 7%">
 		<div class="col s6">
 			<label class="translate">Max UWZ vars:</label>
 			<input class="value" id="numuwz" />
@@ -490,10 +498,10 @@
 		</div>
 		<div class="divider"></div>
 		<div class="col s6">
-			<span class="translate">SceneDescription</span>
+			<span class="translate">Object configutaion list below:</span>
 		</div>
 		<div class="col s6">
-			<span class="translate">On save adapter restarts with new config immediately</span>
+			<span class="translate">dont forget to save config!</span>
 		</div>
 	</div>
 	<div id="devices" class="row" style="width: 100%; height: 60%">

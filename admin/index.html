@@ -26,24 +26,55 @@
 <!-- you have to define 2 functions in the global scope: -->
 <script type="text/javascript">
     var devices = [];
-    systemDictionary = { 
-        "Long Warning Message:": {"en": "Use long message text with description for warnings: ", "de": "Benutze langen Warnungstext mit genauer Beschreibung: "},
-        "radar2 adapter settings": {"en": "radar2 adapter settings", "de": "radar2 Adapter-Einstellungen"},
-        "radar2 settings":         {"en": "radar2 settings",         "de": "radar2-Einstellungen"},
-        "Device setup":        {"en": "individual device setup",  "de": "Individuelle Suchobjekt-Einstellungen"},
-        "UWZ Delay:":   {"en": "Delay in seconds between UWZ scans 0=no UWZ scan: ", "de": "Verzögerung in Sekunden zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "},
-        "Max UWZ vars:":   {"en": "How many seperate messages  0=all messages together: ", "de": "Maximum Meldungen in UWZ 0=alle Meldungen zusammen: "},
-        "Scan Delay:":   {"en": "Delay in seconds between scans (>=30): ", "de": "Verzögerung in Sekunden zwischen Abfragen (>=15): "},
-        "arp-scan cmdline:":   {"en": "Arp-Scan command line, need to be changed if default interface is not first", "de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."},
-        "Delay Away:":   {"en": "How often should be a device not detected before it's marked as away' (>=2): ",     
-                "de": "Wie oft muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "},
-        "Printer Delay:":   {"en": "Delay in scans between printer fill check (>=100): ",     
-                "de": "Verzögerung in scans zwischen Druckerfüllstand-Abfrage (>=100): "},
-        "External Network Scan Delay:":   {"en": "Delay in seconds between External Network IP scan (0 = no scan): ",     
-                "de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "},
-        "description":  {"de":"IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
-            "en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."},
-        "BT adapter id:": {"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):", "en": "on Linux: number of Bluetooth adapter (0 = hci0):"		},
+	systemDictionary = {
+		"Long Warning Message:": {
+			"en": "Use long message text with description for warnings: ",
+			"de": "Benutze langen Warnungstext mit genauer Beschreibung: "
+		},
+		"radar2 settings": {
+			"en": "radar2 settings",
+			"de": "radar2-Einstellungen"
+		},
+		"Device setup": {
+			"en": "individual device setup",
+			"de": "Individuelle Suchobjekt-Einstellungen"
+		},
+		"UWZ Delay:": {
+			"en": "Delay in minutes between UWZ scans 0=no UWZ scan: ",
+			"de": "Verzögerung in Minuten zwischen UWZ-Abfragen 0=UWZ ausgeschaltet: "
+		},
+		"Max UWZ vars:": {
+			"en": "How many seperate messages  0=all messages together: ",
+			"de": "Maximum Meldungen in UWZ 0=alle Meldungen zusammen: "
+		},
+		"Scan Delay:": {
+			"en": "Delay in seconds between scans (>=15): ",
+			"de": "Verzögerung in Sekunden zwischen Abfragen (>=15): "
+		},
+		"arp-scan cmdline:": {
+			"en": "Arp-Scan command line, need to be changed if default interface is not first",
+			"de": "arp-scan Kommandozeile, muss aber geändert werden falls das 1. Netwerkinterface nicht default ist."
+		},
+		"Delay Away:": {
+			"en": "How long (in minutes) should be a device not detected before it's marked as away' (>=2): ",
+			"de": "Wieviele Minuten muss ein Device nicht verfügbar sein bevor es als 'nicht da' markiert wird (>=2): "
+		},
+		"Printer Delay:": {
+			"en": "Delay in minutes between printer fill check (>=100): ",
+			"de": "Verzögerung in Minuten zwischen Druckerfüllstand-Abfrage (>=100): "
+		},
+		"External Network Scan Delay:": {
+			"en": "Delay in minutes between External Network IP scan (0 = no scan): ",
+			"de": "Verzögerung in Minuten zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "
+		},
+		"description": {
+			"de": "IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
+			"en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."
+		},
+		"BT adapter id:": {
+			"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):",
+			"en": "on Linux: number of Bluetooth adapter (0 = hci0):"
+		},
 		"known IP addresses:": {
 			"de": "IP-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
 			"en": "IP-addresses which are known and should not generate 'unknown' entries separated by ',':"
@@ -51,9 +82,17 @@
 		"known BT addresses:": {
 			"de": "BT-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
 			"en": "BT-addresses which are known and should not generate 'unknown' entries separated by ',':"
-}
-    };
+		},
+		"dont forget to save config!": {
+			"de": "Bitte Konfiguration speichern!",
+			"en": "Don't forget to save the config before restart of adapter!"
+		},
+		"Object configutaion list below:": {
+			"de": "Liste der konfigurierten Objekte:",
+			"en": "Object configutaion list below:"
+		}
 
+	};
     function setValue(id, value, onChange) {
         // example: select elements with id=key and class=value and insert value
         if ($('#' + id + '.value').attr('type') == 'checkbox') {
@@ -124,7 +163,7 @@
 
     <table><tr>
         <td><img src="radar2.png" width="64" height="64"></td>
-        <td style="padding-top: 20px;padding-left: 10px"><h3 class="translate">radar2 adapter settings</h3></td>
+        <td style="padding-top: 20px;padding-left: 10px"><h3 class="translate">radar2 settings</h3></td>
     </tr></table>
 
     <h4 class="translate">radar2 settings</h4>
@@ -133,6 +172,8 @@
         <tr><td class="translate">Delay Away:</td><td><input class="value number" id="delayaway" type="input" size="5"/></td></tr>
         <tr><td class="translate">arp-scan cmdline:</td><td><input class="value" id="arp_scan_cmd" type="input" size="25"/></td></tr>
         <tr><td class="translate">BT adapter id:</td><td><input class="value number" id="btadapterid" type="input" size="5"/></td></tr>
+        <tr><td class="translate">known IP addresses:</td><td><input class="value" id="knownIPs" type="input" size="100"/></td></tr>
+        <tr><td class="translate">known BT addresses:</td><td><input class="value" id="knownBTs" type="input" size="100"/></td></tr>
         <tr><td class="translate">External Network Scan Delay:</td><td><input class="value number" id="external" type="input" size="5"/></td></tr>
         <tr><td class="translate">Printer Delay:</td><td><input class="value number" id="printerdelay" type="input" size="5"/></td></tr>
         <tr><td class="translate">UWZ Delay:</td><td><input class="value number" id="delayuwz" type="input" size="5"/></td></tr>
