@@ -54,8 +54,9 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20'], x => console.log(`Ping returned ${x}`))
-//    .then(() => network.arpScan('-qlg --retry=3 --timeout=400'))
+    .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
     .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
+    .then(() => network.dnsReverse(`192.168.178.1`).then(x => A.I(x)))
     .then(() => network.dnsResolve('fritz.box').then(x => A.I(x)))
 //    .then(() => network.dnsReverse('192.168.178.199').then(x => A.I(x)))
     .then(() => Promise.all([bluetooth.startScan(), bluetooth.startNoble(10000)]))
@@ -65,4 +66,4 @@ network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.
 //    .then(() => A.wait(10000))
     //    .then(() => A.I(A.F(network.ips, network.macs)))
     .catch(err => A.E(err))
-    .then(() => A.I('Will stop All now',stopAll()));
+    .then(() => A.I('Will stop All now',stopAll(),A.stop(true)));

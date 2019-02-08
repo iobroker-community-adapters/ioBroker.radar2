@@ -43,7 +43,15 @@
                 "de": "Verzögerung in Sekunden zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): "},
         "description":  {"de":"IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen sind in der gleichen Form wie Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
             "en": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there."},
-        "BT adapter id:": {"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):", "en": "on Linux: number of Bluetooth adapter (0 = hci0):"}
+        "BT adapter id:": {"de": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):", "en": "on Linux: number of Bluetooth adapter (0 = hci0):"		},
+		"known IP addresses:": {
+			"de": "IP-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
+			"en": "IP-addresses which are known and should not generate 'unknown' entries separated by ',':"
+		},
+		"known BT addresses:": {
+			"de": "BT-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
+			"en": "BT-addresses which are known and should not generate 'unknown' entries separated by ',':"
+}
     };
 
     function setValue(id, value, onChange) {

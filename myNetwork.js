@@ -64,13 +64,14 @@ class Bluetooth extends EventEmitter {
         this._len = parseInt(nobleTime);
 
         if (isNaN(this._btid)) {
-            A.W(`BT interface number not defined in config, will use '0'`);
-            this._btid = 0;
+            A.W(`BT interface number not defined in config, will use '-1' to deceide for noble`);
+            this._btid = -1;
         }
-        this._hcicmd = `hcitool -i hci${btid} name `;
-        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+        //        this._hcicmd = `hcitool -i hci${btid} name `;
+        //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
-        process.env[nid] = btid;
+        if (btid >= 0)
+            process.env[nid] = btid;
 
         try {
             this._noble = require('@abandonware/noble');
@@ -159,6 +160,7 @@ class Network extends EventEmitter {
         this._ips = null;
         this._remName = null;
         this._nif = os.networkInterfaces();
+        this._iprCache = this._dnsCache = null;
         Network.matchIP4 = /(((?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))/;
         Network.matchIP6 = /(([0-9A-F]{1,4}:){7,7}[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,7}:|([0-9A-F]{1,4}:){1,6}:[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,5}(:[0-9A-F]{1,4}){1,2}|([0-9A-F]{1,4}:){1,4}(:[0-9A-F]{1,4}){1,3}|([0-9A-F]{1,4}:){1,3}(:[0-9A-F]{1,4}){1,4}|([0-9A-F]{1,4}:){1,2}(:[0-9A-F]{1,4}){1,5}|[0-9A-F]{1,4}:((:[0-9A-F]{1,4}){1,6})|:((:[0-9A-F]{1,4}){1,7}|:)|fe80:(:[0-9A-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9A-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/i;
         Network.matchMac = /(([\dA-F]{2}\:){5}[\dA-F]{2})/i;
@@ -205,6 +207,16 @@ class Network extends EventEmitter {
             timeout: 1000,
             ttl: 10
         };
+
+        this._dnsCache = new MA.CacheP(((name) => {
+            let arr = [];
+            return Promise.all([
+                new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
+                new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
+            ]).then(() => arr.length > 0 ? arr : null);
+        }).bind(this));
+
+        this._iprCache = new MA.CacheP(((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? this.removeName(arr) : [], () => [])).bind(this));
 
         this.clearCache();
 
@@ -448,6 +460,8 @@ class Network extends EventEmitter {
     clearCache() {
         this._macs = new Map();
         this._ips = new Map();
+        this._iprCache.clearCache();
+        this._dnsCache.clearCache();
     }
 
     get macs() {
@@ -480,7 +494,7 @@ class Network extends EventEmitter {
             im[mac] = Network.getMacVendor(mac);
             im.names = names;
         }
-        if (names.length === 0) this.dnsReverse(ip).then(list => {
+        if (names.length === (name ? 1 : 0)) this.dnsReverse(ip).then(list => {
             for (let l of list)
                 if (!names.includes(l))
                     names.push(l);
@@ -495,21 +509,18 @@ class Network extends EventEmitter {
     }
 
     dnsReverse(ip) {
-        return new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? this.removeName(arr) : [], () => []);
+        const self = this;
+        return this._iprCache.cacheItem(ip).then(names => names && !names.length && self._ips.has(ip) ? self._ips.get(ip).names : names );
     }
 
     dnsResolve(name) {
-        let arr = [];
-        return Promise.all([
-            new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
-            new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
-        ]).then(() => arr.length > 0 ? arr : null);
+        return this._dnsCache.cacheItem(name);
     }
 
     static getMacVendor(mac) {
         let v = oui(mac),
             vl = v && v.split('\n');
-        return v && vl && vl.length > 2 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
+        return vl && vl.length > 1 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
     }
 
     ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 

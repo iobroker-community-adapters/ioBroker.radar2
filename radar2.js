@@ -47,7 +47,8 @@ var doArp = true;
 var doUwz = null;
 var ukBt = {};
 var ukIp = {};
-
+let knownIPs= [];
+let knownBTs= [];
 var wlast = null,
     lang = '',
     numuwz = 0,
@@ -209,26 +210,29 @@ function setItem(item) {
 function foundIpMac(what) {
     let found = false;
     if (what.ipAddress) {
-        let ip = what.ipAddress.toLowerCase();
+        let ip = what.ipAddress = what.ipAddress.toLowerCase();
         let item = ipList[ip];
         found = true;
         if (item) {
             item.ipHere = new Date();
             setItem(item);
         } else {
-            ukIp[ip] = what;
+            if (knownIPs.indexOf(ip)<0)
+                ukIp[ip] = what;
             network.dnsReverse(ip).then(names => what.hosts = names, () => null);
         }
     }
     if (what.macAddress && Network.isMac(what.macAddress)) {
-        let ip = what.macAddress.toLowerCase();
-        let item = macList[ip];
-        what.getMacVendor = Network.getMacVendor(ip);
+        let mac = what.macAddress = what.macAddress.toLowerCase();
+        let item = macList[mac];
+        if (found) 
+            network.combine(mac,what.ipAddress,what.hostName);
+        what.getMacVendor = Network.getMacVendor(mac);
         if (item) {
             item.ipHere = new Date();
             setItem(item);
-        } else if (!found)
-            ukIp[ip] = what;
+        } else if (!found && knownIPs.indexOf(mac)<0)
+            ukIp[mac] = what;
     }
     //    A.D(A.F('ip notf', what));
 }
@@ -241,7 +245,8 @@ function foundBt(what) {
         setItem(item);
     } else {
         what.btVendor = Network.getMacVendor(mac);
-        ukBt[mac] = what;
+        if (knownBTs.indexOf(mac)<0)
+            ukBt[mac] = what;
         //        A.D(A.F('bt notf', what));
     }
 }
@@ -342,7 +347,7 @@ const bluetooth = new Bluetooth();
 network.on('request', items => foundIpMac({
     ipAddress: items[3],
     macAddress: items[2],
-    hostname: items[0],
+    hostName: items[0],
     by: 'dhcp'
 }));
 network.init(true);
@@ -392,6 +397,14 @@ function main() {
         as = as.slice(1);
         A.debug = true;
     }
+
+    if (A.C.knownBTs)
+        knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
+    A.I(A.F('use known BT list: ',knownBTs));
+
+    if (A.C.knownIPs)
+        knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
+        A.I(A.F('use known IP list: ',knownIPs));
 
     var numecb = 0,
         numhp = 0,
