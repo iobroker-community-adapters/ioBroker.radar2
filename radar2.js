@@ -246,7 +246,6 @@ function foundBt(what) {
     }
 }
 
-
 A.unload = () => {
     network.stop();
     bluetooth.stop();
