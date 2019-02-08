@@ -517,7 +517,7 @@ class MyAdapter {
                 clearInterval(timer);
             timer = null;
         }
-        this.D(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
+        this.I(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
         Promise.resolve(unload ? unload(dostop) : null)
             .then(() => callback && callback())
             .catch(e => this.W(e))
@@ -787,7 +787,7 @@ class MyAdapter {
 
         if ((!define || typeof ido !== 'object') && (states[id] || states[this.ain + id]))
             return this.changeState(id, value, ack, always);
-            
+
         this.D(`Make State ack:${ack} ${id} = ${this.O(value)}`); ///TC
         const st = {
             common: {

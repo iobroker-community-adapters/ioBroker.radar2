@@ -246,6 +246,12 @@ function foundBt(what) {
     }
 }
 
+
+A.unload = () => {
+    network.stop();
+    bluetooth.stop();
+};
+
 function scanAll() {
 //    A.D(`New scan stated now.`);
 
