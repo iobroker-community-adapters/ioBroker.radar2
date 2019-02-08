@@ -510,9 +510,13 @@ class MyAdapter {
     static stop(dostop, callback) { // dostop 
         if (stopping) return;
         stopping = true;
-        if (timer)
-            clearInterval(timer);
-        timer = null;
+        if (timer) {
+            if (Array.isArray(timer))
+                timer.forEach(t => clearInterval(t));
+            else
+                clearInterval(timer);
+            timer = null;
+        }
         this.D(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
         Promise.resolve(unload ? unload(dostop) : null)
             .then(() => callback && callback())
@@ -770,8 +774,8 @@ class MyAdapter {
 
 
     static makeState(ido, value, ack, always, define) {
-        //        this.D(`Make State ${this.O(ido)} and set value to:${this.O(value)} ack:${ack}`); ///TC
         ack = ack === undefined || !!ack;
+        //        this.D(`Make State ${this.O(ido)} and set value to:${this.O(value)} ack:${ack}`); ///TC
         let id = ido;
         if (typeof id === 'string')
             ido = id.endsWith('Percent') ? {
@@ -780,9 +784,11 @@ class MyAdapter {
         else if (typeof id.id === 'string') {
             id = id.id;
         } else return this.reject(this.W(`Invalid makeState id: ${this.O(id)}`));
+
         if ((!define || typeof ido !== 'object') && (states[id] || states[this.ain + id]))
             return this.changeState(id, value, ack, always);
-        //        this.D(`Make State ${id} and set value to:${this.O(value)} ack:${ack}`); ///TC
+            
+        this.D(`Make State ack:${ack} ${id} = ${this.O(value)}`); ///TC
         const st = {
             common: {
                 name: id, // You can add here some description
@@ -795,7 +801,7 @@ class MyAdapter {
             type: 'state',
             _id: id
         };
-        if (st.common.type==='object') st.common.type = 'mixed'; 
+        if (st.common.type === 'object') st.common.type = 'mixed';
         for (let i in ido) {
             if (i === 'native') {
                 st.native = st.native || {};
@@ -812,6 +818,10 @@ class MyAdapter {
             //            .then(x => states[id] = x)
             .then(() => st.common.state === 'state' ? this.changeState(id, value, ack, always) : true)
             .catch(err => this.D(`MS ${this.O(err)}`, id));
+    }
+
+    static isApp(name) {
+        return this.exec('!which ' + name).then(x => x.length >= name.length, () => false);
     }
 }
 

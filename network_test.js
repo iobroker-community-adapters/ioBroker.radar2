@@ -53,7 +53,7 @@ process.on('SIGINT', () => {
     stopAll();
     process.exit(0);
 });
-network.ping(['::1', '::2', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20'], x => console.log(`Ping returned ${x}`))
+network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20'], x => console.log(`Ping returned ${x}`))
 //    .then(() => network.arpScan('-qlg --retry=3 --timeout=400'))
     .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
     .then(() => network.dnsResolve('fritz.box').then(x => A.I(x)))
