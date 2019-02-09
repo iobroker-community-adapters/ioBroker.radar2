@@ -53,9 +53,12 @@ process.on('SIGINT', () => {
     stopAll();
     process.exit(0);
 });
+
 network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20'], x => console.log(`Ping returned ${x}`))
     .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
     .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
+    .then(() => network.dnsReverse(`192.168.178.119`).then(x => A.I(x)))
+    .then(() => network.dnsReverse(`192.168.178.120`).then(x => A.I(x)))
     .then(() => network.dnsReverse(`192.168.178.1`).then(x => A.I(x)))
     .then(() => network.dnsResolve('fritz.box').then(x => A.I(x)))
 //    .then(() => network.dnsReverse('192.168.178.199').then(x => A.I(x)))

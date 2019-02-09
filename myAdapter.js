@@ -728,7 +728,7 @@ class MyAdapter {
             }).on('error', (e) => reject(e));
         })).catch(err => !retry ? this.reject(err) : this.wait(100, retry - 1).then(a => this.get(url, a)));
     }
-
+    
     static equal(a, b) {
         /*jshint -W116 */
         if (a == b)

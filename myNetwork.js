@@ -198,9 +198,12 @@ class Network extends EventEmitter {
 
     removeName(address) {
         var self = this;
+        var rn = this._remName.toLowerCase().trim();
+        if (!rn) 
+            return address;
         if (typeof address === 'string')
-            return address.toLowerCase().endsWith(this._remName) ? address.slice(0, -this._remName.length) : address;
-        if (Array.isArray(address) && this._remName && address[0] !== this._remName.slice(1))
+            return address.toLowerCase().endsWith(rn) ? address.slice(0, -rn.length) : address;
+        if (Array.isArray(address) && rn && address[0] !== rn.slice(1))
             return address.map((a) => self.removeName(a));
         return address;
     }
@@ -293,7 +296,6 @@ class Network extends EventEmitter {
                     address: a
                 });
             }
-
 
             var BOOTPMessageType = ['NA', 'BOOTPREQUEST', 'BOOTPREPLY'];
             var ARPHardwareType = ['NA', 'HW_ETHERNET', 'HW_EXPERIMENTAL_ETHERNET', 'HW_AMATEUR_RADIO_AX_25', 'HW_PROTEON_TOKEN_RING', 'HW_CHAOS', 'HW_IEEE_802_NETWORKS', 'HW_ARCNET', 'HW_HYPERCHANNEL', 'HW_LANSTAR'];
