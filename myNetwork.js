@@ -188,6 +188,14 @@ class Network extends EventEmitter {
         return Network.matchIP6.test(str) ? str : null;
     }
 
+    get remName() {
+        return this._remName;
+    }
+
+    set remName(val) {
+        this._remName = val;
+    }
+
     removeName(address) {
         var self = this;
         if (typeof address === 'string')

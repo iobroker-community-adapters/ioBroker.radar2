@@ -47,8 +47,8 @@ var doArp = true;
 var doUwz = null;
 var ukBt = {};
 var ukIp = {};
-let knownIPs= [];
-let knownBTs= [];
+let knownIPs = [];
+let knownBTs = [];
 var wlast = null,
     lang = '',
     numuwz = 0,
@@ -217,7 +217,7 @@ function foundIpMac(what) {
             item.ipHere = new Date();
             setItem(item);
         } else {
-            if (knownIPs.indexOf(ip)<0)
+            if (knownIPs.indexOf(ip) < 0)
                 ukIp[ip] = what;
             network.dnsReverse(ip).then(names => what.hosts = names, () => null);
         }
@@ -225,13 +225,13 @@ function foundIpMac(what) {
     if (what.macAddress && Network.isMac(what.macAddress)) {
         let mac = what.macAddress = what.macAddress.toLowerCase();
         let item = macList[mac];
-        if (found) 
-            network.combine(mac,what.ipAddress,what.hostName);
+        if (found)
+            network.combine(mac, what.ipAddress, what.hostName);
         what.getMacVendor = Network.getMacVendor(mac);
         if (item) {
             item.ipHere = new Date();
             setItem(item);
-        } else if (!found && knownIPs.indexOf(mac)<0)
+        } else if (!found && knownIPs.indexOf(mac) < 0)
             ukIp[mac] = what;
     }
     //    A.D(A.F('ip notf', what));
@@ -245,7 +245,7 @@ function foundBt(what) {
         setItem(item);
     } else {
         what.btVendor = Network.getMacVendor(mac);
-        if (knownBTs.indexOf(mac)<0)
+        if (knownBTs.indexOf(mac) < 0)
             ukBt[mac] = what;
         //        A.D(A.F('bt notf', what));
     }
@@ -257,13 +257,16 @@ A.unload = () => {
 };
 
 function scanAll() {
-//    A.D(`New scan stated now.`);
+    //    A.D(`New scan stated now.`);
 
     return Promise.all(
             [
                 (A.ownKeys(btList).length ? Promise.all([bluetooth.startNoble(scanDelay * 0.7), bluetooth.startScan()]) : A.wait(4)),
                 (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ?
-                    network.arpScan(arpcmd).then(() => A.seriesInOI(scanList, item => item.btHere || item.ipHere || !item.rip ? Promise.resolve() : network.ping(item.rip).then(x => x ? x.forEach(i => foundIpMac({ipAddress: i, by: 'ping'})) : null, () => null), 0)) :
+                    network.arpScan(arpcmd).then(() => A.seriesInOI(scanList, item => item.btHere || item.ipHere || !item.rip ? Promise.resolve() : network.ping(item.rip).then(x => x ? x.forEach(i => foundIpMac({
+                        ipAddress: i,
+                        by: 'ping'
+                    })) : null, () => null), 0)) :
                     A.wait(5))
             ]).then(() => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
@@ -400,11 +403,16 @@ function main() {
 
     if (A.C.knownBTs)
         knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
-    A.I(A.F('use known BT list: ',knownBTs));
+    A.I(A.F('use known BT list: ', knownBTs));
 
     if (A.C.knownIPs)
         knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
-        A.I(A.F('use known IP list: ',knownIPs));
+    A.I(A.F('use known IP list: ', knownIPs));
+
+    if (A.C.removeEnd)
+        network.remName = A.C.removeEnd;
+    if (network.remName)
+        A.I(A.F('Remove name end for ost names: ', network.remName));
 
     var numecb = 0,
         numhp = 0,
@@ -524,9 +532,9 @@ function main() {
         }).catch(() => null)
         .then(() => {
             if (numecb && parseInt(A.C.external) > 0) {
-                A.I(A.F('Will scan ECB (for ', numecb, 'devices) every ',A.C.external, ' minutes'));
+                A.I(A.F('Will scan ECB (for ', numecb, 'devices) every ', A.C.external, ' minutes'));
                 A.timer.push(setInterval(scanECBs, parseInt(A.C.external) * 1000 * 60));
-                return scanECBs().catch(()=> null);
+                return scanECBs().catch(() => null);
             }
             return A.resolve();
         }).then(() => {
