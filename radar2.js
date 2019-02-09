@@ -353,10 +353,18 @@ network.on('request', items => foundIpMac({
     hostName: items[0],
     by: 'dhcp'
 }));
-network.init(true);
+network.on('arp-scan', found => foundIpMac({
+    ipAddress: found[0],
+    macAddress: found[1],
+    by: 'arp'
+}));
+bluetooth.on('found', what => foundBt(what));
+
 
 function main() {
     host = adapter.host;
+
+    network.init(true);
 
     if (!A.C.devices.length) {
         A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
@@ -377,13 +385,7 @@ function main() {
         A.C.scandelay = 15;
     scanDelay = A.C.scandelay * 1000;
 
-    network.on('arp-scan', found => foundIpMac({
-        ipAddress: found[0],
-        macAddress: found[1]
-    }));
-
     bluetooth.init(btid, scanDelay * 0.7);
-    bluetooth.on('found', what => foundBt(what));
 
     //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
 
@@ -395,10 +397,10 @@ function main() {
         A.C.printerdelay = 100;
     printerDelay = parseInt(A.C.printerdelay);
 
-    let as = A.C.arp_scan_cmd;
-    if (as && as.startsWith('!')) {
-        as = as.slice(1);
+    if (A.C.removeEnd && A.C.removeEnd.startsWith('!')) {
+        A.C.removeEnd = A.C.removeEnd.slice(1);
         A.debug = true;
+        A.I(`Debug mode set by adapter config ('!' as first letter in removeEnd)!`)
     }
 
     if (A.C.knownBTs)
@@ -412,7 +414,7 @@ function main() {
     if (A.C.removeEnd)
         network.remName = A.C.removeEnd;
     if (network.remName)
-        A.I(A.F('Remove name end for ost names: ', network.remName));
+        A.I(A.F('Remove name end for host names: ', network.remName));
 
     var numecb = 0,
         numhp = 0,
@@ -420,8 +422,8 @@ function main() {
         numbt = 0;
 
     A.timer = [];
-    arpcmd = ((as && as.length > 0) ?
-        as : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+    arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
+    A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
 
     A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} scans.`);
 

@@ -199,7 +199,7 @@ class Network extends EventEmitter {
     removeName(address) {
         var self = this;
         var rn = this._remName.toLowerCase().trim();
-        if (!rn) 
+        if (!rn)
             return address;
         if (typeof address === 'string')
             return address.toLowerCase().endsWith(rn) ? address.slice(0, -rn.length) : address;
@@ -227,7 +227,7 @@ class Network extends EventEmitter {
             ]).then(() => arr.length > 0 ? arr : null);
         }).bind(this));
 
-        this._iprCache = new MA.CacheP(((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? this.removeName(arr) : [], () => [])).bind(this));
+        this._iprCache = new MA.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
 
         this.clearCache();
 
@@ -505,9 +505,10 @@ class Network extends EventEmitter {
             im.names = names;
         }
         if (names.length === (name ? 1 : 0)) this.dnsReverse(ip).then(list => {
-            for (let l of list)
-                if (!names.includes(l))
-                    names.push(l);
+//            if (list)
+                for (let l of list)
+                    if (!names.includes(l))
+                        names.push(l);
         });
         if (!this._macs.has(mac))
             this._macs.set(mac, {});
@@ -520,7 +521,7 @@ class Network extends EventEmitter {
 
     dnsReverse(ip) {
         const self = this;
-        return this._iprCache.cacheItem(ip).then(names => names && !names.length && self._ips.has(ip) ? self._ips.get(ip).names : names );
+        return this._iprCache.cacheItem(ip).then(names => names && !names.length && self._ips.has(ip) ? self._ips.get(ip).names : names).then(names => !names ? [] : names, () => []);
     }
 
     dnsResolve(name) {
