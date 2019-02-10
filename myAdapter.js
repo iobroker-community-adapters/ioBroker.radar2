@@ -5,6 +5,28 @@
  */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
+
+// you have to call the adapter function and pass a options object
+// name has to be set and has to be equal to adapters folder name and main file name excluding extension
+// adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.template.0
+var adapter;
+
+function startAdapter(options) {
+    options = options || {};
+    if (typeof options === 'string')
+        options = {
+            name: options
+        };
+    try {
+        adapter = new require(__dirname + '/lib/utils').Adapter(options);
+    } catch (e) {
+        console.log('cannot find ioBroker...');
+    }
+    return adapter;
+}
+
+// If started as allInOne/compact mode => return function to create instance
+
 const util = require('util'),
     http = require('http'),
     https = require('https'),
@@ -32,9 +54,9 @@ class Sequence {
     }
 }
 
-let myResolve= Promise.resolve();
+let myResolve = Promise.resolve();
 
-var adapter, that, main, messages, timer, unload, name, stopping = false,
+var that, main, messages, timer, unload, name, stopping = false,
     inDebug = false,
     curDebug = 1,
     allStates = myResolve,
@@ -196,9 +218,19 @@ class MyAdapter {
             );
     }
 
-    static init(ori_adapter, ori_main) {
-        assert(!adapter, `myAdapter:(${ori_adapter.name}) defined already!`);
-        adapter = ori_adapter;
+    static clearStates() {
+        states = {};
+    }
+
+    static init(amodule, options, ori_main) {
+        //        assert(!adapter, `myAdapter:(${ori_adapter.name}) defined already!`);
+        if (amodule && amodule.parent) {
+            amodule.exports = startAdapter;
+        } else {
+            // or start the instance directly
+            adapter = startAdapter(options);
+        }
+
         assert(adapter && adapter.name, 'myAdapter:(adapter) no adapter here!');
         name = adapter.name;
         main = typeof ori_main === 'function' ? ori_main : () => this.W(`No 'main() defined for ${adapter.name}!`);
@@ -525,7 +557,7 @@ class MyAdapter {
         Promise.resolve(unload ? unload(dostop) : null)
             .then(() => callback && callback())
             .catch(e => this.W(e))
-            .then(() => this.W(`Adapter will exit in latest 1 sec with code ${dostop}!`, setTimeout(ret => adapter&& adapter.terminate ? adapter.terminate(ret) : process.exit(ret), 900, dostop < 0 ? 0 : dostop)));
+            .then(() => this.W(`Adapter will exit in latest 1 sec with code ${dostop}!`, setTimeout(ret => adapter && adapter.terminate ? adapter.terminate(ret) : process.exit(ret), 900, dostop < 0 ? 0 : dostop)));
     }
 
     static seriesOf(obj, promfn, delay) { // fun gets(item) and returns a promise
@@ -726,7 +758,7 @@ class MyAdapter {
             }).on('error', (e) => reject(e));
         })).catch(err => !retry ? this.reject(err) : this.wait(100, retry - 1).then(a => this.get(url, a)));
     }
-    
+
     static equal(a, b) {
         /*jshint -W116 */
         if (a == b)

@@ -9,63 +9,38 @@
 
 "use strict";
 
-// you have to require the utils module and call adapter function
-const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
-
 const A = require('./myAdapter').MyAdapter,
     Network = require('./myNetworks').Network,
     Bluetooth = require('./myNetworks').Bluetooth,
     xml2js = require('xml2js');
 
-// you have to call the adapter function and pass a options object
-// name has to be set and has to be equal to adapters folder name and main file name excluding extension
-// adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.template.0
-let adapter;
-
-function startAdapter(options) {
-    options = options || {};
-    Object.assign(options, {
-        name: 'radar2'
-    });
-    adapter = new utils.Adapter(options);
-    return adapter;
-}
-
-// If started as allInOne/compact mode => return function to create instance
-if (module && module.parent) {
-    module.exports = startAdapter;
-} else {
-    // or start the instance directly
-    startAdapter();
-}
-
-A.init(adapter, main);
+A.init(module,'radar2', main);
 
 
 const scanList = {},
     ipList = {},
     macList = {},
-    btList = {};
-var scanDelay = 30 * 1000; // in ms = 30 sec
-var printerDelay = 100;
-var delayAway = 10;
-var host = null;
-var arpcmd = null;
-var doArp = true;
-var doUwz = null;
-var ukBt = {};
-var ukIp = {};
-let knownIPs = [];
-let knownBTs = [];
-var wlast = null,
+    btList = {},
+    network = new Network(),
+    bluetooth = new Bluetooth();
+let scanDelay = 30 * 1000, // in ms = 30 sec
+    printerDelay = 100,
+    delayAway = 10,
+    host = null,
+    arpcmd = null,
+    doArp = true,
+    doUwz = null,
+    ukBt = {},
+    ukIp = {},
+    knownIPs = [],
+    knownBTs = [],
+    wlast = null,
     lang = '',
     numuwz = 0,
     delayuwz = 0,
     longuwz = false,
     btid = 0,
     devices = null;
-
-
 
 function xmlParseString(body) {
     function parseNumbers(str) {
@@ -339,31 +314,26 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
-
-
-const network = new Network();
-const bluetooth = new Bluetooth();
-network.on('request', items => foundIpMac({
-    ipAddress: items[3],
-    macAddress: items[2],
-    hostName: items[0],
-    by: 'dhcp'
-}));
-network.on('arp-scan', found => foundIpMac({
-    ipAddress: found[0],
-    macAddress: found[1],
-    by: 'arp'
-}));
-bluetooth.on('found', what => foundBt(what));
-
-A.unload = () => {
-    network.stop();
-    bluetooth.stop();
-};
-
 function main() {
     host = A.adapter.host;
 
+    network.on('request', items => foundIpMac({
+        ipAddress: items[3],
+        macAddress: items[2],
+        hostName: items[0],
+        by: 'dhcp'
+    }));
+    network.on('arp-scan', found => foundIpMac({
+        ipAddress: found[0],
+        macAddress: found[1],
+        by: 'arp'
+    }));
+    bluetooth.on('found', what => foundBt(what));
+    
+    A.unload = () => {
+        network.stop();
+        bluetooth.stop();
+    };
     network.init(true);
 
     if (!A.C.devices.length) {
@@ -376,11 +346,9 @@ function main() {
         A.W(`BT interface number not defined in config, will use '0'`);
         btid = 0;
     }
-    //    hcicmd = `hcitool -i hci${btid} name `;
-    //    l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
-    for (let st of A.ownKeys(A.states))
-        delete A.states[st];
+    A.clearStates();
+
     if (!A.C.scandelay || parseInt(A.C.scandelay) < 15)
         A.C.scandelay = 15;
     scanDelay = A.C.scandelay * 1000;
