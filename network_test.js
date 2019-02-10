@@ -1,9 +1,8 @@
 "use strict";
 
-const MA = require('./myAdapter'),
-    A = MA.MyAdapter,
-    Network = require('./myNetwork').Network,
-    Bluetooth = require('./myNetwork').Bluetooth;
+const A = require('./myAdapter').MyAdapter,
+    Network = require('./myNetworks').Network,
+    Bluetooth = require('./myNetworks').Bluetooth;
 
 
 let network = new Network(false);

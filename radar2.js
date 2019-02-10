@@ -11,7 +11,11 @@
 
 // you have to require the utils module and call adapter function
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
-//const timeago = require('time-ago');
+
+const A = require('./myAdapter').MyAdapter,
+    Network = require('./myNetworks').Network,
+    Bluetooth = require('./myNetworks').Bluetooth,
+    xml2js = require('xml2js');
 
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
@@ -27,12 +31,16 @@ function startAdapter(options) {
     return adapter;
 }
 
-const MA = require('./myAdapter'),
-    A = MA.MyAdapter,
-    Network = require('./myNetwork').Network,
-    Bluetooth = require('./myNetwork').Bluetooth;
+// If started as allInOne/compact mode => return function to create instance
+if (module && module.parent) {
+    module.exports = startAdapter;
+} else {
+    // or start the instance directly
+    startAdapter();
+}
 
-const xml2js = require('xml2js');
+A.init(adapter, main);
+
 
 const scanList = {},
     ipList = {},
@@ -58,15 +66,6 @@ var wlast = null,
     devices = null;
 
 
-// If started as allInOne/compact mode => return function to create instance
-if (module && module.parent) {
-    module.exports = startAdapter;
-} else {
-    // or start the instance directly
-    startAdapter();
-}
-
-A.init(adapter, main);
 
 function xmlParseString(body) {
     function parseNumbers(str) {
@@ -96,7 +95,7 @@ function scanExtIP() {
     return Network.getExtIP()
         .then(ip => {
             oldip = ip;
-            return A.getState('_ExternalNetwork.IP4');
+            return A.getState('_ExternalNetwork');
         })
         .then(x => x, () => Promise.resolve())
         .then(state => {
@@ -251,11 +250,6 @@ function foundBt(what) {
     }
 }
 
-A.unload = () => {
-    network.stop();
-    bluetooth.stop();
-};
-
 function scanAll() {
     //    A.D(`New scan stated now.`);
 
@@ -297,8 +291,8 @@ function scanAll() {
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
         }).then(() => A.D(`radar2 found uBT's: ${A.ownKeysSorted(ukBt)}`, A.D(`radar2 found uIP's: ${A.ownKeysSorted(ukIp)}`)), () => null)
-        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.O(ukBt[mac]))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt)))))
-        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.O(ukIp[ip]))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp)))))
+        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.D('Unknown BT: '+A.O(ukBt[mac])), A.O(ukBt[mac])))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
+        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.D('Unknown IP: ' + A.O(ukIp[ip])), A.O(ukIp[ip])))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
         .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
         .then(() => {
             for (let item in scanList)
@@ -345,6 +339,8 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
+
+
 const network = new Network();
 const bluetooth = new Bluetooth();
 network.on('request', items => foundIpMac({
@@ -360,9 +356,13 @@ network.on('arp-scan', found => foundIpMac({
 }));
 bluetooth.on('found', what => foundBt(what));
 
+A.unload = () => {
+    network.stop();
+    bluetooth.stop();
+};
 
 function main() {
-    host = adapter.host;
+    host = A.adapter.host;
 
     network.init(true);
 
@@ -371,7 +371,7 @@ function main() {
         return A.stop(true);
     }
 
-    btid = Number(adapter.config.btadapterid);
+    btid = Number(A.C.btadapterid);
     if (isNaN(btid)) {
         A.W(`BT interface number not defined in config, will use '0'`);
         btid = 0;
@@ -397,8 +397,8 @@ function main() {
         A.C.printerdelay = 100;
     printerDelay = parseInt(A.C.printerdelay);
 
-    if (A.C.removeEnd && A.C.removeEnd.startsWith('!')) {
-        A.C.removeEnd = A.C.removeEnd.slice(1);
+    if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
+        A.C.removeEnd = A.C.removeEnd.slice(0,-1);
         A.debug = true;
         A.I(`Debug mode set by adapter config ('!' as first letter in removeEnd)!`);
     }
@@ -562,27 +562,9 @@ function main() {
                 return A.resolve();
             }); // scan first time and generate states if they do not exist yet
         })
-        //        .then(() => A.I(A.F(A.sstate)))
-        //        .then(() => A.I(A.F(A.ownKeysSorted(A.states))))
-        .then(() => A.getObjectList({
-            startkey: A.ain,
-            endkey: A.ain + '\u9999'
-        }))
-        .then(res => A.seriesOf(res.rows, item => { // clean all states which are not part of the list
-            //            A.I(`Check ${A.O(item)}`);
-            let id = item.id.slice(A.ain.length);
-            //            A.I(`check state ${item.id} and ${id}: ${A.states[item.id]} , ${A.states[id]}`);
-            if (A.states[item.id] || A.states[id])
-                return Promise.resolve();
-            //            A.I(`Delete ${A.O(item)}`);
-            return A.deleteState(id)
-                .then(() => A.D(`Del State: ${id}`), err => A.D(`Del State err: ${A.O(err)}`)) ///TC
-                .then(() => A.delObject(id))
-                .then(() => A.D(`Del Object: ${id}`), err => A.D(`Del Object err: ${A.O(err)}`)); ///TC
-        }, 10))
-        .catch(err => {
+        .then(() => A.cleanup())  // clean up old states not created this time!
+        .then(() => A.I('Adapter initialization finished!'), err => {
             A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
             A.stop(1);
-        })
-        .then(() => A.I('Adapter initialization finished!'));
+        });
 }

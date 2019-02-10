@@ -1,8 +1,6 @@
 "use strict";
 
-const MA = require('./myAdapter'),
-    A = MA.MyAdapter;
-
+const A = require('./myAdapter').MyAdapter;
 
 const assert = require('assert'),
     dgram = require('dgram'),
@@ -93,6 +91,7 @@ class Bluetooth extends EventEmitter {
                         address: per.address.toLowerCase(),
                         btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
                         rssi: per.rssi,
+                        btVendor: Network.getMacVendor(per.address),
                         by: 'noble'
                         //                        vendor: Network.getMacVendor(per.address)
                     });
@@ -105,13 +104,14 @@ class Bluetooth extends EventEmitter {
             this._device.on('found', (address, name) => self.emit('found', {
                 address: address,
                 btName: name,
+                btVendor: Network.getMacVendor(address),
                 by: 'scan'
             }));
         } catch (e) {
             A.W('node-bluetooth not found!');
         }
         //        this._noble.stopScanning();
-        return true;
+        return oui.update().then(() => A.D('Manufacturer database loaded.'),e => A.I(A.F('Error updating manufacturer database: ', e)) );
     }
 
     stopNoble() {
@@ -219,7 +219,7 @@ class Network extends EventEmitter {
             ttl: 10
         };
 
-        this._dnsCache = new MA.CacheP(((name) => {
+        this._dnsCache = new A.CacheP(((name) => {
             let arr = [];
             return Promise.all([
                 new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
@@ -227,7 +227,7 @@ class Network extends EventEmitter {
             ]).then(() => arr.length > 0 ? arr : null);
         }).bind(this));
 
-        this._iprCache = new MA.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
+        this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
 
         this.clearCache();
 

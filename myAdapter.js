@@ -32,16 +32,14 @@ class Sequence {
     }
 }
 
-function myResolve() {
-    return Promise.resolve();
-}
+let myResolve= Promise.resolve();
 
 var adapter, that, main, messages, timer, unload, name, stopping = false,
     inDebug = false,
     curDebug = 1,
     allStates = myResolve,
-    stateChange = allStates,
-    objChange = allStates,
+    stateChange = myResolve,
+    objChange = myResolve,
     objects = {},
     states = {},
     stq = new Sequence();
@@ -826,14 +824,33 @@ class MyAdapter {
             .catch(err => this.D(`MS ${this.O(err)}`, id));
     }
 
+    static cleanup() {
+        //        .then(() => A.I(A.F(A.sstate)))
+        //        .then(() => A.I(A.F(A.ownKeysSorted(A.states))))
+        return this.getObjectList({
+            startkey: this.ain,
+            endkey: this.ain + '\u9999'
+        }).then(res => this.seriesOf(res.rows, item => { // clean all states which are not part of the list
+            //            this.I(`Check ${this.O(item)}`);
+            let id = item.id.slice(this.ain.length);
+            //            this.I(`check state ${item.id} and ${id}: ${this.states[item.id]} , ${this.states[id]}`);
+            if (this.states[item.id] || this.states[id])
+                return Promise.resolve();
+            //            this.I(`Delete ${this.O(item)}`);
+            return this.deleteState(id)
+                .then(() => this.D(`Del State: ${id}`), err => this.D(`Del State err: ${this.O(err)}`)) ///TC
+                .then(() => this.delObject(id))
+                .then(() => this.D(`Del Object: ${id}`), err => this.D(`Del Object err: ${this.O(err)}`)); ///TC
+        }, 10));
+
+    }
+
     static isApp(name) {
         return this.exec('!which ' + name).then(x => x.length >= name.length, () => false);
     }
 }
 
 MyAdapter.Sequence = Sequence;
-
+MyAdapter.Setter = Setter;
+MyAdapter.CacheP = CacheP;
 exports.MyAdapter = MyAdapter;
-exports.Setter = Setter;
-exports.CacheP = CacheP;
-exports.Sequence = Sequence;
