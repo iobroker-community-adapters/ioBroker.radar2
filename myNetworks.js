@@ -111,7 +111,6 @@ class Bluetooth extends EventEmitter {
             A.W('node-bluetooth not found!');
         }
         //        this._noble.stopScanning();
-        return oui.update().then(() => A.D('Manufacturer database loaded.'),e => A.I(A.F('Error updating manufacturer database: ', e)) );
     }
 
     stopNoble() {
@@ -196,6 +195,9 @@ class Network extends EventEmitter {
         this._remName = val;
     }
 
+    updateMacdb() {
+        return oui.update().then(() => A.D('Manufacturer database loaded.'),e => A.I(A.F('Error updating manufacturer database: ', e)) );
+    }
     removeName(address) {
         var self = this;
         var rn = this._remName.toLowerCase().trim();
@@ -529,8 +531,12 @@ class Network extends EventEmitter {
     }
 
     static getMacVendor(mac) {
-        let v = oui(mac),
-            vl = v && v.split('\n');
+        let vl;
+        try {
+         vl= oui(mac).split('\n');
+        } catch(e) {
+            return 'macdb offline!';
+        }
         return vl && vl.length > 1 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
     }
 

@@ -396,9 +396,10 @@ function main() {
 
     devices = A.C.devices;
 
-    //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-    A.isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
-            .then(x => doArp = x)
+    network.updateMacdb().then(() =>
+        //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
+        A.isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+        .then(x => doArp = x)
         //        .then(() => A.isApp('hcitool').then(x => doHci = x))
         .then(() => {
             return A.seriesOf(devices, item => {
@@ -529,5 +530,5 @@ function main() {
         .then(() => A.I('Adapter initialization finished!'), err => {
             A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
             A.stop(1);
-        });
+        }));
 }
