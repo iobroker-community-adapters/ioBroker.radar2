@@ -85,9 +85,10 @@ Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber d
 * mehrsprachige Anleitung und Texte
 
 ## Changelog
-### 0.1.0 
+### 0.1.1 
 * Repository rename to ioBroker.radar2 to fulfill ioBroker requirements!
-* First npm version
+* First npm version on public beta
+
 
 ## License
 
