@@ -564,14 +564,15 @@ class Network extends EventEmitter {
     arpScan(args) {
         function scan(cmd, self) {
             //            A.D(`arp-scan with ${cmd}`);
-            return A.exec('sudo arp-scan ' + cmd).then(res => {
+            return A.exec('arp-scan ' + cmd).then(res => {
                 var r = null;
                 if (res)
                     r = res.match(/([\d\.]+)\s+seconds\s+.+\s+(\d+)\s+responded/mi);
+                else A.W('arp-scan maybe without rights because no data returned!');
                 if (r)
-                    A.D(`sudo arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
+                    A.D(`arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
                 return res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}\:){5}[\dA-F]{2}/gi);
-            }, () => null).then(x => {
+            }, e => A.W('arp-scan returned error: '+A.O(e),null)).then(x => {
                 //                A.I(`Arp-Scan found ${x}`)
                 if (x) {
                     for (let y of x) {

@@ -6,6 +6,7 @@
  */
 /* eslint-env node,es6 */
 /*jslint node: true, bitwise: true, sub:true */
+/* @ts-ignore:80006 */
 
 "use strict";
 
@@ -14,7 +15,7 @@ const A = require('./myAdapter').MyAdapter,
     Bluetooth = require('./myNetworks').Bluetooth,
     xml2js = require('xml2js');
 
-A.init(module,'radar2', main);
+A.init(module, 'radar2', main);
 
 
 const scanList = {},
@@ -266,7 +267,7 @@ function scanAll() {
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
         }).then(() => A.D(`radar2 found uBT's: ${A.ownKeysSorted(ukBt)}`, A.D(`radar2 found uIP's: ${A.ownKeysSorted(ukIp)}`)), () => null)
-        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.D('Unknown BT: '+A.O(ukBt[mac])), A.O(ukBt[mac])))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
+        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.D('Unknown BT: ' + A.O(ukBt[mac])), A.O(ukBt[mac])))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
         .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.D('Unknown IP: ' + A.O(ukIp[ip])), A.O(ukIp[ip])))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
         .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
         .then(() => {
@@ -329,7 +330,7 @@ function main() {
         by: 'arp'
     }));
     bluetooth.on('found', what => foundBt(what));
-    
+
     A.unload = () => {
         network.stop();
         bluetooth.stop();
@@ -366,7 +367,7 @@ function main() {
     printerDelay = parseInt(A.C.printerdelay);
 
     if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
-        A.C.removeEnd = A.C.removeEnd.slice(0,-1);
+        A.C.removeEnd = A.C.removeEnd.slice(0, -1);
         A.debug = true;
         A.I(`Debug mode set by adapter config ('!' as first letter in removeEnd)!`);
     }
@@ -384,23 +385,20 @@ function main() {
     if (network.remName)
         A.I(A.F('Remove name end for host names: ', network.remName));
 
-    var numecb = 0,
-        numhp = 0,
-        numip = 0,
-        numbt = 0;
+    var numecb = [],
+        numhp = [];
 
     A.timer = [];
     arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
-    A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+        A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
 
     A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} scans.`);
 
     devices = A.C.devices;
 
     //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-    A.wait(100)
-        .then(() => A.isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
-            .then(x => doArp = x))
+    A.isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+            .then(x => doArp = x)
         //        .then(() => A.isApp('hcitool').then(x => doHci = x))
         .then(() => {
             return A.seriesOf(devices, item => {
@@ -434,16 +432,15 @@ function main() {
                         item.hasBT = true;
                         item.type = 'BT';
                         item.btVendor = Network.getMacVendor(item.bluetooth);
-                        numbt++;
                     }
                 } else if (item.bluetooth !== '')
                     A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
                 if (item.ip && item.name.startsWith('HP-')) {
                     item.type = 'printer';
-                    numhp++;
+                    numhp = numhp.concat(item.name);
                 } else if (item.ip && item.name.startsWith('ECB-')) {
                     item.type = 'ECB';
-                    numecb++;
+                    numecb = numecb.concat(item.ip);
                 } else if (item.ip.startsWith('http'))
                     item.type = 'URL';
                 else if (Network.isIP4(item.ip) || Network.isIP6(item.ip)) {
@@ -451,10 +448,8 @@ function main() {
                     if (ipList[item.ip])
                         A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
                     else(ipList[item.ip]) = item;
-                    numip++;
                     item.type = 'IP';
                 } else if (item.ip.length > 1) {
-                    numip++;
                     item.type = 'IP';
                     network.dnsResolve(item.ip).then(x => {
                         if (x && x.length > 0) {
@@ -501,15 +496,15 @@ function main() {
             } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
         }).catch(() => null)
         .then(() => {
-            if (numecb && parseInt(A.C.external) > 0) {
-                A.I(A.F('Will scan ECB (for ', numecb, 'devices) every ', A.C.external, ' minutes'));
+            if (numecb.length && parseInt(A.C.external) > 0) {
+                A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
                 A.timer.push(setInterval(scanECBs, parseInt(A.C.external) * 1000 * 60));
                 return scanECBs().catch(() => null);
             }
             return A.resolve();
         }).then(() => {
-            if (numhp && printerDelay > 0) {
-                A.I(A.F('will scan printers (for ', numhp, ' items) every ', printerDelay, ' minutes'));
+            if (numhp.length && printerDelay > 0) {
+                A.I(A.F('will scan printers ', numhp, ' every ', printerDelay, ' minutes'));
                 A.timer.push(setInterval(scanHPs, printerDelay * 1000 * 60));
                 return scanHPs();
             }
@@ -530,7 +525,7 @@ function main() {
                 return A.resolve();
             }); // scan first time and generate states if they do not exist yet
         })
-        .then(() => A.cleanup())  // clean up old states not created this time!
+        .then(() => A.cleanup()) // clean up old states not created this time!
         .then(() => A.I('Adapter initialization finished!'), err => {
             A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
             A.stop(1);

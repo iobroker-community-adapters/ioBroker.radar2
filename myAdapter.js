@@ -6,6 +6,9 @@
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
 
+//@ts-disable TS80006
+//@js-disable TS80006
+
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
 // adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.template.0
