@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "0.1.1" ,
+        "version": "0.1.2" ,
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
             "en": "This adapter can scan IP and bluetooth addresses for availability/in reach and also get exchange rates from European Central Bank, Weather warning from UWZ  and get ink fill from HP printers",
