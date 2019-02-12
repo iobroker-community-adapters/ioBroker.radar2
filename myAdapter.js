@@ -218,7 +218,7 @@ class MyAdapter {
                 .then(() => stateChange ? MyAdapter.c2p(adapter.subscribeStates)('*') : null)
                 //                .then(() => objChange ? MyAdapter.c2p(adapter.subscribeObjects)('*').then(a => MyAdapter.I('eso '+a),a => MyAdapter.I('eso '+a)) : MyAdapter.resolve())
                 .then(() => objChange ? adapter.subscribeObjects('*') :  null)
-            ).then(() => this.I('Adapter initialization started...'), e => this.stop(this.E('Adapter Initialization Error:' + this.F(e))));
+            ).then(() => this.I(aname +' initialization started...'), e => this.stop(this.E(aname+' Initialization Error:' + this.F(e))));
     }
 
     static clearStates() {
