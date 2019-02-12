@@ -65,6 +65,7 @@ let messages, timer, unload, aname, stopping = false,
     allStates = null,
     stateChange = null,
     objChange = null,
+    onStop = null,
     objects = {},
     states = {},
     stq = new Sequence();
@@ -271,7 +272,7 @@ class MyAdapter {
         adapter.on('message', (obj) => !!obj ? this.processMessage(
                 this.D(`received Message ${this.O(obj)}`, obj)) : true)
             .on('unload', (callback) => this.stop(false, callback))
-            .on('ready', () => this.resolve().then(() => this.initAdapter()).then(() => ori_main(this.I('starting main:' + this.F(ori_main))), e => this.A(this.E(` Adapter Error, stop:` + this.F(e)))))
+            .on('ready', () => this.resolve().then(() => this.initAdapter()).then(() => ori_main(this.I(aname+' starting main...')), e => this.A(this.E(` Adapter Error, stop:` + this.F(e)))))
             .on('objectChange', (id, obj) => obj && obj._id &&  objChange ? setTimeout((id, obj) => objChange(id, obj), 0, id, obj) : null)
             .on('stateChange', (id, state) => setTimeout((id, state) => {
                 (state && stateChange && state.from !== 'system.adapter.' + this.ains ?
@@ -376,8 +377,14 @@ class MyAdapter {
     static set stateChange(y) {
         stateChange = (assert(typeof y === 'function', 'Error: StateChange handler not a function!'), y);
     }
+    static get onStop() {
+        return onStop;
+    }
+    static set onStop(y) {
+        onStop = (assert(typeof y === 'function', 'Error: StateChange handler not a function!'), y);
+    }
     static get allStates() {
-        return stateChange;
+        return allStates;
     }
     static set allStates(y) {
         allStates = (assert(typeof y === 'function', 'Error: StateChange handler not a function!'), y);
@@ -552,6 +559,8 @@ class MyAdapter {
     static stop(dostop, callback) { // dostop 
         if (stopping) return;
         stopping = true;
+        if (onStop)
+            onStop(dostop);
         if (timer) {
             if (Array.isArray(timer))
                 timer.forEach(t => clearInterval(t));
