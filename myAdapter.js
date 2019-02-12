@@ -1,7 +1,9 @@
 /**
  *      iobroker MyAdapter class V1.2.1 from systeminfo
- *      (c) 2016- <frankjoke@hotmail.com>
+ *      (c) 2019- <frankjoke@hotmail.com>
  *      MIT License
+ * 
+ *  V 1.0
  */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
@@ -57,14 +59,12 @@ class Sequence {
     }
 }
 
-let myResolve = Promise.resolve();
-
-var that, main, messages, timer, unload, name, stopping = false,
+let messages, timer, unload, aname, stopping = false,
     inDebug = false,
     curDebug = 1,
-    allStates = myResolve,
-    stateChange = myResolve,
-    objChange = myResolve,
+    allStates = null,
+    stateChange = null,
+    objChange = null,
     objects = {},
     states = {},
     stq = new Sequence();
@@ -212,13 +212,13 @@ class MyAdapter {
                         adapter.config.longitude = parseFloat(objects['system.config'].common.longitude);
                     }
                     return res.length;
-                }, err => this.E('err from getObjectList: ' + err, 'no'))
-                .then(len => this.D(`${adapter.name} received ${len} objects and ${this.ownKeys(states).length} states, with config ${Object.keys(adapter.config)}`))
-                .catch(err => this.W(`Error in adapter.ready: ${err}`))
-                .then(() => allStates !== myResolve ? this.c2p(adapter.subscribeForeignStates)('*') : this.resolve())
-                .then(() => stateChange !== myResolve ? this.c2p(adapter.subscribeStates)('*') : this.resolve())
-                .then(() => objChange !== myResolve ? this.c2p(adapter.subscribeObjects)('*') : this.resolve())
-            );
+                }, err => this.E('err from getObjectList: ' + err, 0))
+                .then(len => MyAdapter.D(`${adapter.name} received ${len} objects and ${this.ownKeys(states).length} states, with config ${this.ownKeys(adapter.config)}`), (err => this.W(`Error in adapter.ready: ${err}`)))
+                .then(() => allStates  ? this.c2p(adapter.subscribeForeignStates)('*') : null)
+                .then(() => stateChange ? MyAdapter.c2p(adapter.subscribeStates)('*') : null)
+                //                .then(() => objChange ? MyAdapter.c2p(adapter.subscribeObjects)('*').then(a => MyAdapter.I('eso '+a),a => MyAdapter.I('eso '+a)) : MyAdapter.resolve())
+                .then(() => objChange ? adapter.subscribeObjects('*') :  null)
+            ).then(() => this.I('Adapter initialization started...'), e => this.stop(this.E('Adapter Initialization Error:' + this.F(e))));
     }
 
     static clearStates() {
@@ -235,8 +235,12 @@ class MyAdapter {
         }
 
         assert(adapter && adapter.name, 'myAdapter:(adapter) no adapter here!');
-        name = adapter.name;
-        main = typeof ori_main === 'function' ? ori_main : () => this.W(`No 'main() defined for ${adapter.name}!`);
+        aname = adapter.name;
+        if (typeof ori_main !== 'function')
+            ori_main = () => {
+                this.W(`No 'main() defined for ${adapter.name}!`);
+                this.stop(true);
+            };
         messages = (mes) => Promise.resolve(this.W(`Message ${this.O(mes)} received and no handler defined!`));
 
         this._util = util;
@@ -267,18 +271,17 @@ class MyAdapter {
         adapter.on('message', (obj) => !!obj ? this.processMessage(
                 this.D(`received Message ${this.O(obj)}`, obj)) : true)
             .on('unload', (callback) => this.stop(false, callback))
-            .on('ready', () => setTimeout(() => this.initAdapter().then(main), 0))
-            .on('objectChange', (id, obj) => setTimeout(
-                (id, obj) => obj && obj._id && objChange(id, obj), 0, id, obj))
+            .on('ready', () => this.resolve().then(() => this.initAdapter()).then(() => ori_main(this.I('starting main:' + this.F(ori_main))), e => this.A(this.E(` Adapter Error, stop:` + this.F(e)))))
+            .on('objectChange', (id, obj) => obj && obj._id &&  objChange ? setTimeout((id, obj) => objChange(id, obj), 0, id, obj) : null)
             .on('stateChange', (id, state) => setTimeout((id, state) => {
-                (state && state.from !== 'system.adapter.' + this.ains ?
+                (state && stateChange && state.from !== 'system.adapter.' + this.ains ?
                     stateChange(id, state).catch(err => this.W(`Error in StateChange for ${id} = ${this.O(err)}`)) :
                     Promise.resolve())
-                .then(() => allStates(id, state).catch(e => this.W(`Error in AllStates for ${id} = ${this.O(e)}`)))
+                .then(() => allStates ? allStates(id, state).catch(e => this.W(`Error in AllStates for ${id} = ${this.O(e)}`)): Promise.resolve())
                     .then(() => states[id] = state);
             }, 0, id, state));
 
-        return that;
+        return this;
     }
 
     static idName(id) {
@@ -392,7 +395,7 @@ class MyAdapter {
         unload = (assert(typeof y === 'function', 'Error: unload handler not a function!'), y);
     }
     static get name() {
-        return name;
+        return aname;
     }
     static get states() {
         return states;
@@ -416,7 +419,7 @@ class MyAdapter {
         curDebug = y;
     }
     static get ains() {
-        return name + '.' + adapter.instance;
+        return aname + '.' + adapter.instance;
     }
     static get ain() {
         return this.ains + '.';
