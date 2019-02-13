@@ -228,6 +228,9 @@ function foundBt(what) {
 
 function scanAll() {
     //    A.D(`New scan stated now.`);
+    let whoHere = [];
+    let allHere = [];
+    let notHere = [];
 
     return Promise.all(
             [
@@ -238,29 +241,37 @@ function scanAll() {
                         by: 'ping'
                     })) : null, () => null), 0)) :
                     A.wait(5))
-            ]).then(() => {
-            //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
-            let whoHere = [];
-            let allHere = [];
-            let notHere = [];
-            for (let x in scanList) {
+            ]).then(() => A.seriesIn(scanList, x => {
+                //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
                 let item = scanList[x];
                 if (item.type !== 'IP' && item.type !== 'BT')
-                    continue;
+                    return A.resolve();
+
+                let n = Date.now();
+                if (!item.lasthere)
+                    item.lasthere = new Date(n - (delayAway * 1001 * 60));
+
+                let d = n - item.lasthere.getTime();
+                //                    A.I(A.F('item ',item.name, item.lasthere, d));
+                if (d > (delayAway * 1000 * 60))
+                    item.anwesend = false;
                 if (item.anwesend) {
                     allHere.push(item.id);
                     if (item.name === item.id)
                         whoHere.push(item.id);
-                } else notHere.push(item.id);
-            }
+                } else {
+                    notHere.push(item.id);
+                }
+                return A.makeState(item.id,item.anwesend,true);
+            },1)).then(()=> {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
             //                oldWhoHere = wh;
             //                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
             //            }
-            allHere = allHere.join(', ');
-            notHere = notHere.join(', ');
-            whoHere = whoHere.join(', ');
+            allHere = allHere.join(', '); 
+            notHere = notHere.join(', '); 
+            whoHere = whoHere.join(', '); 
             A.D(`radar found here (${allHere}), who here (${whoHere}) and not here (${notHere})`);
             return A.makeState('_nHere', whoHere.split(', ').length)
                 .then(() => A.makeState('_allHere', allHere))
