@@ -33,7 +33,9 @@
             "HP"
         ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
-        "type": "network"
+        "type": "network",
+        "singletonHost": true,
+        "compact": false
     },
     "native": {
         "devices": [
