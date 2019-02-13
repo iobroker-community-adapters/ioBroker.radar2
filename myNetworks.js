@@ -196,7 +196,7 @@ class Network extends EventEmitter {
     }
 
     updateMacdb() {
-        return oui.update().then(() => A.D('Manufacturer database loaded.'),e => A.I(A.F('Error updating manufacturer database: ', e)) );
+        return oui.update().then(() => A.D('Manufacturer database loaded.'), e => A.I(A.F('Error updating manufacturer database: ', e)));
     }
     removeName(address) {
         var self = this;
@@ -412,22 +412,32 @@ class Network extends EventEmitter {
 
 
         if (!dhcp || self._listener) return;
-
-        this._listener = dgram.createSocket('udp4');
-        this._listener.on('message', (msg, rinfo) => {
-            try {
-                var data = parseUdp(msg, rinfo);
-                if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                    var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
-                    self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
-                    self.emit('request', req);
+        try {
+            this._listener = dgram.createSocket('udp4');
+            this._listener.on('error', (e) => A.W(`dhcp error `+A.F(e)));
+            this._listener.on('message', (msg, rinfo) => {
+                try {
+                    var data = parseUdp(msg, rinfo);
+                    if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
+                        var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
+                        self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
+                        self.emit('request', req);
+                    }
+                } catch (e) {
+                    A.W(A.F('error in dhcp message '+e));
                 }
-            } catch (e) {
-                A.D(A.F(e));
+            });
+            this._listener.bind(67, () => A.D(`Connected for DHCP Scan!`));
+        } catch (e) {
+            A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
+            try {
+            if (this._listener)
+                this._listener.close();
+            } catch(e) {
+                console.log(e);
             }
-        });
-        this._listener.bind(67, () => A.D(`Connected for DHCP Scan!`));
-
+            this._listener = null;
+        }
     }
 
     ping(ips, fun) {
@@ -507,10 +517,10 @@ class Network extends EventEmitter {
             im.names = names;
         }
         if (names.length === (name ? 1 : 0)) this.dnsReverse(ip).then(list => {
-//            if (list)
-                for (let l of list)
-                    if (!names.includes(l))
-                        names.push(l);
+            //            if (list)
+            for (let l of list)
+                if (!names.includes(l))
+                    names.push(l);
         });
         if (!this._macs.has(mac))
             this._macs.set(mac, {});
@@ -533,8 +543,8 @@ class Network extends EventEmitter {
     static getMacVendor(mac) {
         let vl;
         try {
-         vl= oui(mac).split('\n');
-        } catch(e) {
+            vl = oui(mac).split('\n');
+        } catch (e) {
             return 'macdb offline!';
         }
         return vl && vl.length > 1 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
@@ -578,7 +588,7 @@ class Network extends EventEmitter {
                 if (r)
                     A.D(`arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
                 return res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}\:){5}[\dA-F]{2}/gi);
-            }, e => A.W('arp-scan returned error: '+A.O(e),null)).then(x => {
+            }, e => A.W('arp-scan returned error: ' + A.O(e), null)).then(x => {
                 //                A.I(`Arp-Scan found ${x}`)
                 if (x) {
                     for (let y of x) {

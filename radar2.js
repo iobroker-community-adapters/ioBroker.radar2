@@ -315,6 +315,19 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
+
+process.on('SIGINT', () => {
+    A.W('SIGINT signal received.');
+    A.wait(1000).then(() => {
+            A.stop(true);
+            network.stop();
+            bluetooth.stop();
+        })
+        .then(() => A.wait(2000))
+        .then(() => process.exit(0));
+});
+
+
 function main() {
     host = A.adapter.host;
 
