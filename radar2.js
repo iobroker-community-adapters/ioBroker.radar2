@@ -415,6 +415,8 @@ function main() {
     A.timer = [];
     arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
         A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+    if (A.C.arp_scan_cmd.indexOf('--interface')<0)
+        A.I(`arp-scan will use the following interfaces: `+A.O(network.ip4addrs()));
 
     A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} scans.`);
 
@@ -422,7 +424,7 @@ function main() {
 
     network.updateMacdb().then(() =>
         //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-        A.isApp('arp-scan').then(x => x ? A.exec('sudo arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+        A.isApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
         .then(x => doArp = x)
         //        .then(() => A.isApp('hcitool').then(x => doHci = x))
         .then(() => {
