@@ -80,15 +80,16 @@ Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber d
 
 ### Important/Wichtig
 * Adapter braucht node > v4.1.*!
+* Adapter läuft nicht unter osx! 
 
 ### Todo
 * mehrsprachige Anleitung und Texte
 
 ## Changelog
-### 0.1.1 
+### 0.1.2 Beta 
 * Repository rename to ioBroker.radar2 to fulfill ioBroker requirements!
 * First npm version on public beta
-
+* arp-scan und dhcp-scan changed to avoid errors on systems with internal bridges
 
 ## License
 

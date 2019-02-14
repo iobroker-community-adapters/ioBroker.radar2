@@ -393,7 +393,7 @@ function main() {
     if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
         A.C.removeEnd = A.C.removeEnd.slice(0, -1);
         A.debug = true;
-        A.I(`Debug mode set by adapter config ('!' as first letter in removeEnd)!`);
+        A.I(`Debug mode set by adapter config ('!' as last letter in removeEnd)!`);
     }
 
     if (A.C.knownBTs)
