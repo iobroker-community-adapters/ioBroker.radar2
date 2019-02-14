@@ -242,36 +242,36 @@ function scanAll() {
                     })) : null, () => null), 0)) :
                     A.wait(5))
             ]).then(() => A.seriesIn(scanList, x => {
-                //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
-                let item = scanList[x];
-                if (item.type !== 'IP' && item.type !== 'BT')
-                    return A.resolve();
+            //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
+            let item = scanList[x];
+            if (item.type !== 'IP' && item.type !== 'BT')
+                return A.resolve();
 
-                let n = Date.now();
-                if (!item.lasthere)
-                    item.lasthere = new Date(n - (delayAway * 1001 * 60));
+            let n = Date.now();
+            if (!item.lasthere)
+                item.lasthere = new Date(n - (delayAway * 1001 * 60));
 
-                let d = n - item.lasthere.getTime();
-                //                    A.I(A.F('item ',item.name, item.lasthere, d));
-                if (d > (delayAway * 1000 * 60))
-                    item.anwesend = false;
-                if (item.anwesend) {
-                    allHere.push(item.id);
-                    if (item.name === item.id)
-                        whoHere.push(item.id);
-                } else {
-                    notHere.push(item.id);
-                }
-                return A.makeState(item.id,item.anwesend,true);
-            },1)).then(()=> {
+            let d = n - item.lasthere.getTime();
+            //                    A.I(A.F('item ',item.name, item.lasthere, d));
+            if (d > (delayAway * 1000 * 60))
+                item.anwesend = false;
+            if (item.anwesend) {
+                allHere.push(item.id);
+                if (item.name === item.id)
+                    whoHere.push(item.id);
+            } else {
+                notHere.push(item.id);
+            }
+            return A.makeState(item.id, item.anwesend, true);
+        }, 1)).then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
             //                oldWhoHere = wh;
             //                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
             //            }
-            allHere = allHere.join(', '); 
-            notHere = notHere.join(', '); 
-            whoHere = whoHere.join(', '); 
+            allHere = allHere.join(', ');
+            notHere = notHere.join(', ');
+            whoHere = whoHere.join(', ');
             A.D(`radar found here (${allHere}), who here (${whoHere}) and not here (${notHere})`);
             return A.makeState('_nHere', whoHere.split(', ').length)
                 .then(() => A.makeState('_allHere', allHere))
@@ -339,6 +339,8 @@ process.on('SIGINT', () => {
 });
 
 
+let macs = Network.updateMacdb();
+
 function main() {
     host = A.adapter.host;
 
@@ -359,202 +361,207 @@ function main() {
         network.stop();
         bluetooth.stop();
     };
-    network.init(true);
-
-    if (!A.C.devices.length) {
-        A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
-        return A.stop(true);
-    }
-
-    btid = Number(A.C.btadapterid);
-    if (isNaN(btid)) {
-        A.W(`BT interface number not defined in config, will use '0'`);
-        btid = 0;
-    }
-
-    A.clearStates();
-
-    if (!A.C.scandelay || parseInt(A.C.scandelay) < 15)
-        A.C.scandelay = 15;
-    scanDelay = A.C.scandelay * 1000;
-
-    bluetooth.init(btid, scanDelay * 0.7);
-
-    //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
-
-    if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
-        A.C.delayaway = 2;
-    delayAway = A.C.delayaway;
-
-    if (!A.C.printerdelay || parseInt(A.C.printerdelay) < 100)
-        A.C.printerdelay = 100;
-    printerDelay = parseInt(A.C.printerdelay);
-
-    if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
-        A.C.removeEnd = A.C.removeEnd.slice(0, -1);
-        A.debug = true;
-        A.I(`Debug mode set by adapter config ('!' as last letter in removeEnd)!`);
-    }
-
-    if (A.C.knownBTs)
-        knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
-    A.I(A.O('use known BT list: ', knownBTs));
-
-    if (A.C.knownIPs)
-        knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
-    A.I(A.O('use known IP list: ', knownIPs));
-
-    if (A.C.removeEnd)
-        network.remName = A.C.removeEnd;
-    if (network.remName)
-        A.I('Remove name end for host names: '+network.remName);
 
     var numecb = [],
         numhp = [];
 
-    A.timer = [];
-    arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
-        A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
-    if (A.C.arp_scan_cmd.indexOf('--interface')<0)
-        A.I(`arp-scan will use the following interfaces: `+A.O(network.ip4addrs()));
+//    Network.updateMacdb()
+//    A.wait(1)
+    macs.then(() => {
+        network.init(true);
 
-    A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} minutes.`);
-
-    devices = A.C.devices;
-
-    network.updateMacdb().then(() =>
-        //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-        A.isApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
-        .then(x => doArp = x)
-        //        .then(() => A.isApp('hcitool').then(x => doHci = x))
-        .then(() => {
-            return A.seriesOf(devices, item => {
-                //                A.I(`checking item ${A.O(item)}`);
-                if (item.name)
-                    item.name = item.name.trim().replace(/[\s\.]/g, '_');
-                if (!item.name || item.name.length < 2)
-                    return Promise.resolve(A.W(`Invalid item name '${A.O(item.name)}', must be at least 2 letters long`));
-                if (scanList[item.name])
-                    return Promise.resolve(A.W(`Double item name '${item.name}', names cannot be used more than once!`));
-                item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
-                item.ip = item.ip ? item.ip.trim() : '';
-                item.macs = item.macs ? item.macs.trim().toLowerCase() : '';
-                item.macs.split(',').forEach(val => {
-                    const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
-                    if (mac) {
-                        if (Network.isMac(mac)) {
-                            item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
-                            if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
-                            else macList[mac] = item;
-                        } else
-                            A.W(`invalid MAC address in ${item.name}: '${val}'`);
-                    }
-                });
-                item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
-                if (Network.isMac(item.bluetooth)) {
-                    if (btList[item.bluetooth])
-                        A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
-                    else {
-                        btList[item.bluetooth] = item;
-                        item.hasBT = true;
-                        item.type = 'BT';
-                        item.btVendor = Network.getMacVendor(item.bluetooth);
-                    }
-                } else if (item.bluetooth !== '')
-                    A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
-                if (item.ip && item.name.startsWith('HP-')) {
-                    item.type = 'printer';
-                    numhp = numhp.concat(item.name);
-                } else if (item.ip && item.name.startsWith('ECB-')) {
-                    item.type = 'ECB';
-                    numecb = numecb.concat(item.ip);
-                } else if (item.ip.startsWith('http'))
-                    item.type = 'URL';
-                else if (Network.isIP4(item.ip) || Network.isIP6(item.ip)) {
-                    item.rip = item.ip;
-                    if (ipList[item.ip])
-                        A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
-                    else(ipList[item.ip]) = item;
-                    item.type = 'IP';
-                } else if (item.ip.length > 1) {
-                    item.type = 'IP';
-                    network.dnsResolve(item.ip).then(x => {
-                        if (x && x.length > 0) {
-                            item.rip = x;
-                            x.forEach((ip) => ipList[ip] ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
-                        }
-                        return null;
-                    });
-                } else if (!item.hasBT)
-                    return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
-                scanList[item.name] = item;
-                A.I(`Init item ${item.name} with ${A.O(item)}`);
-                return A.resolve(item.id);
-            }, 50);
-        }).then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
-        .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
-        .then(() => A.getObjectList({
-            include_docs: true
-        }))
-        .then(res => {
-            var r = {};
-            if (!A.C.delayuwz || parseInt(A.C.delayuwz) <= 0)
-                return A.resolve(A.I(`No UWZ warning because of Delay is ${A.C.delayuwz}`));
-            delayuwz = parseInt(A.C.delayuwz);
-            numuwz = parseInt(A.C.numuwz);
-            longuwz = Boolean(A.C.longuwz);
-            res.rows.map(i => r[i.doc._id] = i.doc);
-            if (r['system.config'] && r['system.config'].common.language)
-                lang = r['system.config'].common.language;
-            if (r['system.config'] && r['system.config'].common.latitude) {
-                A.C.latitude = parseFloat(r['system.config'].common.latitude);
-                A.C.longitude = parseFloat(r['system.config'].common.longitude);
-                return A.get(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${A.C.latitude}&lon=${A.C.longitude}`, 2)
-                    .then(res => JSON.parse(res)[0], e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${A.C.longitude} Breite: ${A.C.latitude}`, null))
-                    .then(res => {
-                        doUwz = res && res.AREA_ID ? res.AREA_ID : null;
-                        if (doUwz && delayuwz > 0) {
-                            A.I(`will scan UWZ every ${delayuwz} minutes`);
-                            A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
-                            return getUWZ();
-                        }
-                        return A.resolve();
-                    });
-            } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
-        }).catch(() => null)
-        .then(() => {
-            if (numecb.length && parseInt(A.C.external) > 0) {
-                A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
-                A.timer.push(setInterval(scanECBs, parseInt(A.C.external) * 1000 * 60));
-                return scanECBs().catch(() => null);
+        if (!A.C.devices.length) {
+                A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
+                return A.stop(true);
             }
-            return A.resolve();
-        }).then(() => {
-            if (numhp.length && printerDelay > 0) {
-                A.I(A.F('will scan printers ', numhp, ' every ', printerDelay, ' minutes'));
-                A.timer.push(setInterval(scanHPs, printerDelay * 1000 * 60));
-                return scanHPs();
+
+            btid = Number(A.C.btadapterid);
+            if (isNaN(btid)) {
+                A.W(`BT interface number not defined in config, will use '0'`);
+                btid = 0;
             }
-            return A.resolve();
-        }).then(() => {
-            A.I(`radar2 found ${Object.keys(scanList).length} devices (${Object.keys(scanList)})`);
-            A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
-            return A.Ptime(scanAll()).then(ms => {
-                A.I(`first scan took ${ms/1000} seconds`);
-                if (scanDelay <= ms)
-                    scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds!`, ms + 2000);
-                A.timer.push(setInterval(scanAll, scanDelay));
-                if (parseInt(A.C.external) > 0) {
-                    A.I(A.F('will scan external network every ', A.C.external, ' minutes'));
-                    A.timer.push(setInterval(scanExtIP, parseInt(A.C.external) * 1000 * 60));
-                    return scanExtIP();
+
+            A.clearStates();
+
+            if (!A.C.scandelay || parseInt(A.C.scandelay) < 15)
+                A.C.scandelay = 15;
+            scanDelay = A.C.scandelay * 1000;
+
+            bluetooth.init(btid, scanDelay * 0.7);
+
+            //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
+
+            if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
+                A.C.delayaway = 2;
+            delayAway = A.C.delayaway;
+
+            if (!A.C.printerdelay || parseInt(A.C.printerdelay) < 100)
+                A.C.printerdelay = 100;
+            printerDelay = parseInt(A.C.printerdelay);
+
+            if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
+                A.C.removeEnd = A.C.removeEnd.slice(0, -1);
+                A.debug = true;
+                A.I(`Debug mode set by adapter config ('!' as last letter in removeEnd)!`);
+            }
+
+            if (A.C.knownBTs)
+                knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
+            A.I(A.O('use known BT list: ', knownBTs));
+
+            if (A.C.knownIPs)
+                knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
+            A.I(A.O('use known IP list: ', knownIPs));
+
+            if (A.C.removeEnd)
+                network.remName = A.C.removeEnd;
+            if (network.remName)
+                A.I('Remove name end for host names: ' + network.remName);
+
+            A.timer = [];
+            arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
+                A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+            if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
+                A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
+
+            A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} minutes.`);
+
+            devices = A.C.devices;
+        })
+        .then(() =>
+            //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
+            A.isApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+            .then(x => doArp = x)
+            //        .then(() => A.isApp('hcitool').then(x => doHci = x))
+            .then(() => {
+                return A.seriesOf(devices, item => {
+                    //                A.I(`checking item ${A.O(item)}`);
+                    if (item.name)
+                        item.name = item.name.trim().replace(/[\s\.]/g, '_');
+                    if (!item.name || item.name.length < 2)
+                        return Promise.resolve(A.W(`Invalid item name '${A.O(item.name)}', must be at least 2 letters long`));
+                    if (scanList[item.name])
+                        return Promise.resolve(A.W(`Double item name '${item.name}', names cannot be used more than once!`));
+                    item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
+                    item.ip = item.ip ? item.ip.trim() : '';
+                    item.macs = item.macs ? item.macs.trim().toLowerCase() : '';
+                    item.macs.split(',').forEach(val => {
+                        const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
+                        if (mac) {
+                            if (Network.isMac(mac)) {
+                                item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
+                                item.ipVendor = Network.getMacVendor(mac);
+                                if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
+                                else macList[mac] = item;
+                            } else
+                                A.W(`invalid MAC address in ${item.name}: '${val}'`);
+                        }
+                    });
+                    item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
+                    if (Network.isMac(item.bluetooth)) {
+                        if (btList[item.bluetooth])
+                            A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
+                        else {
+                            btList[item.bluetooth] = item;
+                            item.hasBT = true;
+                            item.type = 'BT';
+                            item.btVendor = Network.getMacVendor(item.bluetooth);
+                        }
+                    } else if (item.bluetooth !== '')
+                        A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
+                    if (item.ip && item.name.startsWith('HP-')) {
+                        item.type = 'printer';
+                        numhp = numhp.concat(item.name);
+                    } else if (item.ip && item.name.startsWith('ECB-')) {
+                        item.type = 'ECB';
+                        numecb = numecb.concat(item.ip);
+                    } else if (item.ip.startsWith('http'))
+                        item.type = 'URL';
+                    else if (Network.isIP4(item.ip) || Network.isIP6(item.ip)) {
+                        item.rip = item.ip;
+                        if (ipList[item.ip])
+                            A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
+                        else(ipList[item.ip]) = item;
+                        item.type = 'IP';
+                    } else if (item.ip.length > 1) {
+                        item.type = 'IP';
+                        network.dnsResolve(item.ip).then(x => {
+                            if (x && x.length > 0) {
+                                item.rip = x;
+                                x.forEach((ip) => ipList[ip] ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
+                            }
+                            return null;
+                        });
+                    } else if (!item.hasBT)
+                        return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
+                    scanList[item.name] = item;
+                    A.I(`Init item ${item.name} with ${A.O(item)}`);
+                    return A.resolve(item.id);
+                }, 50);
+            }).then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
+            .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
+            .then(() => A.getObjectList({
+                include_docs: true
+            }))
+            .then(res => {
+                var r = {};
+                if (!A.C.delayuwz || parseInt(A.C.delayuwz) <= 0)
+                    return A.resolve(A.I(`No UWZ warning because of Delay is ${A.C.delayuwz}`));
+                delayuwz = parseInt(A.C.delayuwz);
+                numuwz = parseInt(A.C.numuwz);
+                longuwz = Boolean(A.C.longuwz);
+                res.rows.map(i => r[i.doc._id] = i.doc);
+                if (r['system.config'] && r['system.config'].common.language)
+                    lang = r['system.config'].common.language;
+                if (r['system.config'] && r['system.config'].common.latitude) {
+                    A.C.latitude = parseFloat(r['system.config'].common.latitude);
+                    A.C.longitude = parseFloat(r['system.config'].common.longitude);
+                    return A.get(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${A.C.latitude}&lon=${A.C.longitude}`, 2)
+                        .then(res => JSON.parse(res)[0], e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${A.C.longitude} Breite: ${A.C.latitude}`, null))
+                        .then(res => {
+                            doUwz = res && res.AREA_ID ? res.AREA_ID : null;
+                            if (doUwz && delayuwz > 0) {
+                                A.I(`will scan UWZ every ${delayuwz} minutes`);
+                                A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
+                                return getUWZ();
+                            }
+                            return A.resolve();
+                        });
+                } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
+            }).catch(() => null)
+            .then(() => {
+                if (numecb.length && parseInt(A.C.external) > 0) {
+                    A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
+                    A.timer.push(setInterval(scanECBs, parseInt(A.C.external) * 1000 * 60));
+                    return scanECBs().catch(() => null);
                 }
                 return A.resolve();
-            }); // scan first time and generate states if they do not exist yet
-        })
-        .then(() => A.cleanup()) // clean up old states not created this time!
-        .then(() => A.I('Adapter initialization finished!'), err => {
-            A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
-            A.stop(1);
-        }));
+            }).then(() => {
+                if (numhp.length && printerDelay > 0) {
+                    A.I(A.F('will scan printers ', numhp, ' every ', printerDelay, ' minutes'));
+                    A.timer.push(setInterval(scanHPs, printerDelay * 1000 * 60));
+                    return scanHPs();
+                }
+                return A.resolve();
+            }).then(() => {
+                A.I(`radar2 found ${Object.keys(scanList).length} devices (${Object.keys(scanList)})`);
+                A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
+                return A.Ptime(scanAll()).then(ms => {
+                    A.I(`first scan took ${ms/1000} seconds`);
+                    if (scanDelay <= ms)
+                        scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds!`, ms + 2000);
+                    A.timer.push(setInterval(scanAll, scanDelay));
+                    if (parseInt(A.C.external) > 0) {
+                        A.I(A.F('will scan external network every ', A.C.external, ' minutes'));
+                        A.timer.push(setInterval(scanExtIP, parseInt(A.C.external) * 1000 * 60));
+                        return scanExtIP();
+                    }
+                    return A.resolve();
+                }); // scan first time and generate states if they do not exist yet
+            })
+            .then(() => A.cleanup()) // clean up old states not created this time!
+            .then(() => A.I('Adapter initialization finished!'), err => {
+                A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
+                A.stop(1);
+            }));
 }

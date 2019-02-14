@@ -6,11 +6,11 @@ const assert = require('assert'),
     dgram = require('dgram'),
     net_ping = require("net-ping"),
     dns = require("dns"),
-    oui = require('oui'),
     os = require('os'),
     EventEmitter = require('events').EventEmitter;
 
 
+let macdb = {};
 
 class Bluetooth extends EventEmitter {
     constructor() {
@@ -195,9 +195,6 @@ class Network extends EventEmitter {
         this._remName = val;
     }
 
-    updateMacdb() {
-        return oui.update().then(() => A.D('Manufacturer database loaded.'), e => A.I(A.F('Error updating manufacturer database: ', e)));
-    }
     removeName(address) {
         var self = this;
         var rn = this._remName.toLowerCase().trim();
@@ -256,10 +253,10 @@ class Network extends EventEmitter {
         for (let k of this._iflist)
             if (k[1] === 'IPv4')
                 addrs.push(k[3]);
-        if (addrs.length >1)
+        if (addrs.length > 1)
             addrs.unshift('0.0.0.0');
         let ac = addrs;
-//        A.I('addrs: ' + A.F(addrs));
+        //        A.I('addrs: ' + A.F(addrs));
         while (addrs.length && !self._listener) {
             this._trybind(addrs.shift());
         }
@@ -578,14 +575,24 @@ class Network extends EventEmitter {
         return this._dnsCache.cacheItem(name);
     }
 
+    static updateMacdb() {
+        return A.get('https://linuxnet.ca/ieee/oui.txt').then(res => res, () => A.get('http://standards-oui.ieee.org/oui/oui.txt').then(res => res, () => ''))
+            .then(res => {
+                let n = 0;
+                let arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
+                if (arr && arr.length > 0)
+                    for (let l of arr) {
+                        let lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
+                        if (lm && lm.length >= 3) 
+                            macdb[lm[1].toLowerCase(++n)] = lm[2];
+                    }
+                A.I('macdb has entries: ' + n);
+            }).catch(e => A.W('Could not init MacDb! ' + e));
+    }
+
     static getMacVendor(mac) {
-        let vl;
-        try {
-            vl = oui(mac).split('\n');
-        } catch (e) {
-            return 'macdb offline!';
-        }
-        return vl && vl.length > 1 ? vl[0] /* + '/' + vl[2] */ : 'Vendor N/A';
+        let r = macdb[mac.toLowerCase().split(':').slice(0, 3).join('')];
+        return r ? r : 'Vendor N/A';
     }
 
     ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 
