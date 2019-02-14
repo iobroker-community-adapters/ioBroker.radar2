@@ -398,16 +398,16 @@ function main() {
 
     if (A.C.knownBTs)
         knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
-    A.I(A.F('use known BT list: ', knownBTs));
+    A.I(A.O('use known BT list: ', knownBTs));
 
     if (A.C.knownIPs)
         knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
-    A.I(A.F('use known IP list: ', knownIPs));
+    A.I(A.O('use known IP list: ', knownIPs));
 
     if (A.C.removeEnd)
         network.remName = A.C.removeEnd;
     if (network.remName)
-        A.I(A.F('Remove name end for host names: ', network.remName));
+        A.I('Remove name end for host names: '+network.remName);
 
     var numecb = [],
         numhp = [];
@@ -514,7 +514,7 @@ function main() {
                     .then(res => {
                         doUwz = res && res.AREA_ID ? res.AREA_ID : null;
                         if (doUwz && delayuwz > 0) {
-                            A.I(A.F('will scan UWZ every ', delayuwz, ' minutes'));
+                            A.I(`will scan UWZ every ${delayuwz} minutes`);
                             A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
                             return getUWZ();
                         }
