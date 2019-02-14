@@ -418,7 +418,7 @@ function main() {
     if (A.C.arp_scan_cmd.indexOf('--interface')<0)
         A.I(`arp-scan will use the following interfaces: `+A.O(network.ip4addrs()));
 
-    A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} scans.`);
+    A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} minutes.`);
 
     devices = A.C.devices;
 
@@ -537,8 +537,8 @@ function main() {
             }
             return A.resolve();
         }).then(() => {
-            A.I(`radar adapter initialized ${Object.keys(scanList).length} devices, ExternalNetwork = ${A.C.external}.`);
-            A.I(`radar set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
+            A.I(`radar2 found ${Object.keys(scanList).length} devices (${Object.keys(scanList)})`);
+            A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
             return A.Ptime(scanAll()).then(ms => {
                 A.I(`first scan took ${ms/1000} seconds`);
                 if (scanDelay <= ms)
