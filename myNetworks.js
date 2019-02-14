@@ -252,16 +252,24 @@ class Network extends EventEmitter {
 
 
         if (!dhcp || self._listener) return;
-        let addrs = this.ip4addrs();
-        addrs = addrs.map(i => i[3]);
-        addrs.unshift('0.0.0.0');
+        let addrs = [];
+        for (let k of this._iflist)
+            if (k[1] === 'IPv4')
+                addrs.push(k[3]);
+        if (addrs.length >1)
+            addrs.unshift('0.0.0.0');
+        let ac = addrs;
+//        A.I('addrs: ' + A.F(addrs));
         while (addrs.length && !self._listener) {
             this._trybind(addrs.shift());
         }
+        if (!this._listener)
+            A.W(`Could not bind to any dhcp listener address, tried ${ac} `);
     }
 
     _trybind(addr) {
         var self = this;
+
         function parseUdp(msg) {
             function trimNulls(str) {
                 var idx = str.indexOf('\u0000');
@@ -427,7 +435,7 @@ class Network extends EventEmitter {
                 type: 'udp4',
                 reuseAddr: true,
             });
-            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr,e)));
+            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
             this._listener.on('message', (msg, rinfo) => {
                 try {
                     var data = parseUdp(msg, rinfo);
@@ -449,9 +457,9 @@ class Network extends EventEmitter {
                     });
                     A.I(`Connected for DHCP Scan on address ` + addr);
                 }
-            } catch(e) {
+            } catch (e) {
                 this._listener = null;
-                A.I('could not bind to address: '+addr+', had error: '+A.O(e));
+                A.I('could not bind to address: ' + addr + ', had error: ' + A.O(e));
             }
         } catch (e) {
             A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
