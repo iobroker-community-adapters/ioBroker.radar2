@@ -240,6 +240,28 @@ class Network extends EventEmitter {
             networkProtocol: net_ping.NetworkProtocol.IPv6
         }));
 
+
+        for (let nif in this._nif)
+            for (let addr of this._nif[nif])
+                if (addr.internal !== undefined && !addr.internal) {
+                    this._iflist.push([
+                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
+                    ]);
+                    this.combine(addr.mac, addr.address);
+                }
+
+
+        if (!dhcp || self._listener) return;
+        let addrs = this.ip4addrs();
+        addrs = addrs.map(i => i[3]);
+        addrs.unshift('0.0.0.0');
+        while (addrs.length && !self._listener) {
+            this._trybind(addrs.shift());
+        }
+    }
+
+    _trybind(addr) {
+        var self = this;
         function parseUdp(msg) {
             function trimNulls(str) {
                 var idx = str.indexOf('\u0000');
@@ -400,69 +422,53 @@ class Network extends EventEmitter {
             }
             return p;
         }
-
-        for (let nif in this._nif)
-            for (let addr of this._nif[nif])
-                if (addr.internal !== undefined && !addr.internal) {
-                    this._iflist.push([
-                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
-                    ]);
-                    this.combine(addr.mac, addr.address);
-                }
-
-
-        if (!dhcp || self._listener) return;
-        let addrs = this.ip4addrs();
-        addrs = addrs.map(i => i[3]);
-        addrs.unshift('0.0.0.0');
-        while (addrs.length && !self._listener) {
-            let addr = addrs.shift();
-            try {
-                this._listener = dgram.createSocket({
-                    type: 'udp4',
-                    reuseAddr: true,
-                });
-                this._listener.on('error', (e) => A.W(`dhcp error ` + A.F(e)));
-                this._listener.on('message', (msg, rinfo) => {
-                    try {
-                        var data = parseUdp(msg, rinfo);
-                        if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                            var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
-                            self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
-                            self.emit('request', req);
-                        }
-                    } catch (e) {
-                        A.W(A.F('error in dhcp message ' + e));
-                    }
-                });
+        try {
+            this._listener = dgram.createSocket({
+                type: 'udp4',
+                reuseAddr: true,
+            });
+            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr,e)));
+            this._listener.on('message', (msg, rinfo) => {
                 try {
-                    if (this._listener) {
-                        this._listener.bind({
-                            address: addr,
-                            port: 67,
-                            exclusive: false
-                        });
-                        A.I(`Connected for DHCP Scan on address ` + addr);
-                    }
-                } catch(e) {
-                    this._listener = null;
-                    A.I('could not bind to address: '+addr+', had error: '+A.O(e));
-                }
-            } catch (e) {
-                A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
-                try {
-                    if (this._listener) {
-                        this._listener.removeAllListeners();
-                        this._listener.close();
-                        this._listener = null;
+                    var data = parseUdp(msg, rinfo);
+                    if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
+                        var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
+                        self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
+                        self.emit('request', req);
                     }
                 } catch (e) {
+                    A.W(A.F('error in dhcp message ' + e));
+                }
+            });
+            try {
+                if (this._listener) {
+                    this._listener.bind({
+                        address: addr,
+                        port: 67,
+                        exclusive: false
+                    });
+                    A.I(`Connected for DHCP Scan on address ` + addr);
+                }
+            } catch(e) {
+                this._listener = null;
+                A.I('could not bind to address: '+addr+', had error: '+A.O(e));
+            }
+        } catch (e) {
+            A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
+            try {
+                if (this._listener) {
+                    this._listener.removeAllListeners();
+                    this._listener.close();
                     this._listener = null;
                 }
+            } catch (e) {
                 this._listener = null;
             }
+            this._listener = null;
         }
+
     }
+
 
     ping(ips, fun) {
         var that = this;
