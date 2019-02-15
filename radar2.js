@@ -419,12 +419,12 @@ function main() {
             }
 
             if (A.C.knownBTs)
-                knownBTs = A.C.knownBTs.split(',').map(i => i.trim());
-            A.I(A.O('use known BT list: ', knownBTs));
+                knownBTs = A.C.knownBTs.toLowerCase().replace(/[\'\[\]\s]/g,'').split(',');
+            A.I('use known BT list: '+ A.O(knownBTs));
 
             if (A.C.knownIPs)
-                knownIPs = A.C.knownIPs.split(',').map(i => i.trim());
-            A.I(A.O('use known IP list: ', knownIPs));
+                knownIPs = A.C.knownIPs.replace(/[\'\[\]\s]/g,'').split(',');
+            A.I('use known IP list: '+ A.O(knownIPs));
 
             if (A.C.removeEnd)
                 network.remName = A.C.removeEnd;
