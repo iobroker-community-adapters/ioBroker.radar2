@@ -509,7 +509,7 @@ function main() {
                     } else if (!item.hasBT)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    A.I(`Init item ${item.name} with ${A.O(item)}`);
+                    A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`);
                     return A.resolve(item.id);
                 }, 50);
             }).then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())

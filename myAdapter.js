@@ -506,6 +506,15 @@ class MyAdapter {
             colors: false
         }).replace(/\n/g, '');
     }
+
+    static removeEmpty(obj) {
+        if (this.T(obj) !== 'object')
+            return obj;
+        let a = this.clone(obj);
+        for(let n of Object.getOwnPropertyNames(a))
+            if(!a[n]) delete a[n];
+        return a;
+    }
     static S(obj, level) {
         return typeof obj === 'string' ? obj : this.O(obj, level);
     }
