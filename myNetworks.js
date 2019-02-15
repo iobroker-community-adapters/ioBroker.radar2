@@ -249,19 +249,22 @@ class Network extends EventEmitter {
 
 
         if (!dhcp || self._listener) return;
-        let addrs = [];
-        for (let k of this._iflist)
-            if (k[1] === 'IPv4')
-                addrs.push(k[3]);
-        if (addrs.length > 1)
-            addrs.unshift('0.0.0.0');
-        let ac = addrs;
-        //        A.I('addrs: ' + A.F(addrs));
-        while (addrs.length && !self._listener) {
-            this._trybind(addrs.shift());
-        }
+        /*        
+                let addrs = [];
+                for (let k of this._iflist)
+                    if (k[1] === 'IPv4')
+                        addrs.push(k[3]);
+        //        if (addrs.length > 1)
+                    addrs.unshift('0.0.0.0');
+        //        let ac = addrs;
+                //        A.I('addrs: ' + A.F(addrs));
+         //       while (addrs.length && !self._listener) {
+        //            this._trybind(addrs.shift());
+        */
+        this._trybind('0.0.0.0');
+        //        }
         if (!this._listener)
-            A.W(`Could not bind to any dhcp listener address, tried ${ac} `);
+            A.W(`Could not bind to any dhcp listener address 0.0.0.0:67!`);
     }
 
     _trybind(addr) {
@@ -434,15 +437,18 @@ class Network extends EventEmitter {
             });
             this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
             this._listener.on('message', (msg, rinfo) => {
+                let data;
                 try {
-                    var data = parseUdp(msg, rinfo);
-                    if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                        var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
-                        self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
-                        self.emit('request', req);
-                    }
+                    data = parseUdp(msg, rinfo);
+//                    A.I(A.F('data udp: ', data));
                 } catch (e) {
-                    A.W(A.F('error in dhcp message ' + e));
+                    return A.W(A.F('error in dhcp message ' + e));
+                }
+//                A.D('dhcp triggered: ' + A.O(data.options));
+                if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
+                    var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
+                    self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
+                    self.emit('request', req);
                 }
             });
             try {
@@ -452,8 +458,8 @@ class Network extends EventEmitter {
                         port: 67,
                         exclusive: false
                     });
-                    A.I(`Connected for DHCP Scan on address ` + addr);
                 }
+                A.I(`Connected for DHCP Scan on address ` + addr);
             } catch (e) {
                 this._listener = null;
                 A.I('could not bind to address: ' + addr + ', had error: ' + A.O(e));
@@ -475,12 +481,10 @@ class Network extends EventEmitter {
     }
 
 
-    ping(ips, fun) {
+    ping(ips) {
         var that = this;
-        if (!fun)
-            fun = function (f) {
-                return f;
-            };
+        //        A.I(`ping ${ips}`);
+        let ret = [];
 
         function pres(ip) {
             ip = ip.trim();
@@ -497,7 +501,7 @@ class Network extends EventEmitter {
                             A.W(target + ": " + error.toString());
                         res(undefined);
                     } else
-                        res(fun(target));
+                        res(ret.push(target));
                 });
             });
         }
@@ -508,10 +512,9 @@ class Network extends EventEmitter {
 
         let pip = [];
 
-        for (let i of ips) {
+        for (let i of ips)
             pip.push(pres(i.trim()));
-        }
-        return Promise.all(pip);
+        return Promise.all(pip).then(() => ret, () => ret);
     }
 
     clearCache() {
@@ -583,7 +586,7 @@ class Network extends EventEmitter {
                 if (arr && arr.length > 0)
                     for (let l of arr) {
                         let lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
-                        if (lm && lm.length >= 3) 
+                        if (lm && lm.length >= 3)
                             macdb[lm[1].toLowerCase(++n)] = lm[2];
                     }
                 A.I('macdb has entries: ' + n);

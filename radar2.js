@@ -159,6 +159,7 @@ function setItem(item) {
     const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.btHere) : item.ipHere || item.btHere;
     if (here) {
         item.lasthere = here;
+//        A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', itemlh:', item.lasthere));
     } else {
         let n = Date.now();
         if (!lasthere)
@@ -171,24 +172,30 @@ function setItem(item) {
     }
     if (!item.lasthere)
         item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
-    if (anw !== wasanw || lasthere !== item.lasthere) {
+//    A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', anwesend', item.anwesend, ', lasthere: ',lasthere, ', itemlh:', item.lasthere));
+    if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
         A.makeState(idn + '.lasthere', A.dateTime(item.lasthere))
+//        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw))
-            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP' : '') + (item.btHere ? (item.ipHere ? ', ' : '') + 'BT' : '')));
+//            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
         //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
         //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
+            .catch(() => true);
     }
 }
 
 function foundIpMac(what) {
+//    A.I(`found: `+A.O(what));
     let found = false;
     if (what.ipAddress) {
         let ip = what.ipAddress = what.ipAddress.toLowerCase();
         let item = ipList[ip];
         found = true;
         if (item) {
+            if (item.ipHere)
+                return;
             item.ipHere = new Date();
             setItem(item);
         } else {
@@ -204,6 +211,8 @@ function foundIpMac(what) {
             network.combine(mac, what.ipAddress, what.hostName);
         what.getMacVendor = Network.getMacVendor(mac);
         if (item) {
+            if (item.ipHere)
+                return;
             item.ipHere = new Date();
             setItem(item);
         } else if (!found && knownIPs.indexOf(mac) < 0)
@@ -247,13 +256,14 @@ function scanAll() {
             if (item.type !== 'IP' && item.type !== 'BT')
                 return A.resolve();
 
-            let n = Date.now();
+            let d = new Date(),
+                n = d.getTime();
             if (!item.lasthere)
                 item.lasthere = new Date(n - (delayAway * 1001 * 60));
 
-            let d = n - item.lasthere.getTime();
+            let dd = n - item.lasthere.getTime();
             //                    A.I(A.F('item ',item.name, item.lasthere, d));
-            if (d > (delayAway * 1000 * 60))
+            if (dd > (delayAway * 1000 * 60))
                 item.anwesend = false;
             if (item.anwesend) {
                 allHere.push(item.id);
@@ -262,6 +272,7 @@ function scanAll() {
             } else {
                 notHere.push(item.id);
             }
+//            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true);
         }, 1)).then(() => {
             //            let wh = whoHere.join(', ');
@@ -544,7 +555,7 @@ function main() {
                 }
                 return A.resolve();
             }).then(() => {
-                A.I(`radar2 found ${Object.keys(scanList).length} devices (${Object.keys(scanList)})`);
+                A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)})`);
                 A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
                 return A.Ptime(scanAll()).then(ms => {
                     A.I(`first scan took ${ms/1000} seconds`);

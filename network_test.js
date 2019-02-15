@@ -44,7 +44,7 @@ function stopAll() {
 }
 
 //network.arpScan('-qlg --retry=3');
-network.on('request', (req) => network.dnsReverse(req[3]).then((names) => console.log(`Request  ${req}= from ${network.getMacVendor(req[2])}, ${names}`)));
+network.on('request', (req) => network.dnsReverse(req[3]).then((names) => console.log(`Request  ${req}= from ${Network.getMacVendor(req[2])}, ${names}`)));
 network.init(true, null, '.fritz.box');
 //A.I(A.F(network.iflist));
 process.on('SIGINT', () => {
@@ -53,19 +53,20 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 A.I(A.F(network._iflist));
-network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20'], x => console.log(`Ping returned ${x}`))
-    .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
-    .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
-    .then(() => network.dnsReverse(`192.168.178.119`).then(x => A.I(x)))
-    .then(() => network.dnsReverse(`192.168.178.120`).then(x => A.I(x)))
-    .then(() => network.dnsReverse(`192.168.178.1`).then(x => A.I(x)))
-    .then(() => network.dnsResolve('fritz.box').then(x => A.I(x)))
+network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20']).then( x => A.I(`Ping returned ${x}`))
+//    .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
+//    .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
+//    .then(() => network.dnsReverse(`192.168.178.119`).then(x => A.I(x)))
+//    .then(() => network.dnsReverse(`192.168.178.120`).then(x => A.I(x)))
+//    .then(() => network.dnsReverse(`192.168.178.1`).then(x => A.I(x)))
+//    .then(() => network.dnsResolve('fritz.box').then(x => A.I(x)))
 //    .then(() => network.dnsReverse('192.168.178.199').then(x => A.I(x)))
-    .then(() => Promise.all([bluetooth.startScan(), bluetooth.startNoble(10000)]))
+//    .then(() => Promise.all([bluetooth.startScan(), bluetooth.startNoble(10000)]))
 //    .then(() => bluetooth.startScan())
 //    .then(found => A.I(A.F('scan found:', found)))
 //    .then(() => bluetooth.startNoble(20000))
 //    .then(() => A.wait(10000))
     //    .then(() => A.I(A.F(network.ips, network.macs)))
+    .then(()=> A.wait(30000))
     .catch(err => A.E(err))
     .then(() => A.I('Will stop All now',stopAll(),A.stop(true)));
