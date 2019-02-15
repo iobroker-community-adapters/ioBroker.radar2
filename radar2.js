@@ -163,15 +163,15 @@ function setItem(item) {
     } else {
         let n = Date.now();
         if (!lasthere)
-            lasthere = item.lasthere = new Date(n - (delayAway * 1000 * 59));
+            lasthere = item.lasthere = new Date(n - (delayAway * 1001 * 60));
 
         let d = n - lasthere.getTime();
         //                    A.I(A.F('item ',item.name, item.lasthere, d));
         if (d > (delayAway * 1000 * 60))
             anw = false;
     }
-    if (!item.lasthere)
-        item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
+//    if (!item.lasthere)
+//        item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
 //    A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', anwesend', item.anwesend, ', lasthere: ',lasthere, ', itemlh:', item.lasthere));
     if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
@@ -407,6 +407,7 @@ function main() {
             if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
                 A.C.delayaway = 2;
             delayAway = A.C.delayaway;
+            A.I(`radar2 set to flag items away if they are not seen for ${delayAway} minutes`);
 
             if (!A.C.printerdelay || parseInt(A.C.printerdelay) < 100)
                 A.C.printerdelay = 100;
@@ -437,7 +438,7 @@ function main() {
             if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
                 A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
 
-            A.I(`radar set to scan every ${A.C.scandelay} sec and printers every ${printerDelay} minutes.`);
+            A.I(`radar2 set to scan every ${A.C.scandelay} seconds and printers every ${printerDelay} minutes.`);
 
             devices = A.C.devices;
         })
