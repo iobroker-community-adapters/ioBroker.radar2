@@ -497,8 +497,8 @@ class Network extends EventEmitter {
             return new Promise((res) => {
                 session.pingHost(ip, function (error, target) {
                     if (error) {
-                        if (!(error instanceof net_ping.RequestTimedOutError))
-                            A.W(target + ": " + error.toString());
+//                        if (!(error instanceof net_ping.RequestTimedOutError))
+//                            A.W(target + ": " + error.toString());
                         res(undefined);
                     } else
                         res(ret.push(target));
