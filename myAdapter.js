@@ -577,7 +577,7 @@ class MyAdapter {
 
     static seriesOf(obj, promfn, delay) { // fun gets(item) and returns a promise
         assert(typeof promfn === 'function', 'series(obj,promfn,delay) error: promfn is not a function!');
-        delay = parseInt(delay);
+        delay = parseInt(delay) || 0;
         let p = Promise.resolve();
         const nv = [],
             f = delay > 0 ? (k) => p = p.then(() => promfn(k).then(res => this.wait(delay, nv.push(res)))) :
@@ -589,7 +589,7 @@ class MyAdapter {
 
     static seriesInOI(obj, promfn, delay) { // fun gets(item) and returns a promise
         assert(typeof promfn === 'function', 'series(obj,promfn,delay) error: promfn is not a function!');
-        delay = parseInt(delay);
+        delay = parseInt(delay) || 0;
         let p = Promise.resolve();
         const nv = [],
             f = delay > 0 ? (k) => p = p.then(() => promfn(k).then(res => this.wait(delay, nv.push(res)))) :
@@ -601,7 +601,7 @@ class MyAdapter {
 
     static seriesIn(obj, promfn, delay) { // fun gets(item,object) and returns a promise
         assert(typeof promfn === 'function', 'series(obj,promfn,delay) error: promfn is not a function!');
-        delay = parseInt(delay);
+        delay = parseInt(delay) || 0;
         let p = Promise.resolve();
         const nv = [],
             f = delay > 0 ? (k) => p = p.then(() => promfn(k).then(res => this.wait(delay, nv.push(res)))) :
@@ -641,10 +641,9 @@ class MyAdapter {
         return fn(arg).catch(err => nretry <= 0 ? this.reject(err) : this.retry(nretry - 1, fn, arg));
     }
 
-    static
-    while ( /** function */ fw, /** function */ fn, /** number */ time) {
+    static while ( /** function */ fw, /** function */ fn, /** number */ time) {
         assert(typeof fw === 'function' && typeof fn === 'function', 'retry (fw,fn,) error: fw or fn is not a function!');
-        time = parseInt(time) || 1;
+        time = parseInt(time) || 0;
         return !fw() ? this.resolve(true) :
             fn().then(() => true, () => true)
             .then(() => this.wait(time))
@@ -653,7 +652,7 @@ class MyAdapter {
 
     static repeat( /** number */ nretry, /** function */ fn, arg) {
         assert(typeof fn === 'function', 'repeat (,fn,) error: fn is not a function!');
-        nretry = parseInt(nretry);
+        nretry = parseInt(nretry) || 0;
         return fn(arg)
             .then(res => this.reject(res))
             .catch(res => nretry <= 0 ? this.resolve(res) : this.repeat(nretry - 1, fn, arg));

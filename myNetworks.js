@@ -50,7 +50,7 @@ class Bluetooth extends EventEmitter {
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
         this._scan = true;
-        return this._device.scan().then(res => ((self._scan = null), res));
+        return A.Ptime(self._device.scan()).then(x => x<1000 ? self._device.scan() : Promise.resolve()).then(res => ((self._scan = null), res));
     }
 
     init(btid, nobleTime) {
@@ -628,6 +628,7 @@ class Network extends EventEmitter {
     arpScan(args) {
         function scan(cmd, self) {
             //            A.D(`arp-scan with ${cmd}`);
+//            var st = Date.now();
             return A.exec('arp-scan ' + cmd).then(res => {
                 var r = null;
                 if (res)
@@ -645,6 +646,7 @@ class Network extends EventEmitter {
                         A.N(self.emit.bind(self), 'arp-scan', found);
                     }
                 }
+//             A.I(`arp-scan took ${(Date.now()-st)/1000.0}`);
             });
         }
 

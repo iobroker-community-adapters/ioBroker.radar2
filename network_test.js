@@ -52,9 +52,10 @@ process.on('SIGINT', () => {
     stopAll();
     process.exit(0);
 });
-A.I(A.F(network._iflist));
+//A.I(A.F(network._iflist));
 network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.178.67', 'XS1', 'XS2', '192.168.179.20']).then( x => A.I(`Ping returned ${x}`))
-//    .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
+    .then(() => A.Ptime(network.arpScan('-qlg --retry=5 --timeout=400')).then(sec => A.I(A.F('arp-scan took ',sec/1000, ' seconds'))))
+    .then(() => A.Ptime(bluetooth.startScan()).then(sec => A.I(A.F('bt-scan took ',sec/1000, ' seconds'))))
 //    .then(() => network.dnsReverse(`192.168.178.67`).then(x => A.I(x)))
 //    .then(() => network.dnsReverse(`192.168.178.119`).then(x => A.I(x)))
 //    .then(() => network.dnsReverse(`192.168.178.120`).then(x => A.I(x)))
@@ -67,6 +68,6 @@ network.ping(['::1', '::2', 'localhost', '127.0.0.1', '192.168.178.1', '192.168.
 //    .then(() => bluetooth.startNoble(20000))
 //    .then(() => A.wait(10000))
     //    .then(() => A.I(A.F(network.ips, network.macs)))
-    .then(()=> A.wait(30000))
-    .catch(err => A.E(err))
+//    .then(()=> A.wait(30000))
+//    .catch(err => A.E(err))
     .then(() => A.I('Will stop All now',stopAll(),A.stop(true)));

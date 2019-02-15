@@ -243,13 +243,15 @@ function scanAll() {
 
     return Promise.all(
             [
-                (A.ownKeys(btList).length ? Promise.all([bluetooth.startNoble(scanDelay * 0.7), bluetooth.startScan()]) : A.wait(4)),
+                (A.ownKeys(btList).length ? Promise.all([
+                    bluetooth.startNoble(scanDelay * 0.8),
+                    bluetooth.startScan()]) : A.wait(1)),
                 (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ?
                     network.arpScan(arpcmd).then(() => A.seriesInOI(scanList, item => item.btHere || item.ipHere || !item.rip ? Promise.resolve() : network.ping(item.rip).then(x => x ? x.forEach(i => foundIpMac({
                         ipAddress: i,
                         by: 'ping'
-                    })) : null, () => null), 0)) :
-                    A.wait(5))
+                    })) : null, () => null))) :
+                    A.wait(1))
             ]).then(() => A.seriesIn(scanList, x => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
             let item = scanList[x];
