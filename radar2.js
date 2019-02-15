@@ -472,17 +472,20 @@ function main() {
                         }
                     });
                     item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
+                    item.type = '';
                     if (Network.isMac(item.bluetooth)) {
-                        if (btList[item.bluetooth])
+                        if (btList[item.bluetooth]) {
                             A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
-                        else {
+                            item.bluetooth = '';
+                        } else {
                             btList[item.bluetooth] = item;
-                            item.hasBT = true;
                             item.type = 'BT';
                             item.btVendor = Network.getMacVendor(item.bluetooth);
                         }
-                    } else if (item.bluetooth !== '')
+                    } else if (item.bluetooth !== '') {
                         A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
+                        item.bluetooth = '';
+                    }
                     if (item.ip && item.name.startsWith('HP-')) {
                         item.type = 'printer';
                         numhp = numhp.concat(item.name);
@@ -506,7 +509,7 @@ function main() {
                             }
                             return null;
                         });
-                    } else if (!item.hasBT)
+                    } else if (!item.bluetooth)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
                     A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`);
