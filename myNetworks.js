@@ -212,9 +212,9 @@ class Network extends EventEmitter {
         if (removeName)
             this._remName = removeName.toLowerCase();
         pingopt = pingopt || {
-            retries: 2,
+            retries: 3,
             //    sessionId: (process.pid % 65535),
-            timeout: 1000,
+            timeout: 600,
             ttl: 10
         };
 

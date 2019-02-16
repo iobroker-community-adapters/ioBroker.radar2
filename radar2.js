@@ -471,6 +471,7 @@ function main() {
                                 A.W(`invalid MAC address in ${item.name}: '${val}'`);
                         }
                     });
+                    delete item.macs;
                     item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
                     item.type = '';
                     if (Network.isMac(item.bluetooth)) {

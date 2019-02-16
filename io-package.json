@@ -34,7 +34,6 @@
         ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
         "type": "network",
-        "singletonHost": true,
         "compact": false
     },
     "native": {
