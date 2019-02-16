@@ -512,7 +512,7 @@ class MyAdapter {
             return obj;
         let a = this.clone(obj);
         for(let n of Object.getOwnPropertyNames(a))
-            if(!a[n]) delete a[n];
+            if(!a[n] && typeof a[n] !== 'boolean') delete a[n];
         return a;
     }
     static S(obj, level) {
