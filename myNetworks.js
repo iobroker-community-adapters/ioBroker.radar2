@@ -73,12 +73,6 @@ class Bluetooth extends EventEmitter {
 
         try {
             this._noble = require('@abandonware/noble');
-            A.I("found '@abandonware/noble'");
-        } catch (e) {
-            A.W(`Noble not available, Error: ${A.O(e)}`);
-            this._noble = null;
-        }
-        if (this._noble) {
             this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
             //        this._noble.on('scanStart', () => A.D('Noble scan started'));
             //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
@@ -96,10 +90,14 @@ class Bluetooth extends EventEmitter {
                         //                        vendor: Network.getMacVendor(per.address)
                     });
             });
+//            this._noble.stopScanning();
+        A.I("found '@abandonware/noble'");
+        } catch (e) {
+            A.W(`Noble not available, Error: ${A.O(e)}`);
+            this._noble = null;
         }
         try {
             this._nbt = require('node-bluetooth');
-            A.I("found 'node-bluetooth'");
             this._device = new this._nbt.DeviceINQ();
             this._device.on('found', (address, name) => self.emit('found', {
                 address: address,
@@ -107,10 +105,10 @@ class Bluetooth extends EventEmitter {
                 btVendor: Network.getMacVendor(address),
                 by: 'scan'
             }));
+            A.I("found 'node-bluetooth'");
         } catch (e) {
             A.W('node-bluetooth not found!');
         }
-        //        this._noble.stopScanning();
     }
 
     stopNoble() {
@@ -215,7 +213,7 @@ class Network extends EventEmitter {
             retries: 3,
             //    sessionId: (process.pid % 65535),
             timeout: 600,
-            ttl: 10
+            ttl: 64
         };
 
         this._dnsCache = new A.CacheP(((name) => {
@@ -435,7 +433,7 @@ class Network extends EventEmitter {
                 type: 'udp4',
                 reuseAddr: true,
             });
-            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
+//            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
             this._listener.on('message', (msg, rinfo) => {
                 let data;
                 try {

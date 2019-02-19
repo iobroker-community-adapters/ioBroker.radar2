@@ -1,5 +1,16 @@
 "use strict";
 
+
+const     EventEmitter = require('events').EventEmitter;
+const oel = EventEmitter.prototype.setMaxListeners;
+EventEmitter.prototype.setMaxListeners = function(x) {
+    console.log(`${this}`, 'sets maxemitter to ', x);
+//    throw "setMaxListeners";
+    oel.bind(this)(x);
+};
+
+
+
 const A = require('./myAdapter').MyAdapter,
     Network = require('./myNetworks').Network,
     Bluetooth = require('./myNetworks').Bluetooth;

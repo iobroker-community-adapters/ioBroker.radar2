@@ -2,7 +2,7 @@
  *      iobroker radar2 Adapter
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
- *      v 0.1.0 Feb 2019
+ *      v 0.1.3 Feb 2019
  */
 /* eslint-env node,es6 */
 /*jslint node: true, bitwise: true, sub:true */

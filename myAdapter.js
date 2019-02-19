@@ -3,7 +3,7 @@
  *      (c) 2019- <frankjoke@hotmail.com>
  *      MIT License
  * 
- *  V 1.0
+ *  V 1.1 Feb 2019
  */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
