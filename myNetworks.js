@@ -50,7 +50,7 @@ class Bluetooth extends EventEmitter {
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
         this._scan = true;
-        return A.Ptime(self._device.scan()).then(x => x<1000 ? self._device.scan() : Promise.resolve()).then(res => ((self._scan = null), res));
+        return A.Ptime(self._device.scan()).then(x => x < 1000 ? self._device.scan() : Promise.resolve()).then(res => ((self._scan = null), res));
     }
 
     init(btid, nobleTime) {
@@ -90,8 +90,8 @@ class Bluetooth extends EventEmitter {
                         //                        vendor: Network.getMacVendor(per.address)
                     });
             });
-//            this._noble.stopScanning();
-        A.I("found '@abandonware/noble'");
+            //            this._noble.stopScanning();
+            A.I("found '@abandonware/noble'");
         } catch (e) {
             A.W(`Noble not available, Error: ${A.O(e)}`);
             this._noble = null;
@@ -210,9 +210,10 @@ class Network extends EventEmitter {
         if (removeName)
             this._remName = removeName.toLowerCase();
         pingopt = pingopt || {
-            retries: 3,
+            retries: 4,
             //    sessionId: (process.pid % 65535),
-            timeout: 600,
+            packetSize: 56,
+            timeout: 700,
             ttl: 64
         };
 
@@ -433,16 +434,16 @@ class Network extends EventEmitter {
                 type: 'udp4',
                 reuseAddr: true,
             });
-//            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
+            //            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
             this._listener.on('message', (msg, rinfo) => {
                 let data;
                 try {
                     data = parseUdp(msg, rinfo);
-//                    A.I(A.F('data udp: ', data));
+                    //                    A.I(A.F('data udp: ', data));
                 } catch (e) {
                     return A.W(A.F('error in dhcp message ' + e));
                 }
-//                A.D('dhcp triggered: ' + A.O(data.options));
+                //                A.D('dhcp triggered: ' + A.O(data.options));
                 if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
                     var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
                     self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
@@ -493,13 +494,16 @@ class Network extends EventEmitter {
                 else return that.dnsResolve(ip).then(list => list && list[0] ? pres(list[0]) : null, () => null);
             }
             return new Promise((res) => {
-                session.pingHost(ip, function (error, target) {
+//                    A.I(`try to ping on ${ip}`);
+                    session.pingHost(ip, function (error, target) {
                     if (error) {
-//                        if (!(error instanceof net_ping.RequestTimedOutError))
-//                            A.W(target + ": " + error.toString());
-                        res(undefined);
-                    } else
-                        res(ret.push(target));
+                        //                        if (!(error instanceof net_ping.RequestTimedOutError))
+                        //                            A.W(target + ": " + error.toString());
+                        //                        A.I(`ping negative result on ${ip} was ${error}`);
+                        return res(undefined);
+                    }
+                    //                        A.I(`ping positive result on ${ip} was ${target}`);
+                    return res(ret.push(target));
                 });
             });
         }
@@ -626,7 +630,7 @@ class Network extends EventEmitter {
     arpScan(args) {
         function scan(cmd, self) {
             //            A.D(`arp-scan with ${cmd}`);
-//            var st = Date.now();
+            //            var st = Date.now();
             return A.exec('arp-scan ' + cmd).then(res => {
                 var r = null;
                 if (res)
@@ -644,7 +648,7 @@ class Network extends EventEmitter {
                         A.N(self.emit.bind(self), 'arp-scan', found);
                     }
                 }
-//             A.I(`arp-scan took ${(Date.now()-st)/1000.0}`);
+                //             A.I(`arp-scan took ${(Date.now()-st)/1000.0}`);
             });
         }
 

@@ -159,7 +159,7 @@ function setItem(item) {
     const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.btHere) : item.ipHere || item.btHere;
     if (here) {
         item.lasthere = here;
-//        A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', itemlh:', item.lasthere));
+        //        A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', itemlh:', item.lasthere));
     } else {
         let n = Date.now();
         if (!lasthere)
@@ -170,24 +170,24 @@ function setItem(item) {
         if (d > (delayAway * 1000 * 60))
             anw = false;
     }
-//    if (!item.lasthere)
-//        item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
-//    A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', anwesend', item.anwesend, ', lasthere: ',lasthere, ', itemlh:', item.lasthere));
+    //    if (!item.lasthere)
+    //        item.lasthere = new Date(Date.now() - (delayAway * 1000 * 60 * 10));
+    //    A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', anwesend', item.anwesend, ', lasthere: ',lasthere, ', itemlh:', item.lasthere));
     if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
         A.makeState(idn + '.lasthere', A.dateTime(item.lasthere))
-//        A.makeState(idn + '.lasthere', item.lasthere)
+            //        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw))
-//            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
-        //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
-        //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
+            //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
+            //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
+            //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
             .catch(() => true);
     }
 }
 
 function foundIpMac(what) {
-//    A.I(`found: `+A.O(what));
+    //    A.I(`found: `+A.O(what));
     let found = false;
     if (what.ipAddress) {
         let ip = what.ipAddress = what.ipAddress.toLowerCase();
@@ -245,13 +245,23 @@ function scanAll() {
             [
                 (A.ownKeys(btList).length ? Promise.all([
                     bluetooth.startNoble(scanDelay * 0.8),
-                    bluetooth.startScan()]) : A.wait(1)),
-                (doArp && A.ownKeys(macList).length + A.ownKeys(ipList).length ?
-                    network.arpScan(arpcmd).then(() => A.seriesInOI(scanList, item => item.btHere || item.ipHere || !item.rip ? Promise.resolve() : network.ping(item.rip).then(x => x ? x.forEach(i => foundIpMac({
-                        ipAddress: i,
-                        by: 'ping'
-                    })) : null, () => null))) :
-                    A.wait(1))
+                    bluetooth.startScan()
+                ]) : A.wait(1)),
+                (A.ownKeys(macList).length + A.ownKeys(ipList).length ?
+                    (doArp ? network.arpScan(arpcmd) : A.wait(1))
+                    .then(() => {
+                        let ips = [];
+                        for (let i of A.ownKeys(scanList)) {
+                            let it = scanList[i];
+                            if (!it.btHere && !it.ipHere && it.rip)
+                            /*jshint -W083 */
+                                ips.push(network.ping(it.rip).then(x => x ? x.forEach(i => foundIpMac({
+                                    ipAddress: i,
+                                    by: 'ping'
+                                })) : null));
+                            return Promise.all(ips);
+                        }
+                    }) : A.wait(1))
             ]).then(() => A.seriesIn(scanList, x => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
             let item = scanList[x];
@@ -274,7 +284,7 @@ function scanAll() {
             } else {
                 notHere.push(item.id);
             }
-//            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
+            //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true);
         }, 1)).then(() => {
             //            let wh = whoHere.join(', ');
@@ -378,12 +388,12 @@ function main() {
     var numecb = [],
         numhp = [];
 
-//    Network.updateMacdb()
-//    A.wait(1)
+    //    Network.updateMacdb()
+    //    A.wait(1)
     macs.then(() => {
-        network.init(true);
+            network.init(true);
 
-        if (!A.C.devices.length) {
+            if (!A.C.devices.length) {
                 A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
                 return A.stop(true);
             }
@@ -420,12 +430,12 @@ function main() {
             }
 
             if (A.C.knownBTs)
-                knownBTs = A.C.knownBTs.toLowerCase().replace(/[\'\[\]\s]/g,'').split(',');
-            A.I('use known BT list: '+ A.O(knownBTs));
+                knownBTs = A.C.knownBTs.toLowerCase().replace(/[\'\[\]\s]/g, '').split(',');
+            A.I('use known BT list: ' + A.O(knownBTs));
 
             if (A.C.knownIPs)
-                knownIPs = A.C.knownIPs.replace(/[\'\[\]\s]/g,'').split(',');
-            A.I('use known IP list: '+ A.O(knownIPs));
+                knownIPs = A.C.knownIPs.replace(/[\'\[\]\s]/g, '').split(',');
+            A.I('use known IP list: ' + A.O(knownIPs));
 
             if (A.C.removeEnd)
                 network.remName = A.C.removeEnd;
