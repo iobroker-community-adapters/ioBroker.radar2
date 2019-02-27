@@ -193,6 +193,10 @@ class Network extends EventEmitter {
         return net.isIPv6(str) ? str : null;
     }
 
+    static getMac(ip) {
+        return A.c2p(arp.getMAC)(ip).then(x => x, e => A.D(`cannot get mac of `+ip,null));
+    }
+
     get remName() {
         return this._remName;
     }

@@ -505,11 +505,11 @@ function main() {
                         numecb = numecb.concat(item.ip);
                     } else if (item.ip.startsWith('http'))
                         item.type = 'URL';
-                    else if (Network.isIP4(item.ip) || Network.isIP6(item.ip)) {
+                    else if (Network.isIP(item.ip)) {
                         item.rip = item.ip;
                         if (ipList[item.ip])
                             A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
-                        else(ipList[item.ip]) = item;
+                        else ipList[item.ip] = item;
                         item.type = 'IP';
                     } else if (item.ip.length > 1) {
                         item.type = 'IP';
@@ -527,6 +527,16 @@ function main() {
                     return A.resolve(item.id);
                 }, 50);
             }).then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
+            .then(() => A.seriesOf(A.ownKeys(ipList),(ip) => Network.getMac(ip).then(x => {
+                if (x) {
+                    let i = ipList[ip]; 
+                    if (i.hasMAC) {
+                        if (i.hasMAC.indexOf(x)<0)
+                                i.hasMAC.push(x);
+                    } else i.hasMAC = [x];      
+                } 
+                return null;
+            }),1))
             .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
             .then(() => A.getObjectList({
                 include_docs: true
