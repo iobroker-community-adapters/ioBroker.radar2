@@ -5,8 +5,12 @@ const A = require('./myAdapter').MyAdapter;
 const assert = require('assert'),
     dgram = require('dgram'),
     net_ping = require("net-ping"),
+    arp = require('node-arp'),
+    arping = require('arping'),
     dns = require("dns"),
     os = require('os'),
+    ip = require('ip'),
+
     EventEmitter = require('events').EventEmitter;
 
 

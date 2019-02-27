@@ -139,7 +139,7 @@ function scanHPs() {
                         rgb = fc.Blue | (fc.Green << 8) | (fc.Red << 16),
                         n = item.ConsumableSelectibilityNumber;
                     rgb = '#' + (0x1000000 + rgb).toString(16).slice(1);
-                    let ss = `${p} = ${lc}, ${d ? d + ',' : ''} ${l}%, ${n}, ${rgb}, ${s}`;
+                    let ss = `${l}%, ${p}=${lc}, ${d ? d + ',' : ''}  ${n}, ${rgb}, ${s}`;
                     if (l <= 10)
                         below10.push(lc);
                     //                A.I(`printer ${idn} = ${below10}`);
