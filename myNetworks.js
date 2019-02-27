@@ -9,8 +9,7 @@ const assert = require('assert'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
-    ip = require('ip'),
-
+//    ip = require('ip'),
     EventEmitter = require('events').EventEmitter;
 
 
