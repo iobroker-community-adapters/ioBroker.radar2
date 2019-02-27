@@ -26,4 +26,3 @@ addons:
       - bluetooth 
       - libbluetooth-dev
       - libudev-dev
-      - libpcap-dev

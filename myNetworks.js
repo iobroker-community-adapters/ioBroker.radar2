@@ -6,7 +6,6 @@ const assert = require('assert'),
     dgram = require('dgram'),
     net_ping = require("net-ping"),
     arp = require('node-arp'),
-//    arping = require('arping'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
@@ -194,7 +193,7 @@ class Network extends EventEmitter {
     }
 
     static getMac(ip) {
-        return A.c2p(arp.getMAC)(ip).then(x => x, e => A.D(`cannot get mac of `+ip,null));
+        return A.c2p(arp.getMAC)(ip).then(x => this.isMac(x) ? x : null, () => null);
     }
 
     get remName() {

@@ -533,7 +533,9 @@ function main() {
                     if (i.hasMAC) {
                         if (i.hasMAC.indexOf(x)<0)
                                 i.hasMAC.push(x);
-                    } else i.hasMAC = [x];      
+                    } else i.hasMAC = [x];
+                    network.combine(x,ip);
+//                    A.I(A.F('ip %s has mac %s.',ip,x));      
                 } 
                 return null;
             }),1))
