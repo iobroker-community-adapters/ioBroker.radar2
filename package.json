@@ -42,12 +42,11 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
-    "arping": "^0.1.0",
+    "@network-utils/arp-lookup": "^1.0.3",
     "ip": "^1.1.5",
     "multicast-dns": "^7.2.0",
     "net-ping": "^1.2.3",
     "node-arp": "^1.0.6",
-    "pcap2": "^3.0.4",
     "xml2js": "^0.4.17"
   },
   "optionalDependencies": {

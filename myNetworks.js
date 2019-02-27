@@ -6,9 +6,10 @@ const assert = require('assert'),
     dgram = require('dgram'),
     net_ping = require("net-ping"),
     arp = require('node-arp'),
-    arping = require('arping'),
+//    arping = require('arping'),
     dns = require("dns"),
     os = require('os'),
+    net = require('net'),
     ip = require('ip'),
 
     EventEmitter = require('events').EventEmitter;
@@ -162,8 +163,6 @@ class Network extends EventEmitter {
         this._remName = null;
         this._nif = os.networkInterfaces();
         this._iprCache = this._dnsCache = null;
-        Network.matchIP4 = /(((?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))/;
-        Network.matchIP6 = /(([0-9A-F]{1,4}:){7,7}[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,7}:|([0-9A-F]{1,4}:){1,6}:[0-9A-F]{1,4}|([0-9A-F]{1,4}:){1,5}(:[0-9A-F]{1,4}){1,2}|([0-9A-F]{1,4}:){1,4}(:[0-9A-F]{1,4}){1,3}|([0-9A-F]{1,4}:){1,3}(:[0-9A-F]{1,4}){1,4}|([0-9A-F]{1,4}:){1,2}(:[0-9A-F]{1,4}){1,5}|[0-9A-F]{1,4}:((:[0-9A-F]{1,4}){1,6})|:((:[0-9A-F]{1,4}){1,7}|:)|fe80:(:[0-9A-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9A-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/i;
         Network.matchMac = /(([\dA-F]{2}\:){5}[\dA-F]{2})/i;
 
     }
@@ -174,6 +173,11 @@ class Network extends EventEmitter {
         return this._nif;
     }
 
+    static isIP(str) {
+        str = str.trim().toLowerCase();
+        return net.isIP(str);
+    }
+
     static isMac(str) {
         str = str.trim().toLowerCase();
         return Network.matchMac.test(str) ? str : null;
@@ -181,12 +185,12 @@ class Network extends EventEmitter {
 
     static isIP4(str) {
         str = str.trim().toLowerCase();
-        return Network.matchIP4.test(str) ? str : null;
+        return net.isIPv4(str) ? str : null;
     }
 
     static isIP6(str) {
         str = str.trim().toLowerCase();
-        return Network.matchIP6.test(str) ? str : null;
+        return net.isIPv6(str) ? str : null;
     }
 
     get remName() {
@@ -491,12 +495,10 @@ class Network extends EventEmitter {
 
         function pres(ip) {
             ip = ip.trim();
-            let session = that._ping4session;
-            if (!Network.matchIP4.test(ip)) {
-                if (Network.matchIP6.test(ip))
-                    session = that._ping6session;
-                else return that.dnsResolve(ip).then(list => list && list[0] ? pres(list[0]) : null, () => null);
-            }
+            let session = Network.isIP(ip);
+            if (!session)
+                return that.dnsResolve(ip).then(list => list && list[0] ? pres(list[0]) : null, () => null);
+            session = session=== 4 ? that._ping4session : that._ping6session;
             return new Promise((res) => {
 //                    A.I(`try to ping on ${ip}`);
                     session.pingHost(ip, function (error, target) {
