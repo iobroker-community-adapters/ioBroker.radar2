@@ -17,6 +17,7 @@
             "daemon"
         ],
         "materialize": true,
+        "enabled": true,
         "readme": "https://github.com/frankjoke/ioBroker.radar2/blob/master/README.md",
         "loglevel": "info",
         "icon": "radar2.png",
@@ -36,6 +37,12 @@
         "type": "network",
         "compact": false
     },
+    "news": {
+        "0.1.5": {
+            "en": "BETA: knowm bugs removed",
+            "de": "BETA: Bekannte Fehler behoben"
+        },
+
     "native": {
         "devices": [
             {

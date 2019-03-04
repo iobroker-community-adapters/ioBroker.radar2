@@ -315,6 +315,7 @@ function scanAll() {
 
 function getUWZ() {
     A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
+//        .then(x => A.Ir(x,'GetUWZ returned %O',x))
         .then(body => JSON.parse(body))
         .then(data => {
             var w = data && data.results;
@@ -454,7 +455,7 @@ function main() {
         })
         .then(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-            A.isApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+            A.isLinuxApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
             .then(x => doArp = x)
             //        .then(() => A.isApp('hcitool').then(x => doHci = x))
             .then(() => {
@@ -557,6 +558,7 @@ function main() {
                     A.C.latitude = parseFloat(r['system.config'].common.latitude);
                     A.C.longitude = parseFloat(r['system.config'].common.longitude);
                     return A.get(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${A.C.latitude}&lon=${A.C.longitude}`, 2)
+//                        .then(x => A.Ir(x,'GetUWZ returned on %s/%s:%O',A.C.latitude,A.C.longitude,x))
                         .then(res => JSON.parse(res)[0], e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${A.C.longitude} Breite: ${A.C.latitude}`, null))
                         .then(res => {
                             doUwz = res && res.AREA_ID ? res.AREA_ID : null;
