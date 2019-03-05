@@ -46,11 +46,11 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^1.0.3",
-    "net-ping": "^1.2.3",
     "node-arp": "^1.0.6",
     "xml2js": "^0.4.17"
   },
   "optionalDependencies": {
+    "net-ping": "^1.2.3",
     "node-bluetooth": "^1.2.5",
     "@abandonware/noble": "^1.9.2-1"
   },
