@@ -79,7 +79,7 @@ Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber d
 
 
 ### Important/Wichtig
-* Adapter braucht node > v4.1.*!
+* Adapter braucht node >= v6.*!
 * Adapter läuft nicht unter osx! 
 
 ### Todo
