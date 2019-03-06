@@ -1,16 +1,14 @@
+# radar2 network and bloutooth availability
+
 ![Logo](admin/radar2.png)
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
-**Tests:** Linux/Mac: [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.radar2/master.svg)](https://travis-ci.org/frankjoke/ioBroker.radar2)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/frankjoke/ioBroker.radar2?branch=master&svg=true)](https://ci.appveyor.com/project/frankjoke/ioBroker-radar2/)
-
+**Tests:** Linux/Mac/Windows: [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.radar2/master.svg)](https://travis-ci.org/frankjoke/ioBroker.radar2)
 
 [![NPM](https://nodei.co/npm/iobroker.radar2.png?downloads=true)](https://nodei.co/npm/iobroker.radar2/)
 
-==============
-
-# ioBroker radar2 für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
+## ioBroker radar2 für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
 Mit diesem Adapter kann man testen ob Geräte via Netzwerk oder Bluetooth verfügbar sind.
 
 Er kann folgendes aufspüren oder anzeigen:
@@ -79,13 +77,18 @@ Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber d
 
 
 ### Important/Wichtig
-* Adapter braucht node >= v6.*!
-* Adapter läuft nicht unter osx! 
+* Adapter needs node >= v6.*!
+* Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
+* Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
 ### Todo
 * mehrsprachige Anleitung und Texte
 
 ## Changelog
+### 0.1.7 Beta
+* Installed fallback for net-ping if net-ping cannot be installed by npm the adapter will use the normal 'ping' of the unterlaying os. This makes it possible to run the adapter on all OS.
+* Adapter tests updated so adapter succeeds in node 6/8 and 10 as well on linux, windows and osx.
+
 ### 0.1.5 Beta
 * klnown bugs removed
 
