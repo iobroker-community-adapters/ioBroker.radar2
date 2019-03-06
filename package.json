@@ -25,7 +25,9 @@
     "type": "git",
     "url": "https://github.com/frankjoke/ioBroker.radar2"
   },
-  "engines" : { "node" : ">=6.1.0" },
+  "engines": {
+    "node": ">=6.1.0"
+  },
   "devDependencies": {
     "axios": "^0.18.0",
     "chai": "^4.1.2",
@@ -47,6 +49,7 @@
   "dependencies": {
     "@iobroker/adapter-core": "^1.0.3",
     "node-arp": "^1.0.6",
+    "ping": "^0.2.2",
     "xml2js": "^0.4.17"
   },
   "optionalDependencies": {

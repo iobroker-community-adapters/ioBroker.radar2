@@ -192,6 +192,10 @@ class Hrtime {
 
     }
 
+    get sec() {
+        return Number(this.text);
+    }
+
     set time(t) {
         this._stime = t;
     }
@@ -567,9 +571,11 @@ class MyAdapter {
         });
     }
 
-    static Ptime(promise) {
+    static Ptime(promise,arg) {
         var start = Date.now();
-        return promise.then(() => {
+        if (typeof promise === 'function')
+            promise = promise(arg);
+        return Promise.resolve(promise).then(() => {
             var end = Date.now();
             return end - start;
         });

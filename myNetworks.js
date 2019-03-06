@@ -4,12 +4,12 @@ const A = require('./myAdapter').MyAdapter;
 
 const assert = require('assert'),
     dgram = require('dgram'),
-    net_ping = require("net-ping"),
     arp = require('node-arp'),
+    ping = require('ping'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
-//    ip = require('ip'),
+    //    ip = require('ip'),
     EventEmitter = require('events').EventEmitter;
 
 
@@ -63,6 +63,7 @@ class Bluetooth extends EventEmitter {
         if (!nobleTime || nobleTime < 0)
             nobleTime = 10000;
         this._len = parseInt(nobleTime);
+
 
         if (isNaN(this._btid)) {
             A.W(`BT interface number not defined in config, will use '-1' to deceide for noble`);
@@ -161,6 +162,7 @@ class Network extends EventEmitter {
         this._remName = null;
         this._nif = os.networkInterfaces();
         this._iprCache = this._dnsCache = null;
+        this._netping = null;
         Network.matchMac = /(([\dA-F]{2}\:){5}[\dA-F]{2})/i;
 
     }
@@ -203,6 +205,10 @@ class Network extends EventEmitter {
         this._remName = val;
     }
 
+    static get Ping() {
+        return ping;
+    }
+
     removeName(address) {
         var self = this;
         var rn = this._remName.toLowerCase().trim();
@@ -227,6 +233,44 @@ class Network extends EventEmitter {
             ttl: 64
         };
 
+        try {
+            this._netping = require("net-pingg"),
+                this._ping4session = this._netping.createSession(Object.assign(pingopt, {
+                    networkProtocol: this._netping.NetworkProtocol.IPv4
+                }));
+            this._ping6session = this._netping.createSession(Object.assign(pingopt, {
+                networkProtocol: this._netping.NetworkProtocol.IPv6
+            }));
+            this._ping6session.mping = this._ping4session.mping = function mping(ip) {
+                return new Promise((res) => {
+                    // A.I(`try to ping on ${ip}:`);
+
+                    this.pingHost(ip, function (error, target) {
+                        if (error) {
+                            //                        if (!(error instanceof net_ping.RequestTimedOutError))
+                            //                            A.W(target + ": " + error.toString());
+                            //                        A.I(`ping negative result on ${ip} was ${error}`);
+                            return res(undefined);
+                        }
+                        A.I(`ping positive result on ${ip} was ${target}`);
+                        return res(target);
+                    });
+                });
+            };
+        } catch (e) {
+            A.I('net-ping not available! Will try to use normal ping!');
+            const my = {
+                mping(ip) {
+                    return ping.promise.probe(ip).then(x => A.Ir(x, 'ping on %s returned %O',ip,x) && x.alive ? ip : null, () => null);
+                },
+                close() {
+                    return;
+                }
+            }
+            this._ping6session = this._ping4session = my;
+        }
+
+
         this._dnsCache = new A.CacheP(((name) => {
             let arr = [];
             return Promise.all([
@@ -238,14 +282,6 @@ class Network extends EventEmitter {
         this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
 
         this.clearCache();
-
-        this._ping4session = net_ping.createSession(Object.assign(pingopt, {
-            networkProtocol: net_ping.NetworkProtocol.IPv4
-        }));
-        this._ping6session = net_ping.createSession(Object.assign(pingopt, {
-            networkProtocol: net_ping.NetworkProtocol.IPv6
-        }));
-
 
         for (let nif in this._nif)
             for (let addr of this._nif[nif])
@@ -500,10 +536,11 @@ class Network extends EventEmitter {
             let session = Network.isIP(ip);
             if (!session)
                 return that.dnsResolve(ip).then(list => list && list[0] ? pres(list[0]) : null, () => null);
-            session = session=== 4 ? that._ping4session : that._ping6session;
+            session = session === 4 ? that._ping4session : that._ping6session;
+            return session.mping(ip).then(x => x ? ret.push(target) : x, x => x);
             return new Promise((res) => {
-//                    A.I(`try to ping on ${ip}`);
-                    session.pingHost(ip, function (error, target) {
+                //                    A.I(`try to ping on ${ip}`);
+                session.pingHost(ip, function (error, target) {
                     if (error) {
                         //                        if (!(error instanceof net_ping.RequestTimedOutError))
                         //                            A.W(target + ": " + error.toString());
