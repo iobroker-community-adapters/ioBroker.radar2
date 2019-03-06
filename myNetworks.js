@@ -234,7 +234,7 @@ class Network extends EventEmitter {
         };
 
         try {
-            this._netping = require("net-pingg"),
+            this._netping = require("net-ping"),
                 this._ping4session = this._netping.createSession(Object.assign(pingopt, {
                     networkProtocol: this._netping.NetworkProtocol.IPv4
                 }));
@@ -252,7 +252,7 @@ class Network extends EventEmitter {
                             //                        A.I(`ping negative result on ${ip} was ${error}`);
                             return res(undefined);
                         }
-                        A.I(`ping positive result on ${ip} was ${target}`);
+//                        A.I(`ping positive result on ${ip} was ${target}`);
                         return res(target);
                     });
                 });
@@ -261,7 +261,7 @@ class Network extends EventEmitter {
             A.I('net-ping not available! Will try to use normal ping!');
             const my = {
                 mping(ip) {
-                    return ping.promise.probe(ip).then(x => A.Ir(x, 'ping on %s returned %O',ip,x) && x.alive ? ip : null, () => null);
+                    return ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null);
                 },
                 close() {
                     return;

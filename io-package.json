@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "0.1.6" ,
+        "version": "0.1.7" ,
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
             "en": "This adapter can scan IP and bluetooth addresses for availability/in reach and also get exchange rates from European Central Bank, Weather warning from UWZ  and get ink fill from HP printers",
@@ -38,6 +38,10 @@
         "compact": false
     },
     "news": {
+        "0.1.7": {
+            "en": "BETA: net-ping is now optional and normal ping is used if not available!",
+            "de": "BETA: net-ping ist optional und normales ping wird benutzt wenn es nicht vorhanden ist!"
+        },
         "0.1.6": {
             "en": "BETA: knowm bugs removed",
             "de": "BETA: Bekannte Fehler behoben"
