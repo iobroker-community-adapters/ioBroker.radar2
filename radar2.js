@@ -391,8 +391,8 @@ function main() {
 
     //    Network.updateMacdb()
     //    A.wait(1)
+    network.init(true);
     Network.updateMacdb().then(() => {
-            network.init(true);
 
             if (!A.C.devices.length) {
                 A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);

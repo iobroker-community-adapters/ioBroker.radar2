@@ -313,7 +313,11 @@ class Network extends EventEmitter {
          //       while (addrs.length && !self._listener) {
         //            this._trybind(addrs.shift());
         */
+       try {
         this._trybind('0.0.0.0');
+       } catch(e) {
+           A.W('could not bind to dhcp port!');
+       }
         //        }
         if (!this._listener)
             A.W(`Could not bind to any dhcp listener address 0.0.0.0:67!`);
@@ -509,9 +513,8 @@ class Network extends EventEmitter {
                         address: addr,
                         port: 67,
                         exclusive: false
-                    });
+                    }, () => A.If('Connected with %O for DHCP Scan',addr));
                 }
-                A.I(`Connected for DHCP Scan on address ` + addr);
             } catch (e) {
                 this._listener = null;
                 A.I('could not bind to address: ' + addr + ', had error: ' + A.O(e));
