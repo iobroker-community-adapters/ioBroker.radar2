@@ -146,7 +146,7 @@ function scanHPs() {
                     return A.makeState(idnc, ss);
                 }, 1)
                 .then(() => A.makeState(idn + 'ink', below10.length > 0 ? below10.join(', ') : 'All >10%'))
-                .then(() => A.makeState(item.id, '' + new Date())))
+                .then(() => A.makeState(item.id, '' + A.dateTime(new Date()))))
             .catch(err => A.D(`HP Printer could not find info! Err: ${A.O(err)}`));
     }, 0);
 }
@@ -530,7 +530,8 @@ function main() {
                     } else if (!item.bluetooth)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return ret.then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
+                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(new Date(item.lasthere = st.ts)),true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).then(st => A.Ir(st,'lasthere is %O',st)).catch(() => null)
+                    .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(() => null)
             .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
