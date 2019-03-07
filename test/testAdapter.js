@@ -1,3 +1,4 @@
+/* eslint-disable strict */
 /* jshint -W097 */// jshint strict:false
 /*jslint node: true */
 var expect = require('chai').expect;
@@ -102,7 +103,7 @@ describe('Test ' + adapterShortName + ' adapter', function() {
     ENABLE THIS WHEN ADAPTER RUNS IN DEAMON MODE TO CHECK THAT IT HAS STARTED SUCCESSFULLY
 */
     it('Test ' + adapterShortName + ' adapter: Check if adapter started', function (done) {
-        this.timeout(60000);
+        this.timeout(160000);
         checkConnectionOfAdapter(function (res) {
             if (res) console.log(res);
             expect(res).not.to.be.equal('Cannot check connection');
