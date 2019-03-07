@@ -31,7 +31,9 @@
             "ECB",
             "printer",
             "Drucker",
-            "HP"
+            "HP",
+            "Tinte",
+            "Ink"
         ],
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
         "type": "network",
