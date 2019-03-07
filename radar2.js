@@ -187,7 +187,7 @@ function setItem(item) {
 }
 
 function foundIpMac(what) {
-    //    A.I(`found: `+A.O(what));
+    //    A.D(`found: ` + A.O(what));
     let found = false;
     if (what.ipAddress) {
         let ip = what.ipAddress = what.ipAddress.toLowerCase();
@@ -241,30 +241,31 @@ function scanAll() {
     let allHere = [];
     let notHere = [];
 
-    return Promise.all(
-            [
-                (A.ownKeys(btList).length ? Promise.all([
-                    bluetooth.startNoble(scanDelay * 0.8),
-                    bluetooth.startScan()
-                ]) : A.wait(1)),
-                (A.ownKeys(macList).length + A.ownKeys(ipList).length ?
-                    (doArp ? network.arpScan(arpcmd) : A.wait(1))
-                    .then(() => {
-                        let ips = [];
-                        for (let i of A.ownKeys(scanList)) {
-                            let it = scanList[i];
-                            if (!it.btHere && !it.ipHere && it.rip)
-                            /*jshint -W083 */
-                                ips.push(network.ping(it.rip).then(x => x ? x.forEach(i => foundIpMac({
-                                    ipAddress: i,
-                                    by: 'ping'
-                                })) : null));
-                            return Promise.all(ips);
-                        }
-                    }) : A.wait(1))
-            ]).then(() => A.seriesIn(scanList, x => {
+    const prom = [];
+    const btl = A.ownKeys(btList).length;
+
+    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
+    prom.push(btl ? bluetooth.startScan().catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
+    if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
+
+        prom.push((doArp ? network.arpScan(arpcmd) : A.wait(1))
+            .then(() => {
+                return A.seriesInOI(scanList, it => {
+                    if (!it.btHere && !it.ipHere && it.rip && it.rip.length > 0) {
+                        //                        A.Df('check unreached %s: %O', it.name, it);
+                        return A.wait(0).then(() => network.ping(it.rip)).then(x => x ? x.forEach(i => foundIpMac({
+                            ipAddress: i,
+                            by: 'ping'
+                        })) : null).catch(e => A.W(`ping error: ${A.O(e)}`));
+                    }
+                    return Promise.resolve();
+                }, 1);
+            }).catch(e => A.W(`ping error: ${A.O(e)}`)));
+
+    return Promise.all(prom)
+        .then(() => A.wait(50))
+        .then(() => A.seriesInOI(scanList, item => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
-            let item = scanList[x];
             if (item.type !== 'IP' && item.type !== 'BT')
                 return A.resolve();
 
@@ -315,7 +316,7 @@ function scanAll() {
 
 function getUWZ() {
     A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
-//        .then(x => A.Ir(x,'GetUWZ returned %O',x))
+        //        .then(x => A.Ir(x,'GetUWZ returned %O',x))
         .then(body => JSON.parse(body))
         .then(data => {
             var w = data && data.results;
@@ -363,8 +364,6 @@ process.on('SIGINT', () => {
 });
 
 
-let macs = Network.updateMacdb();
-
 function main() {
     host = A.adapter.host;
 
@@ -372,6 +371,7 @@ function main() {
         ipAddress: items[3],
         macAddress: items[2],
         hostName: items[0],
+        macVendor: Network.getMacVendor(items[2]),
         by: 'dhcp'
     }));
     network.on('arp-scan', found => foundIpMac({
@@ -391,7 +391,7 @@ function main() {
 
     //    Network.updateMacdb()
     //    A.wait(1)
-    macs.then(() => {
+    Network.updateMacdb().then(() => {
             network.init(true);
 
             if (!A.C.devices.length) {
@@ -431,11 +431,11 @@ function main() {
             }
 
             if (A.C.knownBTs)
-                knownBTs = A.C.knownBTs.toLowerCase().replace(/[\'\[\]\s]/g, '').split(',');
+                knownBTs = A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',');
             A.I('use known BT list: ' + A.O(knownBTs));
 
             if (A.C.knownIPs)
-                knownIPs = A.C.knownIPs.replace(/[\'\[\]\s]/g, '').split(',');
+                knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
             A.I('use known IP list: ' + A.O(knownIPs));
 
             if (A.C.removeEnd)
@@ -461,8 +461,9 @@ function main() {
             .then(() => {
                 return A.seriesOf(devices, item => {
                     //                A.I(`checking item ${A.O(item)}`);
+                    let ret = Promise.resolve();
                     if (item.name)
-                        item.name = item.name.trim().replace(/[\s\.]/g, '_');
+                        item.name = item.name.trim().replace(/[\s.]/g, '_');
                     if (!item.name || item.name.length < 2)
                         return Promise.resolve(A.W(`Invalid item name '${A.O(item.name)}', must be at least 2 letters long`));
                     if (scanList[item.name])
@@ -504,42 +505,48 @@ function main() {
                     } else if (item.ip && item.name.startsWith('ECB-')) {
                         item.type = 'ECB';
                         numecb = numecb.concat(item.ip);
-                    } else if (item.ip.startsWith('http'))
+                    } else if (item.ip.startsWith('http')) {
                         item.type = 'URL';
-                    else if (Network.isIP(item.ip)) {
-                        item.rip = item.ip;
-                        if (ipList[item.ip])
-                            A.W(`ip address ${item.ip} in ${item.name} was used already for another device ${ipList[item.ip].name}, this is forbidden!`);
-                        else ipList[item.ip] = item;
-                        item.type = 'IP';
                     } else if (item.ip.length > 1) {
                         item.type = 'IP';
-                        network.dnsResolve(item.ip).then(x => {
-                            if (x && x.length > 0) {
-                                item.rip = x;
-                                x.forEach((ip) => ipList[ip] ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
-                            }
-                            return null;
-                        });
+                        item.rip = !item.rip ? [] : !Array.isArray(item.rip) ? [item.rip] : item.rip;
+                        const list = item.ip.split(',').map(x => x.trim());
+                        ret = A.seriesOf(list, (addr) => Network.isIP(addr) ?
+                                A.resolve(item.rip.push(addr)) :
+                                network.dnsResolve(addr).then(x => {
+                                    //                                    A.Ir(x, 'dns for %s was %O', addr, x);
+                                    if (x)
+                                        x.forEach((i) => item.rip.push(i));
+                                    return null;
+                                }).catch(e => A.E(A.O(e))), 0)
+                            .then(() => {
+                                let x = item.rip;
+                                if (x && x.length > 0) {
+                                    x.forEach((ip) => ipList[ip] && ipList[ip] == item ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
+                                }
+                                return null;
+                            }).catch(e => A.E(A.O(e)));
+                        delete item.ip;
                     } else if (!item.bluetooth)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`);
-                    return A.resolve(item.id);
-                }, 50);
-            }).then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
-            .then(() => A.seriesOf(A.ownKeys(ipList),(ip) => Network.getMac(ip).then(x => {
+                    return ret.then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
+                }, 5);
+            }).catch(() => null)
+            .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
+            .then(() => A.seriesOf(A.ownKeys(ipList), (ip) => Network.getMac(ip).then(x => {
                 if (x) {
-                    let i = ipList[ip]; 
+                    let i = ipList[ip];
                     if (i.hasMAC) {
-                        if (i.hasMAC.indexOf(x)<0)
-                                i.hasMAC.push(x);
+                        if (i.hasMAC.indexOf(x) < 0)
+                            i.hasMAC.push(x);
                     } else i.hasMAC = [x];
-                    network.combine(x,ip);
-//                    A.I(A.F('ip %s has mac %s.',ip,x));      
-                } 
-                return null;
-            }),1))
+                    if (x && ip)
+                        network.combine(x, ip);
+                    //                    A.I(A.F('ip %s has mac %s.',ip,x));      
+                }
+                return Promise.resolve(null);
+            }), 0).catch(e => A.E(A.O(e))))
             .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
             .then(() => A.getObjectList({
                 include_docs: true
@@ -552,18 +559,14 @@ function main() {
                 numuwz = parseInt(A.C.numuwz);
                 longuwz = Boolean(A.C.longuwz);
                 res.rows.map(i => r[i.doc._id] = i.doc);
-                if (r['system.config'] && r['system.config'].common.language)
-                    lang = r['system.config'].common.language;
-                if (r['system.config'] && r['system.config'].common.latitude) {
-                    A.C.latitude = parseFloat(r['system.config'].common.latitude);
-                    A.C.longitude = parseFloat(r['system.config'].common.longitude);
+                lang = A.C.lang;
+                if (A.C.latitude && A.C.longitude) {
                     return A.get(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${A.C.latitude}&lon=${A.C.longitude}`, 2)
-//                        .then(x => A.Ir(x,'GetUWZ returned on %s/%s:%O',A.C.latitude,A.C.longitude,x))
                         .then(res => JSON.parse(res)[0], e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${A.C.longitude} Breite: ${A.C.latitude}`, null))
                         .then(res => {
                             doUwz = res && res.AREA_ID ? res.AREA_ID : null;
                             if (doUwz && delayuwz > 0) {
-                                A.I(`will scan UWZ every ${delayuwz} minutes`);
+                                A.I(`will scan UWZ with code ${res.AREA_ID} every ${delayuwz} minutes`);
                                 A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
                                 return getUWZ();
                             }

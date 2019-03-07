@@ -85,6 +85,7 @@ let messages, timer, unload, aname, stopping = false,
     onStop = null,
     objects = {},
     states = {},
+    systemconf = null,
     stq = new Sequence();
 const
     sstate = {},
@@ -208,6 +209,10 @@ class MyAdapter {
         return MyAdapter;
     }
 
+    static get config() {
+        return systemconf;
+    }
+
     static processMessage(obj) {
         return (obj.command === 'debug' ? this.resolve(`debug set to '${inDebug = isNaN(parseInt(obj.message)) ?  this.parseLogic(obj.message) : parseInt(obj.message)}'`) : messages(obj))
             .then(res => this.D(`Message from '${obj.from}', command '${obj.command}', message '${this.S(obj.message)}' executed with result:"${this.S(res)}"`, res),
@@ -250,6 +255,7 @@ class MyAdapter {
                         if (o.type === 'state' && o.common.name && !i.doc._id.startsWith('system.adapter.'))
                             addSState(o.common.name, i.doc._id);
                     }
+                    systemconf = objects['system.config'];
                     if (objects['system.config'] && objects['system.config'].common.language)
                         adapter.config.lang = objects['system.config'].common.language;
                     if (objects['system.config'] && objects['system.config'].common.latitude) {
@@ -374,6 +380,13 @@ class MyAdapter {
         return (inDebug ?
             slog(adapter, 'info', `debug: ${str}`) :
             slog(adapter, 'debug', str), val !== undefined ? val : str);
+    }
+    static Dr(str) {
+        if (!inDebug || curDebug > Number(inDebug))
+            return str;
+        else
+            this.f.apply(null, Array.prototype.slice.call(arguments, 1));
+        return str;
     }
     static Df(str) {
         str = this.f.apply(null, arguments);

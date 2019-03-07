@@ -9,7 +9,7 @@ const assert = require('assert'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
-    //    ip = require('ip'),
+    fs = require('fs'),
     EventEmitter = require('events').EventEmitter;
 
 
@@ -73,6 +73,7 @@ class Bluetooth extends EventEmitter {
         //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
         if (btid >= 0)
+            // eslint-disable-next-line no-process-env
             process.env[nid] = btid;
 
         try {
@@ -146,8 +147,6 @@ class Bluetooth extends EventEmitter {
 
 }
 
-
-
 class Network extends EventEmitter {
     constructor(dodhcp) {
         super();
@@ -163,7 +162,7 @@ class Network extends EventEmitter {
         this._nif = os.networkInterfaces();
         this._iprCache = this._dnsCache = null;
         this._netping = null;
-        Network.matchMac = /(([\dA-F]{2}\:){5}[\dA-F]{2})/i;
+        Network.matchMac = /(([\dA-F]{2}:){5}[\dA-F]{2})/i;
 
     }
     get iflist() {
@@ -174,26 +173,36 @@ class Network extends EventEmitter {
     }
 
     static isIP(str) {
+        if (!str)
+            return 0;
         str = str.trim().toLowerCase();
         return net.isIP(str);
     }
 
     static isMac(str) {
+        if (!str)
+            return null;
         str = str.trim().toLowerCase();
         return Network.matchMac.test(str) ? str : null;
     }
 
     static isIP4(str) {
+        if (!str)
+            return null;
         str = str.trim().toLowerCase();
         return net.isIPv4(str) ? str : null;
     }
 
     static isIP6(str) {
+        if (!str)
+            return null;
         str = str.trim().toLowerCase();
         return net.isIPv6(str) ? str : null;
     }
 
     static getMac(ip) {
+        if (!this.isIP4(ip))
+            return A.resolve(null);
         return A.c2p(arp.getMAC)(ip).then(x => this.isMac(x) ? x : null, () => null);
     }
 
@@ -234,28 +243,27 @@ class Network extends EventEmitter {
         };
 
         try {
-            this._netping = require("net-ping"),
-                this._ping4session = this._netping.createSession(Object.assign(pingopt, {
-                    networkProtocol: this._netping.NetworkProtocol.IPv4
-                }));
+            this._netping = require("net-ping");
+            this._ping4session = this._netping.createSession(Object.assign(pingopt, {
+                networkProtocol: this._netping.NetworkProtocol.IPv4
+            }));
             this._ping6session = this._netping.createSession(Object.assign(pingopt, {
                 networkProtocol: this._netping.NetworkProtocol.IPv6
             }));
-            this._ping6session.mping = this._ping4session.mping = function mping(ip) {
+            this._ping6session.mping = this._ping4session.mping = (ip, session) => {
                 return new Promise((res) => {
                     // A.I(`try to ping on ${ip}:`);
-
-                    this.pingHost(ip, function (error, target) {
+                    session.pingHost(ip, function (error, target) {
                         if (error) {
                             //                        if (!(error instanceof net_ping.RequestTimedOutError))
                             //                            A.W(target + ": " + error.toString());
                             //                        A.I(`ping negative result on ${ip} was ${error}`);
                             return res(undefined);
                         }
-//                        A.I(`ping positive result on ${ip} was ${target}`);
+                        //                        A.I(`ping positive result on ${ip} was ${target}`);
                         return res(target);
                     });
-                });
+                }).then(x => x ? x : ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null));
             };
         } catch (e) {
             A.I('net-ping not available! Will try to use normal ping!');
@@ -263,10 +271,9 @@ class Network extends EventEmitter {
                 mping(ip) {
                     return ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null);
                 },
-                close() {
-                    return;
-                }
-            }
+                // eslint-disable-next-line no-empty-function
+                close() {}
+            };
             this._ping6session = this._ping4session = my;
         }
 
@@ -277,7 +284,7 @@ class Network extends EventEmitter {
                 new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
                 new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
             ]).then(() => arr.length > 0 ? arr : null);
-        }).bind(this));
+        }));
 
         this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
 
@@ -318,12 +325,12 @@ class Network extends EventEmitter {
         function parseUdp(msg) {
             function trimNulls(str) {
                 var idx = str.indexOf('\u0000');
-                return (-1 === idx) ? str : str.substr(0, idx);
+                return (idx === -1) ? str : str.substr(0, idx);
             }
 
             function readIpRaw(msg, offset) {
                 //            console.log(`Read IpRaw bl = ${msg.length} offset = ${offset}`)
-                if (0 === msg.readUInt8(offset))
+                if (msg.readUInt8(offset) === 0)
                     return undefined;
                 return '' +
                     msg.readUInt8(offset++) + '.' +
@@ -356,8 +363,7 @@ class Network extends EventEmitter {
                     try {
                         b = msg.readUInt8(offset++);
                     } catch (e) {
-                        console.log(`buffer length = ${msg.length} offset = ${offset}, len = ${len}, err = ${e} `);
-
+                        A.D(`buffer length = ${msg.length} offset = ${offset}, len = ${len}, err = ${e} `);
                     }
                     addr += (b + 0x100).toString(16).substr(-2);
                     if (len > 0) {
@@ -405,7 +411,8 @@ class Network extends EventEmitter {
                 var len;
                 switch (code) {
                     case 0:
-                        continue; // pad
+                        // eslint-disable-next-line no-continue
+                        continue;
                     case 255:
                         break; // end
                     case 12:
@@ -423,8 +430,8 @@ class Network extends EventEmitter {
                             len = msg.readUInt8(offset++);
                             assert.strictEqual(len, 1);
                             var mtype = msg.readUInt8(offset++);
-                            assert.ok(1 <= mtype);
-                            assert.ok(8 >= mtype);
+                            assert.ok(mtype >= 1);
+                            assert.ok(mtype <= 8);
                             p.options.dhcpMessageType = DHCPMessageType[mtype];
                             break;
                         }
@@ -517,7 +524,7 @@ class Network extends EventEmitter {
                     this._listener.close();
                     this._listener = null;
                 }
-            } catch (e) {
+            } catch (e1) {
                 this._listener = null;
             }
             this._listener = null;
@@ -528,40 +535,24 @@ class Network extends EventEmitter {
 
     ping(ips) {
         var that = this;
-        //        A.I(`ping ${ips}`);
         let ret = [];
+        let pip = [];
 
         function pres(ip) {
             ip = ip.trim();
             let session = Network.isIP(ip);
             if (!session)
-                return that.dnsResolve(ip).then(list => list && list[0] ? pres(list[0]) : null, () => null);
+                return that.dnsResolve(ip).then(list => list ? pres(list) : null, () => null);
             session = session === 4 ? that._ping4session : that._ping6session;
-            return session.mping(ip).then(x => x ? ret.push(target) : x, x => x);
-            return new Promise((res) => {
-                //                    A.I(`try to ping on ${ip}`);
-                session.pingHost(ip, function (error, target) {
-                    if (error) {
-                        //                        if (!(error instanceof net_ping.RequestTimedOutError))
-                        //                            A.W(target + ": " + error.toString());
-                        //                        A.I(`ping negative result on ${ip} was ${error}`);
-                        return res(undefined);
-                    }
-                    //                        A.I(`ping positive result on ${ip} was ${target}`);
-                    return res(ret.push(target));
-                });
-            });
+            return session.mping(ip, session).then(x => x ? ret.push(ip) : x, x => x);
         }
+
         if (typeof ips === 'string')
             ips = [ips];
-        if (!Array.isArray(ips))
-            return Promise.reject(`Invalid argument for network:'${JSON.stringify(ips)}'`);
-
-        let pip = [];
 
         for (let i of ips)
-            pip.push(pres(i.trim()));
-        return Promise.all(pip).then(() => ret, () => ret);
+            pip.push(pres(i.trim()).catch(e => A.Wf('error in %s ping: %O', i, e)));
+        return Promise.race(pip).then(() => ret, () => ret);
     }
 
     clearCache() {
@@ -626,18 +617,52 @@ class Network extends EventEmitter {
     }
 
     static updateMacdb() {
-        return A.get('https://linuxnet.ca/ieee/oui.txt').then(res => res, () => A.get('http://standards-oui.ieee.org/oui/oui.txt').then(res => res, () => ''))
-            .then(res => {
-                let n = 0;
-                let arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
-                if (arr && arr.length > 0)
-                    for (let l of arr) {
-                        let lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
-                        if (lm && lm.length >= 3)
-                            macdb[lm[1].toLowerCase(++n)] = lm[2];
-                    }
-                A.I('macdb has entries: ' + n);
-            }).catch(e => A.W('Could not init MacDb! ' + e));
+        const filename = __dirname + '/lib/vendors.json';
+
+        function readmacs() {
+            return A.get('https://linuxnet.ca/ieee/oui.txt').then(res => res, () => A.get('http://standards-oui.ieee.org/oui/oui.txt').then(res => res, () => ''))
+                .then(res => {
+                    let n = 0;
+                    let arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
+                    if (arr && arr.length > 0)
+                        for (let l of arr) {
+                            let lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
+                            if (lm && lm.length >= 3)
+                                macdb[lm[1].toLowerCase(++n)] = lm[2];
+                        }
+                    A.I('macdb has entries: ' + n);
+                    return macdb;
+                }).then(db => {
+                    db = JSON.stringify(db);
+                    return A.c2p(fs.writeFile)(filename, db, 'utf8').catch(e => A.Wf('could not write vendor file %s because of %O:', filename, e));
+                }).catch(e => A.W('Could not init MacDb! ' + e));
+        }
+        let j;
+        try {
+            // eslint-disable-next-line no-sync
+            j = fs.statSync(filename);
+        } catch (e) {
+            A.Wf('no %s, reading file from web because of error %O', filename, e);
+        }
+        if (j && j.size > 1000) {
+            let td = Date.now() - new Date(j.mtime).getTime();
+            td = td / 1000 / 60 / 60 / 24 / 30;
+            A.Wf('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
+            try {
+                // eslint-disable-next-line no-sync
+                let f = fs.readFileSync(filename, 'utf8');
+                f = JSON.parse(f);
+                if (A.ownKeys(f).length > 1000) {
+                    macdb = f;
+                    if (td >= 1)
+                        f = readmacs();
+                    return Promise.resolve();
+                }
+            } catch (e) {
+                A.Wf('reading file %s error %O', filename, e);
+            }
+        }
+        return readmacs();
     }
 
     static getMacVendor(mac) {
@@ -679,11 +704,11 @@ class Network extends EventEmitter {
             return A.exec('arp-scan ' + cmd).then(res => {
                 var r = null;
                 if (res)
-                    r = res.match(/([\d\.]+)\s+seconds\s+.+\s+(\d+)\s+responded/mi);
+                    r = res.match(/([0-9.]+)\s+seconds\s+.+\s+(\d+)\s+responded/mi);
                 else A.W('arp-scan maybe without rights because no data returned!');
                 if (r)
                     A.D(`arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
-                return res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}\:){5}[\dA-F]{2}/gi);
+                return res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}:){5}[\dA-F]{2}/gi);
             }, e => A.W('arp-scan returned error: ' + A.O(e), null)).then(x => {
                 //                A.I(`Arp-Scan found ${x}`)
                 if (x) {
