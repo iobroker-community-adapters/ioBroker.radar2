@@ -544,7 +544,7 @@ class Network extends EventEmitter {
         let pip = [];
 
         function pres(ip) {
-            A.If('should ping %O', ip);
+//            A.If('should ping %O', ip);
             ip = ip.trim();
             let session = Network.isIP(ip);
             if (!session)
