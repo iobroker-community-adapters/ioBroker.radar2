@@ -2,7 +2,7 @@
  *      iobroker radar2 Adapter
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
- *      v 0.1.3 Feb 2019
+ *      v 1.0.0 March 2019
  */
 /* eslint-env node,es6 */
 /*jslint node: true, bitwise: true, sub:true */
@@ -245,7 +245,8 @@ function scanAll() {
     const btl = A.ownKeys(btList).length;
 
     prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
-    prom.push(btl ? bluetooth.startScan().catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
+    prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
+    prom.push(A.seriesInOI(scanList,item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(),1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
 
         prom.push((doArp ? network.arpScan(arpcmd) : A.wait(1))
@@ -266,7 +267,7 @@ function scanAll() {
         .then(() => A.wait(50))
         .then(() => A.seriesInOI(scanList, item => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
-            if (item.type !== 'IP' && item.type !== 'BT')
+            if (item.type !== 'IP' && item.type !== 'BT' && item.type !== 'URL')
                 return A.resolve();
 
             let d = new Date(),
@@ -286,8 +287,8 @@ function scanAll() {
                 notHere.push(item.id);
             }
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
-            return A.makeState(item.id, item.anwesend, true);
-        }, 1)).then(() => {
+            return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`));
+        }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`))).then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
             //                oldWhoHere = wh;
@@ -530,7 +531,7 @@ function main() {
                     } else if (!item.bluetooth)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(new Date(item.lasthere = st.ts)),true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).then(st => A.Ir(st,'lasthere is %O',st)).catch(() => null)
+                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)),true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
                     .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(() => null)

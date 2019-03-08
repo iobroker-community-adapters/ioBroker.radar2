@@ -1,5 +1,7 @@
 "use strict";
 
+// V 1.2 March 2019
+
 const A = require('./myAdapter').MyAdapter;
 
 const assert = require('assert'),
@@ -313,11 +315,11 @@ class Network extends EventEmitter {
          //       while (addrs.length && !self._listener) {
         //            this._trybind(addrs.shift());
         */
-       try {
-        this._trybind('0.0.0.0');
-       } catch(e) {
-           A.W('could not bind to dhcp port!');
-       }
+        try {
+            this._trybind('0.0.0.0');
+        } catch (e) {
+            A.W('could not bind to dhcp port!');
+        }
         //        }
         if (!this._listener)
             A.W(`Could not bind to any dhcp listener address 0.0.0.0:67!`);
@@ -513,7 +515,7 @@ class Network extends EventEmitter {
                         address: addr,
                         port: 67,
                         exclusive: false
-                    }, () => A.If('Connected with %O for DHCP Scan',addr));
+                    }, () => A.If('Connected with %O for DHCP Scan', addr));
                 }
             } catch (e) {
                 this._listener = null;
@@ -542,15 +544,17 @@ class Network extends EventEmitter {
         let pip = [];
 
         function pres(ip) {
+            A.If('should ping %O', ip);
             ip = ip.trim();
             let session = Network.isIP(ip);
             if (!session)
-                return that.dnsResolve(ip).then(list => list ? pres(list) : null, () => null);
+                return that.dnsResolve(ip).then(list => list ? that.ping(list) : null, () => null);
             session = session === 4 ? that._ping4session : that._ping6session;
             return session.mping(ip, session).then(x => x ? ret.push(ip) : x, x => x);
         }
 
-        if (typeof ips === 'string')
+//        if (typeof ips === 'string')
+        if (!Array.isArray(ips))
             ips = [ips];
 
         for (let i of ips)

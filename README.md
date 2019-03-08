@@ -8,72 +8,72 @@
 
 [![NPM](https://nodei.co/npm/iobroker.radar2.png?downloads=true)](https://nodei.co/npm/iobroker.radar2/)
 
-## ioBroker radar2 für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
-Mit diesem Adapter kann man testen ob Geräte via Netzwerk oder Bluetooth verfügbar sind.
 
-Er kann folgendes aufspüren oder anzeigen:
-* Geräte mit IP oder Netzwerkadressen, unterstützt IPv4 und IPv6!
-* Es intersucht alle Interfaces welche IPv4-Adressen zugewiesen haben (z.B. auf dem Kabel und WLan)
-* Neue Funktion erkennt alle neuen Benutzer im Netz sofort wenn sie eine IP zugewiesen bekommen (dhcp)
-* Bluetooth normal oder Bluetooth LE, der Bluetooth-Adapter kann definiert werden
-* HP-drucker tintenfüllstände
-* ECB Umrechnungskurse zum Euro
-* UWZ Wetterwarnungen
-* Eigene node-routinen
-* Mit Ausnahme von arp-scan keine externen Programme mehr notwendig, weniger CPU und Netzwerkauslastung!
-* Der Adapter läuft ohne sudo und somit auch als iobroker-Benutzer!
-* Urls mit https können jetzt verwendet werden
-  HP-Drucker erzeugen weniger States
+[German manual - Deutsche Anleitung](README_DE.md)
 
-Wenn die IP-adresse mit 'http' beginnt interpretiert radar2 sie als web-adresse (url) und fragt die Adresse ab anstatt ping zu verwenden. Damit kann der Status eines Webservers (wie z.B. http(s)://iobroker.net) geprüft werden.
-Bei https kann aber ein Fehler bei den Schlüsseln auch als 'nicht vorhanden' gemeldet werden. So meldet https://forum.iobroker.net abwesend da das Forum nicht im domainschlüssel gelistet ist. Das vorige Beispiel ohne 'forum.' funktioniert.
+## ioBroker radar2 visibility testing for network and bluetooth devices, HP printers, UWZ-warnungs and ECB-currencies
 
-Für Unwetterwarnungen muss im ioBroker-admin der Längen- und Breitengrad konfiguriert sein damit der Adapter den UWZ-Area_Code findet. 
-Wenn der Wert von Max Messages >0 ist dann werden genau so viele states erzeugt die entweder leer sind oder Meldungen enthalten.
-Wenn 0 angegeben wird (als default) wird nur ein State erzeugt welcher dann für jede Meldung eine Zeile enthält.
-Jede Meldung besteht aus dem Meldungs-Text und am Ende eine severity-einstufung.
-Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte mit Gewitter) oder kurze Warnungstext angezeigt wird.
+This adapter tries to find the devices specified on the network or with bluetooth. It also shows the current external IP of the network, can read ink status of HP printers and also Weather warnings from UWZ for several european countries. It also can read daily currency exchange rates from ECB.
 
-Die verfügbareb ECB-Währungen können mit `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` abgefragt werden.
+It works by:
+* Using arp-scan and ping to lookup devices on the network with IPv4 und IPv6!
+* Listening to dhcp messages which announces new devices coming to the network.
+* It works on multiple interfaces which mean iof your system has Wlan and lan on different networks it can see both lans.
+* Normal Bluetooth and Bluetooth LE is supported
+* HP-printer ink-status
+* European central bank currency exchange for Euero
+* UWZ Weather warnings for the area where ioBroker is set to
+* Uses arp-scan and ping on network as only expernal programs, everything else is internal to nodejs.
+* The adapter works also without root rights but some configuration actions are required before installation
 
-## Unterschiede zum alten radar-Adapter:
+If you put a `-` ar the end of a name the device will not be countet in the _notHere or _isHere.
 
-Radar2 hört am Netzwerk mit um neuankömmlinge sofort zu entdecken. Das bedeutet wenn z.B. nach der Heimkehr das Häny sich ins lokale W-Lan einloggt).
-Wnn das Handy sich einloggt sendet es eine Anfrage per dhcp, das DHCP-Protokoll dauert 5 Sekunden (damit der Router keine Adresse vergibt die schon vergeben ist) der Router(=meistens DNS-Server)  offeriert die Adresse genau dann wenn das Händy sie akzeptiert und die Verbindung aufnehen kann wir das auch in radar2 verarbeitet, nicht erst beim nächsten Scan!
+If IP-address starts with 'http' radar2 will interpret it as an URL/web address and tries to read a page from the server, this can be used to test availability of web servers (like for example http://iobroker.net). In case of https it can happen that the server is not accessible if he does not have updated security keys!
 
-Weiters sind alle externen internen ping und DNS-Anfragen durch node-Module ersetzt und damit vielö schneller und mit weniger CPU-load verwendbar.
-Einzig und alleine `arp-scan` ist noch ein externes Programm welches einmal pro scan alle IPv4-Adressen scannt und erreichbare ausgibt. Nur jene Adressen welche nicht mit arp-scan gefunden werden können werden dann nochmal mit ping gesucht.
-Neu ist dass arp-scan alle IPv4-Schnittstellen überprüft und nicht nur die 1. Damit ist es möglich einen Raspi per Lan-Kabel ins Hausnetz anzuschließen und per W-Lan z.B. ins Gast-Wlan!
-Damit werden auch dort Geräte erkannt!
+To use UWZ you need to have your location configured in ioBroker.Admin!
+If the value of max messages is >0 the each warning will be written in a separate state, otherwisde they will be combined.
+You can also set if you want to use long warning text but all info is available in short one as well.
 
-Neu ist auch dass die Anwesenheit nicht mehr mizt Zählern sondern mit Zeitdauer bis zur letzten Sichtbarkeit berechnet wird und somit in Minuiten angegeben wird.
+European Central Bank currencies can be seen here: `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` 
 
-Bei den Bluetooth-routinen wurde auch die externen Programme durch einige node-module ersetzt, damit wird ein Bluetooth-Standard und ein Bluetooth-LE scan durchgeführt. Beide dauern bis zu 12 Sekunden um alle Geräte zu fincen welche eine relativ gute Verbindung habenund deshalb ist die Minimale Scan-Zeit auf 15 Sekunden gesetzt.
-Das Signal ist bei BT sehr wichtig, deshalb würde ich nicht das interne BT-Modul verwenden sondern einen USB-BT 4.0-Modul (habe die um ~7€ gekauft), das richtige zu verwendende Interface (hci0...) kann konfiguriert werden.
-Damit kann man auch z.b. den BLE-Adapter jetzt gleichzeitig laufen lassen wenn man zwei Schnittstellen verwendet!
+## Differences to radar-Adapter
 
-Die Art der generierten Daten hat nsich auch geändert. Unbekannte IP und BT-Adressen werden jetzt einzeln gespeichert. Es kann jedoch eine Liste angegeben werden welche geräte aus diesen Info's ausschließt, das ist sicher gut für alle festen Geräte welche ihr nicht permanen testen wollt und die aber auch keine Unbekannt-Meldung generieren woillt.
+Radar2 sets devices which are seen immediately when they become visible, for new ip's even before the scan starts again.
+Radar2 uses nodejs-libraries to find bluetooth devices but it can run now also in user space from iobroker and does not need to get root access (see below installation requirements).
+You can configure more than one IP (now IPv4 AND IPv6) address or host address (not URL's) in same line which allows you to ping on multiple ways to devices.
+`arp-scan` is used to look for mac adresses, it will run (if not specified differently in it's command line) on all network interfaces which has external IPv4, so it will not detect devices based on mac addresses on IPv6, but it will now detect devices on wireless and fixed networks at the same time!
 
-Die Intervalle für HP-Ducker, ECB-, UWZ- und normale scans können getrennt gesetzt werden.
+Availability of devices is handled differently. Each device will get a lasthere state updated with current date & time whenever it is seen. At the end of each scan the adapter check all lasthere entries if they are older than the current time - the configured minutes of absence. Devecies which never have been here will also not have a lasthere state! 
+
+Web URL's can better manage now https servers.
+The mac address vendor resolution is now done internally and not via the web. Only on adapter start file lib/vendor.json is loaded, if this file gets older than 31 days then a new version is downloaded from web - ONLY at adapter start!
+
+The bluetooth part have been updated in a way that you can define the bluetooth device to be used (0,1, ... default: -1=first). In this way you can use multiple BT sticks to run multiple adapters like BLE and radar2 on the same device (bluetooth LE drivers for one device cannot be accessed by multiple programs at the same time).
+
+If ip addresses or bluetooth devices  are found which you did not specify in your device list they will be shown in unknown IP and BT lists and a state will be generated for each of them. In this way you can identify people loggingh into your network or ned devices which can be integrated.
+If you do not want to get them listed as unknown put them into the respective known IP/BT lists in adapter config.
+
+Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be defined separately.
 
 ## Installation
 
-Auf Linux sollte das tool `arp-scan` und `libcap2-bin` sowie einige Bluetooth treiber installiert werden installiert werden und die Rechte von arp-scan und node angepasst werden. 
-Bei Debian (Raspi-Stretch, Ubuntu, ...) schaut das so aus:
+Before installing the adapter into ioBroker you need to install on linux `arp-scan` and `libcap2-bin` and some drivers which you can do by running below commands.
+On Debian (Raspi-Stretch, Ubuntu, ...) it looks like:
 ```
 sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
 ```
 
-Bei Windows steht arp-scan nicht zur Verfügung und es wird nur node-ping verwendet.
+On Windows (and maybe osx) there is no arp-scan which means that only ping will be used but no IP-mac addresses can be scanned!
 
-Der Rest kann ion der Adapter-Konfig eingestellt werden.
+On Osx also bluetooth may not work at all!
 
-### Eine spezielle Info zu arp-scan:
-Es ist eine Standard-Kommandozeile `-lgq --retry=4 --timeout=400` welche auf allen IPv4-Interfaces alle 255 Adressen scannt und wenn eine nicht binnen 400ms nicht antwortet es noch 4x probiert!
-Wenn ihr zwar mehrere interfaces habt aber nicht alle scannen wollt dann hängt ` --interface=br0` an dann wird nur dort gescannt.
-Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber darüber habe ich kleinen Unterschied festgestellt. Genauso hab ich bei Timeout über 500 nie einen Unterschied erkannt. 
+After installation setup adapter config, you can remove the demo line items.
+
+### Special information for arp-scan:
+There is a standard command line `-lgq --retry=5 --timeout=400` defined which would scan on all IPv4 interfaces all 254 addresses if it won't answer within 400ms it would retry 5 times!
+If you need to scan s specific interface only you can add for example ` --interface=br0` but normally bridge interfaces are used now rightfully, but still in docker environments iot might be necessary.The repeat=5 can be changed to 6 or 7 for better detection, above 7 I did not find improvement! The same is with the timeout, above 500 I could not find any improvement. 
 
 
 ### Important/Wichtig
@@ -81,21 +81,11 @@ Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber d
 * Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
-### Todo
-* mehrsprachige Anleitung und Texte
-
 ## Changelog
-### 0.1.7 Beta
-* Installed fallback for net-ping if net-ping cannot be installed by npm the adapter will use the normal 'ping' of the unterlaying os. This makes it possible to run the adapter on all OS.
-* Adapter tests updated so adapter succeeds in node 6/8 and 10 as well on linux, windows and osx.
 
-### 0.1.5 Beta
-* klnown bugs removed
+### 1.0.0
 
-### 0.1.2 Beta 
-* Repository rename to ioBroker.radar2 to fulfill ioBroker requirements!
-* First npm version on public beta
-* arp-scan und dhcp-scan changed to avoid errors on systems with internal bridges
+* First public realease
 
 ## License
 

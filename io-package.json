@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "0.1.8" ,
+        "version": "1.0.0" ,
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -41,6 +41,10 @@
         "compact": false
     },
     "news": {
+        "1.0.0": {
+            "en": "public release of new radar2-adapter with english information page",
+            "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
+        },
         "0.1.8": {
             "en": "BETA: adapter will use netping first (if available) and thenping if device does not answer on net-ping",
             "de": "BETA: net-ping zuerst und ping wird benutzt wenn Gerät oder net-ping nicht vorhanden ist!"
@@ -64,7 +68,7 @@
             },
             {
                 "name": "Fritzbox",
-                "ip": "fritz.box",
+                "ip": "fritz.box, 192.168.178.1",
                 "macs": "12:34:56:78:90:12",
                 "bluetooth": ""
             },
@@ -73,10 +77,28 @@
                 "ip": "",
                 "macs": "",
                 "bluetooth": "01:23:45:56:78:89:90"
-            }
+            },
+            {
+                "name": "HP-7520-",
+                "ip": "HPC56C03-PS7520",
+                "macs": "",
+                "bluetooth": ""
+              },
+              {
+                "name": "ECB-",
+                "ip": "USD,RUB,GBP",
+                "macs": "",
+                "bluetooth": ""
+              },
+              {
+                "name": "Forum",
+                "ip": "https://forum.iobroker.net",
+                "macs": "",
+                "bluetooth": ""
+              }
         ],
         "scandelay": 20,
-        "arp_scan_cmd": "-lgq --retry=4 --timeout=400",
+        "arp_scan_cmd": "-lgq --retry=5 --timeout=400",
         "btadapterid": -1,
         "printerdelay": 720,
         "removeEnd": ".fritz.box",
