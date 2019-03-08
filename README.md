@@ -26,7 +26,7 @@ It works by:
 * Uses arp-scan and ping on network as only expernal programs, everything else is internal to nodejs.
 * The adapter works also without root rights but some configuration actions are required before installation
 
-If you put a `-` ar the end of a name the device will not be countet in the _notHere or _isHere.
+If you put a `-` at the end of a name the device will not be counted in the _notHere or _isHere.
 
 If IP-address starts with 'http' radar2 will interpret it as an URL/web address and tries to read a page from the server, this can be used to test availability of web servers (like for example http://iobroker.net). In case of https it can happen that the server is not accessible if he does not have updated security keys!
 
