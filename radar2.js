@@ -358,7 +358,7 @@ function scanAll() {
 
 }
 
-
+/*
 process.on('SIGINT', () => {
     A.W('SIGINT signal received.');
     A.wait(1000).then(() => {
@@ -369,7 +369,7 @@ process.on('SIGINT', () => {
         .then(() => A.wait(2000))
         .then(() => process.exit(0));
 });
-
+*/
 function main() {
     host = A.adapter.host;
 
@@ -387,7 +387,7 @@ function main() {
     }));
     bluetooth.on('found', what => foundBt(what));
 
-    A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null);
+    A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null).then(() => A.wait(10).then(() => process.exit(0)));
 
    /* 
     A.unload = () => {
