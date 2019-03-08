@@ -1,5 +1,7 @@
 node_modules
+node_modules/
 .vscode
+.vscode/
 .idea
 tmp
 *debug.log
