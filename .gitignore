@@ -1,7 +1,9 @@
 node_modules
-node_modules/
+node_modules/**
+**/launch.json
+**/sftp.json
 .vscode
-.vscode/
+.vscode/**
 .idea
 tmp
 *debug.log
