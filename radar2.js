@@ -4,10 +4,6 @@
  *      MIT License
  *      v 1.0.0 March 2019
  */
-/* eslint-env node,es6 */
-/*jslint node: true, bitwise: true, sub:true */
-/* @ts-ignore:80006 */
-
 "use strict";
 
 const A = require('./myAdapter').MyAdapter,
@@ -44,24 +40,12 @@ let scanDelay = 30 * 1000, // in ms = 30 sec
     devices = null;
 
 function xmlParseString(body) {
-    function parseNumbers(str) {
-        if (!isNaN(str))
-            str = str % 1 === 0 ? parseInt(str) : parseFloat(str);
-        return str;
-    }
-
-    function tagnames(item) {
-        let all = item.split(':');
-        item = (all.length === 2) ? all[1] : all[0];
-        //            A.I(`Tag: all: ${A.O(all)} became ${item}`);                
-        return item;
-    }
     return (A.c2p(new xml2js.Parser({
             explicitArray: false,
             trim: true,
-            tagNameProcessors: [tagnames],
-            //                attrNameProcessors: [tagnames],
-            valueProcessors: [parseNumbers]
+            tagNameProcessors: [item => ((item = item.split(':')), item.length == 2 ? item[1] : item[0])],
+            //                attrNameProcessors: [tagnames],  // can but not must be same as tagNameProcessor 
+            valueProcessors: [str => !isNaN(str) ? (str % 1 === 0 ? parseInt(str) : parseFloat(str)) : str]
         })
         .parseString))(body);
 }
@@ -149,6 +133,43 @@ function scanHPs() {
                 .then(() => A.makeState(item.id, '' + A.dateTime(new Date()))))
             .catch(err => A.D(`HP Printer could not find info! Err: ${A.O(err)}`));
     }, 0);
+}
+
+function getUWZ() {
+    A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
+        //        .then(x => A.Ir(x,'GetUWZ returned %O',x))
+        .then(body => JSON.parse(body))
+        .then(data => {
+            var w = data && data.results;
+            if (!w)
+                return A.reject('UWZ data err: ' + A.O(data));
+            //            A.W(`${A.O(w,5)}`);
+            return w.map(i => (lang === 'de' ?
+                (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) :
+                (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
+        })
+        .then(w => {
+            let wl = w.length,
+                wt = w.join(numuwz < 0 ? '<br>\n' : '\n');
+            wt = wt === '' ? "No warnings" : wt;
+            if (wt !== wlast) {
+                wlast = wt;
+                A.I(`UWZ found the following (changed) warnings: ${wt}`);
+                if (numuwz > 0) {
+                    return A.seriesOf(Object.keys(w), (x) => x < numuwz ? A.makeState('_UWZ' + x, w[x]) : A.resolve())
+                        .then(() => {
+                            let n = wl,
+                                l = [];
+
+                            while (n < numuwz)
+                                l.push(n++);
+                            return A.seriesOf(l, (x) => A.makeState('_UWZ' + x, ''));
+                        });
+                } else
+                    return A.makeState('_UWZ', wlast);
+            }
+        })
+        .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
 function setItem(item) {
@@ -315,56 +336,6 @@ function scanAll() {
 
 }
 
-function getUWZ() {
-    A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
-        //        .then(x => A.Ir(x,'GetUWZ returned %O',x))
-        .then(body => JSON.parse(body))
-        .then(data => {
-            var w = data && data.results;
-            if (!w)
-                return A.reject('UWZ data err: ' + A.O(data));
-            //            A.W(`${A.O(w,5)}`);
-            return w.map(i => (lang === 'de' ?
-                (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) :
-                (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
-        })
-        .then(w => {
-            let wl = w.length,
-                wt = w.join(numuwz < 0 ? '<br>\n' : '\n');
-            wt = wt === '' ? "No warnings" : wt;
-            if (wt !== wlast) {
-                wlast = wt;
-                A.I(`UWZ found the following (changed) warnings: ${wt}`);
-                if (numuwz > 0) {
-                    return A.seriesOf(Object.keys(w), (x) => x < numuwz ? A.makeState('_UWZ' + x, w[x]) : A.resolve())
-                        .then(() => {
-                            let n = wl,
-                                l = [];
-
-                            while (n < numuwz)
-                                l.push(n++);
-                            return A.seriesOf(l, (x) => A.makeState('_UWZ' + x, ''));
-                        });
-                } else
-                    return A.makeState('_UWZ', wlast);
-            }
-        })
-        .catch(e => A.W(`Error in getUWZ: ${e}`));
-}
-
-
-process.on('SIGINT', () => {
-    A.W('SIGINT signal received.');
-    A.wait(1000).then(() => {
-            A.stop(true);
-            network.stop();
-            bluetooth.stop();
-        })
-        .then(() => A.wait(2000))
-        .then(() => process.exit(0));
-});
-
-
 function main() {
     host = A.adapter.host;
 
@@ -382,10 +353,7 @@ function main() {
     }));
     bluetooth.on('found', what => foundBt(what));
 
-    A.unload = () => {
-        network.stop();
-        bluetooth.stop();
-    };
+    A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null);
 
     var numecb = [],
         numhp = [];
