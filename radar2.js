@@ -4,6 +4,10 @@
  *      MIT License
  *      v 1.0.0 March 2019
  */
+/* eslint-env node,es6 */
+/*jslint node: true, bitwise: true, sub:true */
+/* @ts-ignore:80006 */
+
 "use strict";
 
 const A = require('./myAdapter').MyAdapter,
@@ -135,6 +139,10 @@ function scanHPs() {
     }, 0);
 }
 
+
+/// @name getUWZ
+/// @return Promise
+/// 
 function getUWZ() {
     A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2)
         //        .then(x => A.Ir(x,'GetUWZ returned %O',x))
@@ -172,6 +180,11 @@ function getUWZ() {
         .catch(e => A.W(`Error in getUWZ: ${e}`));
 }
 
+
+/// @name setItem
+/// Process any scanlist item after lasthere for ipHere or btHere was set to new Date
+/// 
+/// @param {item from scanList} item - scanlist entry which found to be here. 
 function setItem(item) {
     let wasanw = item.anwesend;
     let lasthere = item.lasthere;
@@ -207,6 +220,11 @@ function setItem(item) {
     }
 }
 
+/// @name foundIpMac
+/// 
+/// 
+/// @param {object} what - object with one or more of {ipAddress, macAddress, by, ... } 
+/// @returns {void} - 
 function foundIpMac(what) {
     //    A.D(`found: ` + A.O(what));
     let found = false;
@@ -242,6 +260,10 @@ function foundIpMac(what) {
     //    A.D(A.F('ip notf', what));
 }
 
+/// @name foundBt
+/// 
+/// 
+/// @param {object} what - object with one or more of {address, by, ... } 
 function foundBt(what) {
     const mac = what.address.toLowerCase();
     let item = btList[mac];
@@ -336,6 +358,18 @@ function scanAll() {
 
 }
 
+
+process.on('SIGINT', () => {
+    A.W('SIGINT signal received.');
+    A.wait(1000).then(() => {
+            A.stop(true);
+            network.stop();
+            bluetooth.stop();
+        })
+        .then(() => A.wait(2000))
+        .then(() => process.exit(0));
+});
+
 function main() {
     host = A.adapter.host;
 
@@ -355,6 +389,12 @@ function main() {
 
     A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null);
 
+   /* 
+    A.unload = () => {
+        network.stop();
+        bluetooth.stop();
+    };
+*/
     var numecb = [],
         numhp = [];
 
