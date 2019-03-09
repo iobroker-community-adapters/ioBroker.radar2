@@ -27,7 +27,6 @@ const scanList = {},
 let scanDelay = 30 * 1000, // in ms = 30 sec
     printerDelay = 100,
     delayAway = 10,
-    host = null,
     arpcmd = null,
     doArp = true,
     doUwz = null,
@@ -371,7 +370,6 @@ process.on('SIGINT', () => {
 });
 */
 function main() {
-    host = A.adapter.host;
 
     network.on('request', items => foundIpMac({
         ipAddress: items[3],
@@ -404,7 +402,7 @@ function main() {
     Network.updateMacdb().then(() => {
 
             if (!A.C.devices.length) {
-                A.W(`No to be scanned devices are configured for host ${host}! Will stop Adapter`);
+                A.W(`No to be scanned devices are configured for host ${A.adapter.host}! Will stop Adapter`);
                 return A.stop(true);
             }
 

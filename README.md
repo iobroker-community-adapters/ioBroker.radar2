@@ -75,8 +75,21 @@ After installation setup adapter config, you can remove the demo line items.
 There is a standard command line `-lgq --retry=5 --timeout=400` defined which would scan on all IPv4 interfaces all 254 addresses if it won't answer within 400ms it would retry 5 times!
 If you need to scan s specific interface only you can add for example ` --interface=br0` but normally bridge interfaces are used now rightfully, but still in docker environments iot might be necessary.The repeat=5 can be changed to 6 or 7 for better detection, above 7 I did not find improvement! The same is with the timeout, above 500 I could not find any improvement. 
 
+### Tip for those moving from radar to radar2-adapter or from machine one to another machine
 
-### Important/Wichtig
+* If you move radar adapters you can easily copy whole device list or settings by
+* - Go in admin to objects and enable expert mode
+* - Look for an object tree which is called `system.adapter.radar.0` (where `0` is the instance, if you had multiple instgances select the right one)
+* - On the very right of this line is a buttom with a pencil, click on it
+* - On the window you get select NATIVE
+* - you should see then the config fields, select the content of the 'devices' field and copy it to the clipboard
+* - do the same on destination machine selecting `system.adapter.radar2.0` in Admin/objects and go here also to NATIVE.
+* - Delete the text in the 'devices' field and past in the old ones from clipboard
+* - save the changes
+
+This methodology of moving settings is working also between systems but may not work if other adapter has different structure. The device list is the same for radar and radar2, the only difference is that in radar2 you can have multiple ip addresses/entry separated by ','.
+
+## Important/Wichtig
 * Adapter needs node >= v6.*!
 * Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.

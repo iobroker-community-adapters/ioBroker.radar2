@@ -80,8 +80,22 @@ Es ist eine Standard-Kommandozeile `-lgq --retry=4 --timeout=400` welche auf all
 Wenn ihr zwar mehrere interfaces habt aber nicht alle scannen wollt dann hängt ` --interface=br0` an dann wird nur dort gescannt.
 Die Wiederholungen werden bis 6-7 eventuell in 1% der Fälle noch besser, aber darüber habe ich kleinen Unterschied festgestellt. Genauso hab ich bei Timeout über 500 nie einen Unterschied erkannt. 
 
+### Tip for those moving from radar to radar2-adapter or from machine one to another machine
 
-### Important/Wichtig
+* Wenn sie von radar auf radar2 oder auf eine neue Maschine wechseln können sie einfach die Geräteliste von radar kopieren: 
+* - In Admin auf Objekte gehen, dort den Expertenmodus einschalten
+* - Dann den Eintrag `system.adapter.radar.0` (wobei `0` die Instanz-Nummer ist von welcher sie die Liste kopieren wollen)
+* - In dieser Zeile gibt es rechts ein Bleistiftzicon, darauf klicken
+* - Im erscheinenden Fenster auf 'NATIVE' gehen
+* - Sie sollten nun die Felder für das Konfig sehen, selektiere 'devices' und kopiere den gesamten Text ins Clipboard
+* - Nun selektieren sie den neuen Adapter `system.adapter.radar2.0` in Admin/Objekte gehen auch über den Bleistift zu NATIVE
+* - Ins Feld 'devices' gehen, den enthaltenen Text löschen und den Text vom clipboard einfügen.
+* - Die Änderungen jetzt sichern. In der Adapter-Konfig sollten jetzt alle Geräte vom alten Adapter kopiert sein.
+
+Diese Methode funktioniert auch über Systemgrenzen hinweg falls sie einen Adapter auf ein anderes System oder host verschieben.
+Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist dass bei radar2 mehrere IP-Adressen oder Hostnamen durch ',' getrennt im IP-Eintrag eingetragen werden können.
+
+## Important/Wichtig
 * Adapter needs node >= v6.*!
 * Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
