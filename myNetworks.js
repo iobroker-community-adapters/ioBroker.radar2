@@ -654,7 +654,7 @@ class Network extends EventEmitter {
         if (j && j.size > 1000) {
             let td = Date.now() - new Date(j.mtime).getTime();
             td = td / 1000 / 60 / 60 / 24 / 30;
-            A.Wf('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
+            A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
             try {
                 // eslint-disable-next-line no-sync
                 let f = fs.readFileSync(filename, 'utf8');
