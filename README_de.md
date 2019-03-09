@@ -66,7 +66,7 @@ Die Intervalle für HP-Ducker, ECB-, UWZ- und normale scans können getrennt ges
 Auf Linux sollte das tool `arp-scan` und `libcap2-bin` sowie einige Bluetooth treiber installiert werden installiert werden und die Rechte von arp-scan und node angepasst werden. 
 Bei Debian (Raspi-Stretch, Ubuntu, ...) schaut das so aus:
 ```
-sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev
+sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
 ```

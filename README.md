@@ -60,7 +60,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 Before installing the adapter into ioBroker you need to install on linux `arp-scan` and `libcap2-bin` and some drivers which you can do by running below commands.
 On Debian (Raspi-Stretch, Ubuntu, ...) it looks like:
 ```
-sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev
+sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
 ```
