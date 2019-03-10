@@ -69,6 +69,7 @@ Bei Debian (Raspi-Stretch, Ubuntu, ...) schaut das so aus:
 sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
+sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp`)
 ```
 
 Bei Windows steht arp-scan nicht zur Verfügung und es wird nur node-ping verwendet.

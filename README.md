@@ -63,6 +63,7 @@ On Debian (Raspi-Stretch, Ubuntu, ...) it looks like:
 sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
+sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp`)
 ```
 
 On Windows (and maybe osx) there is no arp-scan which means that only ping will be used but no IP-mac addresses can be scanned!
