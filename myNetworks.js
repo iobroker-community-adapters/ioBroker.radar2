@@ -55,7 +55,7 @@ class Bluetooth extends EventEmitter {
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
         this._scan = true;
-        return A.Ptime(self._device.scan()).then(x => x < 1000 ? self._device.scan() : Promise.resolve()).then(res => ((self._scan = null), res));
+        return A.Ptime(self._device.scan()).then(x => x < 1000 ? self._device.scan() : Promise.resolve()).catch(e => e).then(res => ((self._scan = false), res));
     }
 
     init(btid, nobleTime) {
