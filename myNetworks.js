@@ -2,7 +2,7 @@
 
 // V 1.2 March 2019
 
-const A = require('./myAdapter').MyAdapter;
+const A = require('@frankjoke/myadapter').MyAdapter;
 
 const assert = require('assert'),
     dgram = require('dgram'),
@@ -205,7 +205,14 @@ class Network extends EventEmitter {
     static getMac(ip) {
         if (!this.isIP4(ip))
             return A.resolve(null);
-        return A.c2p(arp.getMAC)(ip).then(x => this.isMac(x) ? x : null, () => null);
+        let ret=null;
+        try {
+            ret = A.c2p(arp.getMAC)(ip);
+        } catch(e) {
+            A.Wf('Error %O in getMac with arp! Maybe no arp available?',e);
+            return Promise.reject();
+        }
+        return Promise.resolve(ret).then(x => this.isMac(x) ? x : null, () => null);
     }
 
     get remName() {

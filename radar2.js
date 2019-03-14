@@ -10,7 +10,7 @@
 
 "use strict";
 
-const A = require('./myAdapter').MyAdapter,
+const A = require('@frankjoke/myadapter').MyAdapter,
     Network = require('./myNetworks').Network,
     Bluetooth = require('./myNetworks').Bluetooth,
     xml2js = require('xml2js');

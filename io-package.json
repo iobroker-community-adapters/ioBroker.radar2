@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.0" ,
+        "version": "1.0.1" ,
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -41,6 +41,10 @@
         "compact": false
     },
     "news": {
+        "1.0.1": {
+            "en": "Bug-release-beta and chang to @frankjoke/myadapter",
+            "de": "Bug-release-Beta and und Nutzung von @frankjoke/myadapter"
+        },
         "1.0.0": {
             "en": "public release of new radar2-adapter with english information page",
             "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
