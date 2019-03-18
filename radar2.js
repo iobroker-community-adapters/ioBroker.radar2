@@ -381,7 +381,7 @@ function main() {
         hostName: items[0],
         macVendor: Network.getMacVendor(items[2]),
         by: 'dhcp'
-    }));
+    }, A.Df('found item %s by dhcp: %s, %s, %s', items[3], items[2], items[0], Network.getMacVendor(items[2]))));
     network.on('arp-scan', found => foundIpMac({
         ipAddress: found[0],
         macAddress: found[1],
@@ -481,22 +481,21 @@ function main() {
                         return Promise.resolve(A.W(`Double item name '${item.name}', names cannot be used more than once!`));
                     item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
                     item.ip = item.ip ? item.ip.trim() : '';
-                    item.macs = item.macs ? item.macs.trim().toLowerCase() : '';
+                    item.type = '';
+                    item.macs = item.macs ? item.macs : '';
                     item.macs.split(',').forEach(val => {
                         const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
-                        if (mac) {
-                            if (Network.isMac(mac)) {
+                        if (mac && Network.isMac(mac)) {
+                                item.type = 'IP';
                                 item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
                                 item.ipVendor = Network.getMacVendor(mac);
                                 if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
                                 else macList[mac] = item;
-                            } else
+                            } else if(mac)
                                 A.W(`invalid MAC address in ${item.name}: '${val}'`);
-                        }
                     });
                     delete item.macs;
                     item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
-                    item.type = '';
                     if (Network.isMac(item.bluetooth)) {
                         if (btList[item.bluetooth]) {
                             A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
@@ -538,10 +537,11 @@ function main() {
                                 return null;
                             }).catch(e => A.E(A.O(e)));
                         delete item.ip;
-                    } else if (!item.bluetooth)
+                    } else if (!item.bluetooth && !item.hasMAC)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
+                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
+                        .then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(() => null)

@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.1" ,
+        "version": "1.0.1",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -36,35 +36,34 @@
             "Tinte",
             "Ink"
         ],
+        "news": {
+            "1.0.1": {
+                "en": "Bug-release-beta and chang to @frankjoke/myadapter",
+                "de": "Bug-release-Beta and und Nutzung von @frankjoke/myadapter"
+            },
+            "1.0.0": {
+                "en": "public release of new radar2-adapter with english information page",
+                "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
+            },
+            "0.1.8": {
+                "en": "BETA: adapter will use netping first (if available) and thenping if device does not answer on net-ping",
+                "de": "BETA: net-ping zuerst und ping wird benutzt wenn Gerät oder net-ping nicht vorhanden ist!"
+            },
+            "0.1.7": {
+                "en": "BETA: net-ping is now optional and normal ping is used if not available!",
+                "de": "BETA: net-ping ist optional und normales ping wird benutzt wenn es nicht vorhanden ist!"
+            },
+            "0.1.6": {
+                "en": "BETA: knowm bugs removed",
+                "de": "BETA: Bekannte Fehler behoben"
+            }
+        },
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
         "type": "network",
         "compact": false
     },
-    "news": {
-        "1.0.1": {
-            "en": "Bug-release-beta and chang to @frankjoke/myadapter",
-            "de": "Bug-release-Beta and und Nutzung von @frankjoke/myadapter"
-        },
-        "1.0.0": {
-            "en": "public release of new radar2-adapter with english information page",
-            "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
-        },
-        "0.1.8": {
-            "en": "BETA: adapter will use netping first (if available) and thenping if device does not answer on net-ping",
-            "de": "BETA: net-ping zuerst und ping wird benutzt wenn Gerät oder net-ping nicht vorhanden ist!"
-        },
-        "0.1.7": {
-            "en": "BETA: net-ping is now optional and normal ping is used if not available!",
-            "de": "BETA: net-ping ist optional und normales ping wird benutzt wenn es nicht vorhanden ist!"
-        },
-        "0.1.6": {
-            "en": "BETA: knowm bugs removed",
-            "de": "BETA: Bekannte Fehler behoben"
-        }
-    },
     "native": {
-        "devices": [
-            {
+        "devices": [{
                 "name": "Ich-",
                 "ip": "localhost",
                 "macs": "",
@@ -87,19 +86,19 @@
                 "ip": "HPC56C03-PS7520",
                 "macs": "",
                 "bluetooth": ""
-              },
-              {
+            },
+            {
                 "name": "ECB-",
                 "ip": "USD,RUB,GBP",
                 "macs": "",
                 "bluetooth": ""
-              },
-              {
+            },
+            {
                 "name": "Forum",
                 "ip": "https://forum.iobroker.net",
                 "macs": "",
                 "bluetooth": ""
-              }
+            }
         ],
         "scandelay": 20,
         "arp_scan_cmd": "-lgq --retry=5 --timeout=400",
@@ -107,7 +106,7 @@
         "printerdelay": 720,
         "removeEnd": ".fritz.box",
         "knownIPs": "1.1.1.1",
-        "knownBTs": "01:12:23:34:45:56", 
+        "knownBTs": "01:12:23:34:45:56",
         "external": 60,
         "delayaway": 2,
         "delayuwz": 120,
