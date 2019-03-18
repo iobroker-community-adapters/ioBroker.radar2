@@ -288,7 +288,7 @@ function scanAll() {
 
     prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
-    prom.push(A.seriesInOI(scanList,item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(),1));
+    prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
 
         prom.push((doArp ? network.arpScan(arpcmd) : A.wait(1))
@@ -336,11 +336,15 @@ function scanAll() {
             //                oldWhoHere = wh;
             //                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
             //            }
-            allHere = allHere.join(', ');
-            notHere = notHere.join(', ');
-            whoHere = whoHere.join(', ');
-            A.D(`radar found here (${allHere}), who here (${whoHere}) and not here (${notHere})`);
-            return A.makeState('_nHere', whoHere.split(', ').length)
+            return A.makeState('_nHere', whoHere.length)
+                .then(() => {
+                    allHere = allHere.join(', ');
+                    notHere = notHere.join(', ');
+                    whoHere = whoHere.join(', ');
+                    A.D(`radar2 found here (${allHere})`);
+                    A.D(`and who here (${whoHere})`);
+                    A.D(`and not here (${notHere})`);
+                })
                 .then(() => A.makeState('_allHere', allHere))
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
@@ -387,7 +391,7 @@ function main() {
 
     A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null).then(() => A.wait(10).then(() => process.exit(0)));
 
-   /* 
+    /* 
     A.unload = () => {
         network.stop();
         bluetooth.stop();
@@ -537,8 +541,8 @@ function main() {
                     } else if (!item.bluetooth)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)),true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
-                    .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
+                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null).then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
+                        .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(() => null)
             .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
