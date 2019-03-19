@@ -227,38 +227,51 @@ function setItem(item) {
 function foundIpMac(what) {
     //    A.D(`found: ` + A.O(what));
     let found = false;
-    if (what.ipAddress) {
-        let ip = what.ipAddress = what.ipAddress.toLowerCase();
+    let ip = what.ipAddress && Network.isIP(what.ipAddress) && what.ipAddress.trim().toLowerCase();
+    let mac = what.macAddress && Network.isMac(what.macAddress) && what.macAddress.trim().toLowerCase();
+    //    if (what.macAddress === 'dc:53:60:e6:e8:94')
+    //        debugger;
+    if (ip) {
+        what.ipAddress = ip;
         let item = ipList[ip];
-        found = true;
         if (item) {
-            if (item.ipHere)
-                return;
-            item.ipHere = new Date();
-            setItem(item);
-        } else {
+            found = true;
             if (knownIPs.indexOf(ip) < 0)
-                ukIp[ip] = what;
-            network.dnsReverse(ip).then(names => what.hosts = names, () => null);
+                knownIPs.push(ip);
+            if (!item.ipHere) {
+                item.ipHere = new Date();
+                setItem(item);
+            }
         }
     }
-    if (what.macAddress && Network.isMac(what.macAddress)) {
+    if (mac) {
         let mac = what.macAddress = what.macAddress.toLowerCase();
         let item = macList[mac];
-        if (found)
-            network.combine(mac, what.ipAddress, what.hostName);
+        if (ip)
+            network.combine(mac, ip, what.hostName);
         what.getMacVendor = Network.getMacVendor(mac);
+        //        A.Df('found mac %s of %O: %O', mac, what, item);
         if (item) {
-            if (item.ipHere)
-                return;
-            item.ipHere = new Date();
-            setItem(item);
-        } else if (!found && knownIPs.indexOf(mac) < 0)
-            ukIp[mac] = what;
-    }
-    //    A.D(A.F('ip notf', what));
-}
+            found = true;
+            if (knownIPs.indexOf(mac) < 0)
+                knownIPs.push(mac);
 
+            if (ip && knownIPs.indexOf(ip)) {
+                knownIPs.push(mac);
+                network.combine(mac, ip);
+            }
+            if (!item.ipHere) {
+                item.ipHere = new Date();
+                setItem(item);
+            }
+        }
+    }
+    if (!found) {
+        if ((ip && knownIPs.indexOf(ip) < 0) && (mac && knownIPs.indexOf(mac) < 0))
+            ukIp[ip] = what;
+        network.dnsReverse(ip).then(names => what.hosts = names, () => null);
+    }
+}
 /// @name foundBt
 /// 
 /// 
@@ -486,13 +499,13 @@ function main() {
                     item.macs.split(',').forEach(val => {
                         const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
                         if (mac && Network.isMac(mac)) {
-                                item.type = 'IP';
-                                item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
-                                item.ipVendor = Network.getMacVendor(mac);
-                                if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
-                                else macList[mac] = item;
-                            } else if(mac)
-                                A.W(`invalid MAC address in ${item.name}: '${val}'`);
+                            item.type = 'IP';
+                            item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
+                            item.ipVendor = Network.getMacVendor(mac);
+                            if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
+                            else macList[mac] = item;
+                        } else if (mac)
+                            A.W(`invalid MAC address in ${item.name}: '${val}'`);
                     });
                     delete item.macs;
                     item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
@@ -559,7 +572,7 @@ function main() {
                 }
                 return Promise.resolve(null);
             }), 0).catch(e => A.E(A.O(e))))
-            .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nbts: (${A.ownKeys(btList)}), \nips: (${A.ownKeys(ipList)})`))
+            .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nips: (${A.ownKeys(ipList)}), \nbts: (${A.ownKeys(btList)})`))
             .then(() => A.getObjectList({
                 include_docs: true
             }))
