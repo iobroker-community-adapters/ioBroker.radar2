@@ -1,4 +1,4 @@
-# radar2 network and bloutooth availability
+# radar2 Geräte auf Verfügbarkeit mittels Netzwerk oder Bluetooth prüfen  
 
 ![Logo](admin/radar2.png)
 
