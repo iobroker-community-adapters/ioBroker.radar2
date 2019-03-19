@@ -43,7 +43,7 @@ Radar2 uses nodejs-libraries to find bluetooth devices but it can run now also i
 You can configure more than one IP (now IPv4 AND IPv6) address or host address (not URL's) in same line which allows you to ping on multiple ways to devices.
 `arp-scan` is used to look for mac adresses, it will run (if not specified differently in it's command line) on all network interfaces which has external IPv4, so it will not detect devices based on mac addresses on IPv6, but it will now detect devices on wireless and fixed networks at the same time!
 
-Availability of devices is handled differently. Each device will get a lasthere state updated with current date & time whenever it is seen. At the end of each scan the adapter check all lasthere entries if they are older than the current time - the configured minutes of absence. Devecies which never have been here will also not have a lasthere state! 
+Availability of devices is handled differently. Each device will get a `_lasthere` state updated with current date & time whenever it is seen. At the end of each scan the adapter check all lasthere entries if they are older than the current time - the configured minutes of absence. Devecies which never have been here will also not have a `_lasthere` state! 
 
 Web URL's can better manage now https servers.
 The mac address vendor resolution is now done internally and not via the web. Only on adapter start file lib/vendor.json is loaded, if this file gets older than 31 days then a new version is downloaded from web - ONLY at adapter start!
@@ -96,6 +96,10 @@ This methodology of moving settings is working also between systems but may not 
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
 ## Changelog
+
+### 1.0.2
+
+* Corrected version which works with _lastHere and all new devices
 
 ### 1.0.0
 

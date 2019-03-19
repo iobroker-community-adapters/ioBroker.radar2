@@ -209,7 +209,7 @@ function setItem(item) {
     if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
-        A.makeState(idn + '.lasthere', A.dateTime(item.lasthere))
+        A.makeState(idn + '._lastHere', A.dateTime(item.lasthere))
             //        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw))
             //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
@@ -522,6 +522,8 @@ function main() {
                         A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
                         item.bluetooth = '';
                     }
+                    if (item.bluetooth === '')
+                        delete item.bluetooth;
                     if (item.ip && item.name.startsWith('HP-')) {
                         item.type = 'printer';
                         numhp = numhp.concat(item.name);
@@ -547,31 +549,38 @@ function main() {
                                 if (x && x.length > 0) {
                                     x.forEach((ip) => ipList[ip] && ipList[ip] == item ? A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) : (ipList[ip] = item));
                                 }
-                                return null;
+                                return A.seriesOf(item.rip, (ip) => network.ping(ip).catch(A.nop).then(() => Network.getMac(ip)).then(x => {
+                                    //                                    A.Df('add mac %s for ip %s in %s to %O', x, ip, item.name);
+                                    if (x) {
+                                        item.ipVendor = Network.getMacVendor(x);
+                                        if (item.hasMAC) {
+                                            if (item.hasMAC.indexOf(x) < 0)
+                                                item.hasMAC.push(x);
+                                        } else item.hasMAC = [x];
+                                        if (x && ip)
+                                            network.combine(x, ip);
+                                        //                    A.I(A.F('ip %s has mac %s.',ip,x));      
+                                        //                                        A.Df('add mac %s for ip %s in %s to %O and vendor: ', x, ip, item.name, item.hasMAC, item.mipVendor);
+                                        macList[x] = item;
+                                    }
+                                    return Promise.resolve(null);
+                                }).catch(e => A.E(A.O(e))), 0);
                             }).catch(e => A.E(A.O(e)));
                         delete item.ip;
                     } else if (!item.bluetooth && !item.hasMAC)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return A.getState(item.id + '.lasthere').then(st => st && st.ts ? A.makeState(item.id + '.lasthere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
-                        .then(() => ret).then(() => A.getState(item.id + '.lasthere')).catch(() => null)
+                    return  A.getState(item.id + '._lastHere').then(st => st && st.ts ? A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
+                        .then(() => ret).then(() => A.extendObject(item.id, {
+                            type: 'state',
+                            native: {
+                                radar2: item
+                            }
+                        }).catch(A.nop)).then(() => A.getState(item.id + '._lastHere')).catch(() => null)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(() => null)
             .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
-            .then(() => A.seriesOf(A.ownKeys(ipList), (ip) => Network.getMac(ip).then(x => {
-                if (x) {
-                    let i = ipList[ip];
-                    if (i.hasMAC) {
-                        if (i.hasMAC.indexOf(x) < 0)
-                            i.hasMAC.push(x);
-                    } else i.hasMAC = [x];
-                    if (x && ip)
-                        network.combine(x, ip);
-                    //                    A.I(A.F('ip %s has mac %s.',ip,x));      
-                }
-                return Promise.resolve(null);
-            }), 0).catch(e => A.E(A.O(e))))
             .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nips: (${A.ownKeys(ipList)}), \nbts: (${A.ownKeys(btList)})`))
             .then(() => A.getObjectList({
                 include_docs: true

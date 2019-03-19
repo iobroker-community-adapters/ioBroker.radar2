@@ -50,6 +50,7 @@ Neu ist dass arp-scan alle IPv4-Schnittstellen überprüft und nicht nur die 1. 
 Damit werden auch dort Geräte erkannt!
 
 Neu ist auch dass die Anwesenheit nicht mehr mizt Zählern sondern mit Zeitdauer bis zur letzten Sichtbarkeit berechnet wird und somit in Minuiten angegeben wird.
+Geräte die gefunden werden bekommen einen `_lasthere`-State zugewiesen mit der Zeit wo sie zuletzt gefunden wurden. Geräte die nie da waren haben keinen `_lasthere` Status!
 
 Bei radar2 können auch mehrere IP-Adressen oder Hostnamen im ip-Feld angegeben werden. Der Hostname ist ein Vorteil da radar dann die momentanen ip's vom dns-server nimmt, das können auch solche für IPv6 sein die dann mit ping auch abgefragt werden.
 
@@ -102,6 +103,10 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
 ## Changelog
+
+### 1.0.2
+
+* Korrigierte finale Version mit _lastHere und allen neuen Geräten funktionierend
 
 ### 1.0.1
 
