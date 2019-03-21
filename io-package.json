@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -37,6 +37,10 @@
             "Ink"
         ],
         "news": {
+            "1.0.3": {
+                "en": "Added possibility to add more than one BT mac address for a device",
+                "de": "Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden"
+            },
             "1.0.2": {
                 "en": "final release of radar2, lasthere changed to '_lastHere', item data saved to native",
                 "de": "Finale Version des Adapters, lasthere auf '_lastHere' geändert und Geräte unter native abgespeichert"
@@ -48,18 +52,6 @@
             "1.0.0": {
                 "en": "public release of new radar2-adapter with english information page",
                 "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
-            },
-            "0.1.8": {
-                "en": "BETA: adapter will use netping first (if available) and thenping if device does not answer on net-ping",
-                "de": "BETA: net-ping zuerst und ping wird benutzt wenn Gerät oder net-ping nicht vorhanden ist!"
-            },
-            "0.1.7": {
-                "en": "BETA: net-ping is now optional and normal ping is used if not available!",
-                "de": "BETA: net-ping ist optional und normales ping wird benutzt wenn es nicht vorhanden ist!"
-            },
-            "0.1.6": {
-                "en": "BETA: knowm bugs removed",
-                "de": "BETA: Bekannte Fehler behoben"
             }
         },
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
@@ -80,10 +72,10 @@
                 "bluetooth": ""
             },
             {
-                "name": "G-Tag",
+                "name": "G-Tags",
                 "ip": "",
                 "macs": "",
-                "bluetooth": "01:23:45:56:78:89:90"
+                "bluetooth": "01:23:45:56:78:89:90,01:23:45:56:78:89:99"
             },
             {
                 "name": "HP-7520-",

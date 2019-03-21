@@ -60,7 +60,7 @@ function scanExtIP() {
             oldip = ip;
             return A.getState('_ExternalNetwork');
         })
-        .then(x => x, () => Promise.resolve())
+        .then(x => x, () => undefined)
         .then(state => {
             var time = Date.now();
             if (state && state.val)
@@ -386,6 +386,28 @@ process.on('SIGINT', () => {
         .then(() => process.exit(0));
 });
 */
+
+function pE(x,y) {
+    y = y ? y : pE;
+    function get() {
+		var oldLimit = Error.stackTraceLimit;
+		Error.stackTraceLimit = Infinity;
+        var orig = Error.prepareStackTrace;
+        Error.prepareStackTrace = function (_, stack) {
+            return stack;
+        };
+        var err = new Error('Test');
+        Error.captureStackTrace(err, y);
+        var stack = err.stack;
+        Error.prepareStackTrace = orig;
+		Error.stackTraceLimit = oldLimit;
+        return stack.map(site => site.getFileName() ? (site.getFunctionName() || 'anonymous') + ' in ' + site.getFileName() +' @'+site.getLineNumber()+':'+site.getColumnNumber() : '');
+    }
+
+    A.If('Promise failed @ %O error: %o', get().join('; '), x);
+    return x;
+}
+
 function main() {
 
     network.on('request', items => foundIpMac({
@@ -483,6 +505,7 @@ function main() {
             .then(x => doArp = x)
             //        .then(() => A.isApp('hcitool').then(x => doHci = x))
             .then(() => {
+                // eslint-disable-next-line complexity
                 return A.seriesOf(devices, item => {
                     //                A.I(`checking item ${A.O(item)}`);
                     let ret = Promise.resolve();
@@ -500,7 +523,7 @@ function main() {
                         const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
                         if (mac && Network.isMac(mac)) {
                             item.type = 'IP';
-                            item.hasMAC = item.hasMAC ? item.hasMAC.push(mac) : [mac];
+                            item.hasMAC = item.hasMAC ? item.hasMAC.concat(mac) : [mac];
                             item.ipVendor = Network.getMacVendor(mac);
                             if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
                             else macList[mac] = item;
@@ -508,22 +531,23 @@ function main() {
                             A.W(`invalid MAC address in ${item.name}: '${val}'`);
                     });
                     delete item.macs;
-                    item.bluetooth = item.bluetooth ? item.bluetooth.trim().toLowerCase() : '';
-                    if (Network.isMac(item.bluetooth)) {
-                        if (btList[item.bluetooth]) {
-                            A.W(`bluetooth address ${item.bluetooth} in ${item.name} was used already for another device ${btList[item.bluetooth].name}, this is forbidden!`);
-                            item.bluetooth = '';
-                        } else {
-                            btList[item.bluetooth] = item;
-                            item.type = 'BT';
-                            item.btVendor = Network.getMacVendor(item.bluetooth);
-                        }
-                    } else if (item.bluetooth !== '') {
-                        A.W(`Invalid bluetooth address '${item.bluetooth}', 6 hex numbers separated by ':'`);
-                        item.bluetooth = '';
-                    }
-                    if (item.bluetooth === '')
+                    item.bluetooth = item.bluetooth ? item.bluetooth.toLowerCase() : '';
+                    item.bluetooth = A.trim(item.bluetooth.split(','));
+                    if (item.bluetooth.length == 1 && !item.bluetooth[0])
                         delete item.bluetooth;
+                    else
+                        for (let b of item.bluetooth)
+                            if (Network.isMac(b)) {
+                                if (btList[b] && btList[b] !== item) {
+                                    A.W(`bluetooth address ${b} in ${item.name} was used already for another device ${btList[b].name}, this is forbidden!`);
+                                } else {
+                                    btList[b] = item;
+                                    item.type = 'BT';
+                                    item.btVendor = Network.getMacVendor(b);
+                                }
+                            } else if (b !== '')
+                        A.W(`Invalid bluetooth address '${b}' in ${item.name} , 6 hex numbers separated by ':'`);
+
                     if (item.ip && item.name.startsWith('HP-')) {
                         item.type = 'printer';
                         numhp = numhp.concat(item.name);
@@ -533,7 +557,8 @@ function main() {
                     } else if (item.ip.startsWith('http')) {
                         item.type = 'URL';
                     } else if (item.ip.length > 1) {
-                        item.type = 'IP';
+                        if (item.type !== 'BT')
+                            item.type = 'IP';
                         item.rip = !item.rip ? [] : !Array.isArray(item.rip) ? [item.rip] : item.rip;
                         const list = item.ip.split(',').map(x => x.trim());
                         ret = A.seriesOf(list, (addr) => Network.isIP(addr) ?
@@ -552,8 +577,8 @@ function main() {
                                 return A.seriesOf(item.rip, (ip) => network.ping(ip).catch(A.nop).then(() => Network.getMac(ip)).then(x => {
                                     //                                    A.Df('add mac %s for ip %s in %s to %O', x, ip, item.name);
                                     if (x) {
-                                        item.ipVendor = Network.getMacVendor(x);
                                         if (item.hasMAC) {
+//                                            A.If('mac for %O is %O', item, item.hasMAC);
                                             if (item.hasMAC.indexOf(x) < 0)
                                                 item.hasMAC.push(x);
                                         } else item.hasMAC = [x];
@@ -570,16 +595,16 @@ function main() {
                     } else if (!item.bluetooth && !item.hasMAC)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return  A.getState(item.id + '._lastHere').then(st => st && st.ts ? A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
+                    return A.getState(item.id + '._lastHere').then(st => st && st.ts ? A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
                         .then(() => ret).then(() => A.extendObject(item.id, {
                             type: 'state',
                             native: {
                                 radar2: item
                             }
-                        }).catch(A.nop)).then(() => A.getState(item.id + '._lastHere')).catch(() => null)
+                        }).catch(pE)).then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
-            }).catch(() => null)
+            }).catch(pE)
             .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
             .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nips: (${A.ownKeys(ipList)}), \nbts: (${A.ownKeys(btList)})`))
             .then(() => A.getObjectList({
@@ -607,12 +632,12 @@ function main() {
                             return A.resolve();
                         });
                 } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
-            }).catch(() => null)
+            }).catch(pE)
             .then(() => {
                 if (numecb.length && parseInt(A.C.external) > 0) {
                     A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
                     A.timer.push(setInterval(scanECBs, parseInt(A.C.external) * 1000 * 60));
-                    return scanECBs().catch(() => null);
+                    return scanECBs().catch(A.nop);
                 }
                 return A.resolve();
             }).then(() => {

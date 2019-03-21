@@ -104,6 +104,10 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 
 ## Changelog
 
+### 1.0.3
+
+* Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden
+
 ### 1.0.2
 
 * Korrigierte finale Version mit _lastHere und allen neuen Geräten funktionierend

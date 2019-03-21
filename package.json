@@ -1,7 +1,7 @@
 {
   "name": "iobroker.radar2",
   "description": "Radar2 for IP and Bluetooth device check, it also can scan HP printers ink and ECB currency to EUR as well as UWZ weather warnings",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "frankjoke <frankjoke@hotmail.com>",
   "contributors": [
     "frankjoke <frankjoke@hotmail.com>"
@@ -33,11 +33,6 @@
   "devDependencies": {
     "axios": "^0.18.0",
     "chai": "^4.1.2",
-    "grunt": "^1.0.1",
-    "grunt-contrib-jshint": "^1.1.0",
-    "grunt-http": "^2.2.0",
-    "grunt-jscs": "^3.0.1",
-    "grunt-replace": "^1.0.1",
     "gulp": "^4.0.0",
     "mocha": "^4.1.0"
   },

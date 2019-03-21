@@ -97,6 +97,10 @@ This methodology of moving settings is working also between systems but may not 
 
 ## Changelog
 
+### 1.0.3
+
+* Added possibility to add more than one BT mac address for a device
+
 ### 1.0.2
 
 * Corrected version which works with _lastHere and all new devices
