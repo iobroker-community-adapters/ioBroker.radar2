@@ -212,6 +212,7 @@ function setItem(item) {
         A.makeState(idn + '._lastHere', A.dateTime(item.lasthere))
             //        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw))
+            .then(() => A.makeState(item.id+'._here', anw))
             //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
             //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
             //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -361,9 +362,9 @@ function scanAll() {
                 .then(() => A.makeState('_allHere', allHere))
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
-        }).then(() => A.D(`radar2 found uBT's: ${A.ownKeysSorted(ukBt)}`, A.D(`radar2 found uIP's: ${A.ownKeysSorted(ukIp)}`)), () => null)
-        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.D('Unknown BT: ' + A.O(ukBt[mac])), A.O(ukBt[mac])))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
-        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.D('Unknown IP: ' + A.O(ukIp[ip])), A.O(ukIp[ip])))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
+        }).then(() => A.Df("radar2 found uBT's: %O",A.ownKeysSorted(ukBt)), A.Df("radar2 found uIP's: %O",A.ownKeysSorted(ukIp)), () => null)
+        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac,  A.f(ukBt[mac]), true))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
+        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.f(ukIp[ip]),true))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
         .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
         .then(() => {
             for (let item in scanList)
@@ -385,7 +386,6 @@ process.on('SIGINT', () => {
         .then(() => A.wait(2000))
         .then(() => process.exit(0));
 });
-*/
 
 function pE(x,y) {
     y = y ? y : pE;
@@ -407,6 +407,7 @@ function pE(x,y) {
     A.If('Promise failed @ %O error: %o', get().join('; '), x);
     return x;
 }
+*/
 
 function main() {
 
@@ -601,10 +602,11 @@ function main() {
                             native: {
                                 radar2: item
                             }
-                        }).catch(pE)).then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
+                        }).catch(A.pE)).then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
+                        .then(() => (item.type === 'BT' || item.type === 'IP' || item.type === 'URL') ? setItem(item).catch(A.pE) : null)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
-            }).catch(pE)
+            }).catch(A.pE)
             .then(() => parseInt(A.C.external) > 0 ? scanExtIP() : Promise.resolve())
             .then(() => A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nips: (${A.ownKeys(ipList)}), \nbts: (${A.ownKeys(btList)})`))
             .then(() => A.getObjectList({
@@ -632,7 +634,7 @@ function main() {
                             return A.resolve();
                         });
                 } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
-            }).catch(pE)
+            }).catch(A.pE)
             .then(() => {
                 if (numecb.length && parseInt(A.C.external) > 0) {
                     A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
@@ -663,7 +665,7 @@ function main() {
                     return A.resolve();
                 }); // scan first time and generate states if they do not exist yet
             })
-            .then(() => A.cleanup()) // clean up old states not created this time!
+            .then(() => A.cleanup('*',A.D('cleanup old states...'))) // clean up old states not created this time!
             .then(() => A.I('Adapter initialization finished!'), err => {
                 A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
                 A.stop(1);

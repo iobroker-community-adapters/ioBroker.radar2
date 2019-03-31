@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.3",
+        "version": "1.0.4",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -37,6 +37,10 @@
             "Ink"
         ],
         "news": {
+            "1.0.4": {
+                "en": "Added ._here state to overcome blocky problem, updated save logic that only changes in states will generate triggers.",
+                "de": "'._here' state hinzugefügt um Blocky-Bug zu umgehen. Änderungen angebracht das States nur geschrieben werden wenn sie sich ändern."
+            },
             "1.0.3": {
                 "en": "Added possibility to add more than one BT mac address for a device",
                 "de": "Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden"
