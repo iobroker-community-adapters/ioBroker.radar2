@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.4",
+        "version": "1.0.5",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -37,7 +37,7 @@
             "Ink"
         ],
         "news": {
-            "1.0.4": {
+            "1.0.5": {
                 "en": "Added ._here state to overcome blocky problem, updated save logic that only changes in states will generate triggers.",
                 "de": "'._here' state hinzugefügt um Blocky-Bug zu umgehen. Änderungen angebracht das States nur geschrieben werden wenn sie sich ändern."
             },
