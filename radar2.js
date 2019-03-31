@@ -603,7 +603,7 @@ function main() {
                                 radar2: item
                             }
                         }).catch(A.pE)).then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
-                        .then(() => (item.type === 'BT' || item.type === 'IP' || item.type === 'URL') ? setItem(item).catch(A.pE) : null)
+                        .then(() => (item.type === 'BT' || item.type === 'IP' || item.type === 'URL') ? Promise.resolve(setItem(item)).catch(A.pE) : null)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(A.pE)
