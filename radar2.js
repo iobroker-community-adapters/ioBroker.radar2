@@ -211,8 +211,8 @@ function setItem(item) {
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
         A.makeState(idn + '._lastHere', A.dateTime(item.lasthere))
             //        A.makeState(idn + '.lasthere', item.lasthere)
-            .then(() => A.makeState(item.id, anw))
-            .then(() => A.makeState(item.id+'._here', anw))
+            .catch(A.nop).then(() => A.makeState(item.id, anw))
+            .catch(A.nop).then(() => A.makeState(item.id+'._here', anw))
             //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
             //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
             //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -343,7 +343,8 @@ function scanAll() {
                 notHere.push(item.id);
             }
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
-            return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`));
+            return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`))
+                .then(() => A.makeState(item.id+'+._here', item.anwesend, true)).catch(A.nop);
         }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`))).then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
