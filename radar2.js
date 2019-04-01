@@ -344,7 +344,7 @@ function scanAll() {
             }
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`))
-                .then(() => A.makeState(item.id+'+._here', item.anwesend, true)).catch(A.nop);
+                .then(() => A.makeState(item.id+'._here', item.anwesend, true)).catch(A.nop);
         }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`))).then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
