@@ -388,26 +388,6 @@ process.on('SIGINT', () => {
         .then(() => process.exit(0));
 });
 
-function pE(x,y) {
-    y = y ? y : pE;
-    function get() {
-		var oldLimit = Error.stackTraceLimit;
-		Error.stackTraceLimit = Infinity;
-        var orig = Error.prepareStackTrace;
-        Error.prepareStackTrace = function (_, stack) {
-            return stack;
-        };
-        var err = new Error('Test');
-        Error.captureStackTrace(err, y);
-        var stack = err.stack;
-        Error.prepareStackTrace = orig;
-		Error.stackTraceLimit = oldLimit;
-        return stack.map(site => site.getFileName() ? (site.getFunctionName() || 'anonymous') + ' in ' + site.getFileName() +' @'+site.getLineNumber()+':'+site.getColumnNumber() : '');
-    }
-
-    A.If('Promise failed @ %O error: %o', get().join('; '), x);
-    return x;
-}
 */
 
 function main() {

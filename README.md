@@ -8,7 +8,6 @@
 
 [![NPM](https://nodei.co/npm/iobroker.radar2.png?downloads=true)](https://nodei.co/npm/iobroker.radar2/)
 
-
 [German manual - Deutsche Anleitung](README_DE.md)
 
 ## ioBroker radar2 visibility testing for network and bluetooth devices, HP printers, UWZ-warnungs and ECB-currencies

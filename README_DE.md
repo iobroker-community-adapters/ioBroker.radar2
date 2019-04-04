@@ -10,7 +10,6 @@
 
 [English manual](README.md)
 
-
 ## ioBroker radar2 für Netzwerk und Bluetooth-Geräte, HP Drucker und ECB-Kurse
 Mit diesem Adapter kann man testen ob Geräte via Netzwerk oder Bluetooth verfügbar sind.
 
