@@ -40,6 +40,7 @@ let scanDelay = 30 * 1000, // in ms = 30 sec
     delayuwz = 0,
     longuwz = false,
     btid = 0,
+    scanBt = false,
     devices = null;
 
 function xmlParseString(body) {
@@ -298,7 +299,7 @@ function scanAll() {
     let notHere = [];
 
     const prom = [];
-    const btl = A.ownKeys(btList).length;
+    const btl = scanBt && A.ownKeys(btList).length;
 
     prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
@@ -392,18 +393,19 @@ process.on('SIGINT', () => {
 
 function main() {
 
-    network.on('request', items => foundIpMac({
-        ipAddress: items[3],
-        macAddress: items[2],
-        hostName: items[0],
-        macVendor: Network.getMacVendor(items[2]),
-        by: 'dhcp'
-    }, A.Df('found item %s by dhcp: %s, %s, %s', items[3], items[2], items[0], Network.getMacVendor(items[2]))));
+    network.on('request', items => {
+        items.macVendor = Network.getMacVendor(items.macAddress);
+        delete items.type;
+        items.by = 'dhcp';
+        foundIpMac(items);
+        A.Df('found item %s by dhcp: %s, %s, %s', items.hostName, items.ipAddress, items.macAddress, Network.getMacVendor(items.macAddress));
+    });
     network.on('arp-scan', found => foundIpMac({
         ipAddress: found[0],
         macAddress: found[1],
         by: 'arp'
     }));
+    network.on('listenState',listen => A.makeState('info.connection', listen,true));
     bluetooth.on('found', what => foundBt(what));
 
     A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null).then(() => A.wait(10).then(() => process.exit(0)));
@@ -481,6 +483,8 @@ function main() {
 
             devices = A.C.devices;
         })
+        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()),() => true).then(x => !!x, () => false).then(x => scanBt = x))
+        .then(x => A.If('Will try to scan BT devices: %s',x))
         .then(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
             A.isLinuxApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)

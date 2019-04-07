@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.6",
+        "version": "1.0.7",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "desc": {
@@ -37,6 +37,10 @@
             "Ink"
         ],
         "news": {
+            "1.0.7": {
+                "en": "Added check not to call BT scan if no BT devices are ready.",
+                "de": "Adapter prüft jetzt uinterLinux ob BT-Geräte vorhanden sind und mach keine BT-scans falls diese nicht gefunden werden um SIGSEGV zu verhindern"
+            },
             "1.0.6": {
                 "en": "Added ._here state to overcome blocky problem, updated save logic that only changes in states will generate triggers.",
                 "de": "'._here' state hinzugefügt um Blocky-Bug zu umgehen. Änderungen angebracht das States nur geschrieben werden wenn sie sich ändern."
@@ -113,5 +117,27 @@
         "numuwz": 0,
         "longuwz": false
     },
-    "objects": []
+    "objects": [],  "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "If connected to Meross Cloud",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
 }

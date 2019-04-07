@@ -102,6 +102,10 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 
 ## Changelog
 
+### 1.0.7
+
+* Prüfe jetzt unter Linux die Verfügbarkeit von BT-Geräten und unterdrücke die BT scans wenn kein Gerät gefunden wurde um SIGSEGV zu vermeiden
+
 ### 1.0.3
 
 * Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden

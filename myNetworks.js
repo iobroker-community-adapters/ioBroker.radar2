@@ -149,187 +149,37 @@ class Bluetooth extends EventEmitter {
 
 }
 
-class Network extends EventEmitter {
-    constructor(dodhcp) {
+class Dhcp extends EventEmitter {
+    constructor(addr) {
         super();
-        this._dodhcp = dodhcp;
-        this._init = false;
+        this._addr = addr || '0.0.0.0';
         this._listener = null;
-        this._ping4session = null;
-        this._ping6session = null;
-        this._iflist = [];
-        this._macs = null;
-        this._ips = null;
-        this._remName = null;
-        this._nif = os.networkInterfaces();
-        this._iprCache = this._dnsCache = null;
-        this._netping = null;
-        Network.matchMac = /(([\dA-F]{2}:){5}[\dA-F]{2})/i;
-
-    }
-    get iflist() {
-        return this._iflist;
-    }
-    get nif() {
-        return this._nif;
+        this.init();
     }
 
-    static isIP(str) {
-        if (!str)
-            return 0;
-        str = str.trim().toLowerCase();
-        return net.isIP(str);
-    }
-
-    static isMac(str) {
-        if (!str)
-            return null;
-        str = str.trim().toLowerCase();
-        return Network.matchMac.test(str) ? str : null;
-    }
-
-    static isIP4(str) {
-        if (!str)
-            return null;
-        str = str.trim().toLowerCase();
-        return net.isIPv4(str) ? str : null;
-    }
-
-    static isIP6(str) {
-        if (!str)
-            return null;
-        str = str.trim().toLowerCase();
-        return net.isIPv6(str) ? str : null;
-    }
-
-    static getMac(ip) {
-        if (!this.isIP4(ip))
-            return A.resolve(null);
-        let ret=null;
-        try {
-            ret = A.c2p(arp.getMAC)(ip);
-        } catch(e) {
-            A.Wf('Error %O in getMac with arp! Maybe no arp available?',e);
-            return Promise.reject();
-        }
-        return Promise.resolve(ret).then(x => this.isMac(x) ? x : null, () => null);
-    }
-
-    get remName() {
-        return this._remName;
-    }
-
-    set remName(val) {
-        this._remName = val;
-    }
-
-    static get Ping() {
-        return ping;
-    }
-
-    removeName(address) {
-        var self = this;
-        var rn = this._remName.toLowerCase().trim();
-        if (!rn)
-            return address;
-        if (typeof address === 'string')
-            return address.toLowerCase().endsWith(rn) ? address.slice(0, -rn.length) : address;
-        if (Array.isArray(address) && rn && address[0] !== rn.slice(1))
-            return address.map((a) => self.removeName(a));
-        return address;
-    }
-
-    init(dhcp, pingopt, removeName) {
-        var self = this;
-        if (removeName)
-            this._remName = removeName.toLowerCase();
-        pingopt = pingopt || {
-            retries: 4,
-            //    sessionId: (process.pid % 65535),
-            packetSize: 56,
-            timeout: 700,
-            ttl: 64
-        };
-
-        try {
-            this._netping = require("net-ping");
-            this._ping4session = this._netping.createSession(Object.assign(pingopt, {
-                networkProtocol: this._netping.NetworkProtocol.IPv4
-            }));
-            this._ping6session = this._netping.createSession(Object.assign(pingopt, {
-                networkProtocol: this._netping.NetworkProtocol.IPv6
-            }));
-            this._ping6session.mping = this._ping4session.mping = (ip, session) => {
-                return new Promise((res) => {
-                    // A.I(`try to ping on ${ip}:`);
-                    session.pingHost(ip, function (error, target) {
-                        if (error) {
-                            //                        if (!(error instanceof net_ping.RequestTimedOutError))
-                            //                            A.W(target + ": " + error.toString());
-                            //                        A.I(`ping negative result on ${ip} was ${error}`);
-                            return res(undefined);
-                        }
-                        //                        A.I(`ping positive result on ${ip} was ${target}`);
-                        return res(target);
-                    });
-                }).then(x => x ? x : ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null));
-            };
-        } catch (e) {
-            A.I('net-ping not available! Will try to use normal ping!');
-            const my = {
-                mping(ip) {
-                    return ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null);
-                },
-                // eslint-disable-next-line no-empty-function
-                close() {}
-            };
-            this._ping6session = this._ping4session = my;
-        }
-
-
-        this._dnsCache = new A.CacheP(((name) => {
-            let arr = [];
-            return Promise.all([
-                new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
-                new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
-            ]).then(() => arr.length > 0 ? arr : null);
-        }));
-
-        this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
-
-        this.clearCache();
-
-        for (let nif in this._nif)
-            for (let addr of this._nif[nif])
-                if (addr.internal !== undefined && !addr.internal) {
-                    this._iflist.push([
-                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
-                    ]);
-                    this.combine(addr.mac, addr.address);
-                }
-
-
-        if (!dhcp || self._listener) return;
-        /*        
-                let addrs = [];
-                for (let k of this._iflist)
-                    if (k[1] === 'IPv4')
-                        addrs.push(k[3]);
-        //        if (addrs.length > 1)
-                    addrs.unshift('0.0.0.0');
-        //        let ac = addrs;
-                //        A.I('addrs: ' + A.F(addrs));
-         //       while (addrs.length && !self._listener) {
-        //            this._trybind(addrs.shift());
-        */
+    init(addr) {
+        addr = addr || this._addr;
         try {
             this._trybind('0.0.0.0');
         } catch (e) {
-            A.W('could not bind to dhcp port!');
+            A.Wf('could not bind to address %s dhcp port 67 because of %O!', e);
         }
-        //        }
-        if (!this._listener)
-            A.W(`Could not bind to any dhcp listener address 0.0.0.0:67!`);
+        setTimeout(self => {
+            self.emit('listenState', !!self._listener);
+            if (!self._listener) {
+                A.Wf(`Could not bind to any dhcp listener address %s:67!`, addr);
+            }
+        }, 1000, this);
+    }
+
+    close() {
+        if (this._listener) {
+            this.emit('listenState', false);
+            this.emit('close', true);
+            this._listener.close();
+            this._listener.removeAllListeners();
+        }
+        this._listener = null;
     }
 
     _trybind(addr) {
@@ -500,6 +350,17 @@ class Network extends EventEmitter {
                 type: 'udp4',
                 reuseAddr: true,
             });
+            this._listener.on('close', err => {
+                //                A.Wf('Dhcp Error %O',err);
+                self.emit('close', err);
+                self.emit('listenState', false);
+                self._listener = false;
+            });
+            this._listener.on('error', err => {
+                //                A.Wf('Dhcp Error %O',err);
+                self.emit('error', err);
+                self.close();
+            });
             //            this._listener.on('error', e => A.W(`dhcp error on address ` + A.F(addr, e)));
             this._listener.on('message', (msg, rinfo) => {
                 let data;
@@ -511,8 +372,12 @@ class Network extends EventEmitter {
                 }
                 //                A.D('dhcp triggered: ' + A.O(data.options));
                 if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                    var req = [data.options.hostName, data.options.clientIdentifier.type, data.options.clientIdentifier.address, data.options.requestedIpAddress];
-                    self.combine(data.options.clientIdentifier.address, data.options.requestedIpAddress, data.options.hostName);
+                    var req = {
+                        hostName: data.options.hostName,
+                        type: data.options.clientIdentifier.type,
+                        macAddress: data.options.clientIdentifier.address,
+                        ipAddress: data.options.requestedIpAddress
+                    };
                     self.emit('request', req);
                 }
             });
@@ -525,8 +390,9 @@ class Network extends EventEmitter {
                     }, () => A.If('Connected with %O for DHCP Scan', addr));
                 }
             } catch (e) {
+                this._listener.removeAllListeners();
                 this._listener = null;
-                A.I('could not bind to address: ' + addr + ', had error: ' + A.O(e));
+                A.W('could not bind to address: ' + addr + ', had error: ' + A.O(e));
             }
         } catch (e) {
             A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
@@ -541,7 +407,177 @@ class Network extends EventEmitter {
             }
             this._listener = null;
         }
+    }
+}
+class Network extends EventEmitter {
+    constructor(dodhcp) {
+        super();
+        this._dodhcp = dodhcp;
+        this._init = false;
+        this._listener = null;
+        this._ping4session = null;
+        this._ping6session = null;
+        this._iflist = [];
+        this._macs = null;
+        this._ips = null;
+        this._remName = null;
+        this._nif = os.networkInterfaces();
+        this._iprCache = this._dnsCache = null;
+        this._netping = null;
+        Network.matchMac = /(([\dA-F]{2}:){5}[\dA-F]{2})/i;
 
+    }
+    get iflist() {
+        return this._iflist;
+    }
+    get nif() {
+        return this._nif;
+    }
+
+    static isIP(str) {
+        if (!str)
+            return 0;
+        str = str.trim().toLowerCase();
+        return net.isIP(str);
+    }
+
+    static isMac(str) {
+        if (!str)
+            return null;
+        str = str.trim().toLowerCase();
+        return Network.matchMac.test(str) ? str : null;
+    }
+
+    static isIP4(str) {
+        if (!str)
+            return null;
+        str = str.trim().toLowerCase();
+        return net.isIPv4(str) ? str : null;
+    }
+
+    static isIP6(str) {
+        if (!str)
+            return null;
+        str = str.trim().toLowerCase();
+        return net.isIPv6(str) ? str : null;
+    }
+
+    static getMac(ip) {
+        if (!this.isIP4(ip))
+            return A.resolve(null);
+        let ret = null;
+        try {
+            ret = A.c2p(arp.getMAC)(ip);
+        } catch (e) {
+            A.Wf('Error %O in getMac with arp! Maybe no arp available?', e);
+            return Promise.reject();
+        }
+        return Promise.resolve(ret).then(x => this.isMac(x) ? x : null, () => null);
+    }
+
+    get remName() {
+        return this._remName;
+    }
+
+    set remName(val) {
+        this._remName = val;
+    }
+
+    static get Ping() {
+        return ping;
+    }
+
+    removeName(address) {
+        var self = this;
+        var rn = this._remName.toLowerCase().trim();
+        if (!rn)
+            return address;
+        if (typeof address === 'string')
+            return address.toLowerCase().endsWith(rn) ? address.slice(0, -rn.length) : address;
+        if (Array.isArray(address) && rn && address[0] !== rn.slice(1))
+            return address.map((a) => self.removeName(a));
+        return address;
+    }
+
+    init(dhcp, pingopt, removeName) {
+        var self = this;
+        if (removeName)
+            this._remName = removeName.toLowerCase();
+        pingopt = pingopt || {
+            retries: 4,
+            //    sessionId: (process.pid % 65535),
+            packetSize: 56,
+            timeout: 700,
+            ttl: 64
+        };
+
+        try {
+            this._netping = require("net-ping");
+            this._ping4session = this._netping.createSession(Object.assign(pingopt, {
+                networkProtocol: this._netping.NetworkProtocol.IPv4
+            }));
+            this._ping6session = this._netping.createSession(Object.assign(pingopt, {
+                networkProtocol: this._netping.NetworkProtocol.IPv6
+            }));
+            this._ping6session.mping = this._ping4session.mping = (ip, session) => {
+                return new Promise((res) => {
+                    // A.I(`try to ping on ${ip}:`);
+                    session.pingHost(ip, function (error, target) {
+                        if (error) {
+                            //                        if (!(error instanceof net_ping.RequestTimedOutError))
+                            //                            A.W(target + ": " + error.toString());
+                            //                        A.I(`ping negative result on ${ip} was ${error}`);
+                            return res(undefined);
+                        }
+                        //                        A.I(`ping positive result on ${ip} was ${target}`);
+                        return res(target);
+                    });
+                }).then(x => x ? x : ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null));
+            };
+        } catch (e) {
+            A.I('net-ping not available! Will try to use normal ping!');
+            const my = {
+                mping(ip) {
+                    return ping.promise.probe(ip).then(x => x && x.alive ? ip : null, () => null);
+                },
+                // eslint-disable-next-line no-empty-function
+                close() {}
+            };
+            this._ping6session = this._ping4session = my;
+        }
+
+
+        this._dnsCache = new A.CacheP(((name) => {
+            let arr = [];
+            return Promise.all([
+                new Promise((res, rej) => dns.resolve4(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null),
+                new Promise((res, rej) => dns.resolve6(name, (err, hosts) => err ? rej(err) : res(hosts))).then(x => arr = arr.concat(x), () => null)
+            ]).then(() => arr.length > 0 ? arr : null);
+        }));
+
+        this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
+
+        this.clearCache();
+
+        for (let nif in this._nif)
+            for (let addr of this._nif[nif])
+                if (addr.internal !== undefined && !addr.internal) {
+                    this._iflist.push([
+                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
+                    ]);
+                    this.combine(addr.mac, addr.address);
+                }
+
+
+        if (!dhcp || self._listener) return;
+        self._listener = new Dhcp();
+        self._listener.on('error', e => self.emit('error', e))
+            .on('listenState', s => self.emit('listenState', s))
+            .on('request', (req) => {
+                self.combine(req.macAddress, req.ipAddress, req.hostName);
+                self.emit('request', req);
+            })
+            .on('close', () => setTimeout(() => self._listener.init.bind(self._listener), 1000));
     }
 
 
@@ -551,7 +587,7 @@ class Network extends EventEmitter {
         let pip = [];
 
         function pres(ip) {
-//            A.If('should ping %O', ip);
+            //            A.If('should ping %O', ip);
             ip = ip.trim();
             let session = Network.isIP(ip);
             if (!session)
@@ -560,7 +596,7 @@ class Network extends EventEmitter {
             return session.mping(ip, session).then(x => x ? ret.push(ip) : x, x => x);
         }
 
-//        if (typeof ips === 'string')
+        //        if (typeof ips === 'string')
         if (!Array.isArray(ips))
             ips = [ips];
 
@@ -680,7 +716,7 @@ class Network extends EventEmitter {
     }
 
     static getMacVendor(mac) {
-        let r = macdb[mac.toLowerCase().split(':').slice(0, 3).join('')];
+        let r = Network.isMac(mac) && macdb[mac.toLowerCase().split(':').slice(0, 3).join('')];
         return r ? r : 'Vendor N/A';
     }
 
