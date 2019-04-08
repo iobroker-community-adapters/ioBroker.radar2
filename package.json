@@ -44,7 +44,7 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.1.5",
+    "@frankjoke/myadapter": "^1.1.6",
     "node-arp": "^1.0.6",
     "ping": "^0.2.2",
     "xml2js": "^0.4.17"

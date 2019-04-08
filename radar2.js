@@ -213,7 +213,7 @@ function setItem(item) {
         A.makeState(idn + '._lastHere', A.dateTime(item.lasthere))
             //        A.makeState(idn + '.lasthere', item.lasthere)
             .catch(A.nop).then(() => A.makeState(item.id, anw))
-            .catch(A.nop).then(() => A.makeState(item.id+'._here', anw))
+            .catch(A.nop).then(() => A.makeState(item.id + '._here', anw))
             //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
             //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
             //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -345,7 +345,7 @@ function scanAll() {
             }
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`))
-                .then(() => A.makeState(item.id+'._here', item.anwesend, true)).catch(A.nop);
+                .then(() => A.makeState(item.id + '._here', item.anwesend, true)).catch(A.nop);
         }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`))).then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
@@ -364,9 +364,9 @@ function scanAll() {
                 .then(() => A.makeState('_allHere', allHere))
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
-        }).then(() => A.Df("radar2 found uBT's: %O",A.ownKeysSorted(ukBt)), A.Df("radar2 found uIP's: %O",A.ownKeysSorted(ukIp)), () => null)
-        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac,  A.f(ukBt[mac]), true))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
-        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.f(ukIp[ip]),true))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
+        }).then(() => A.Df("radar2 found uBT's: %O", A.ownKeysSorted(ukBt)), A.Df("radar2 found uIP's: %O", A.ownKeysSorted(ukIp)), () => null)
+        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.f(ukBt[mac]), true))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
+        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.f(ukIp[ip]), true))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
         .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
         .then(() => {
             for (let item in scanList)
@@ -405,10 +405,10 @@ function main() {
         macAddress: found[1],
         by: 'arp'
     }));
-    network.on('listenState',listen => A.makeState('info.connection', listen,true));
+    network.on('listenState', listen => A.makeState('info.connection', listen, true));
     bluetooth.on('found', what => foundBt(what));
 
-    A.unload = () => Promise.resolve(() => network.stop()).catch(() => null).then(() => Promise.resolve(bluetooth.stop())).catch(() => null).then(() => A.wait(10).then(() => process.exit(0)));
+    A.unload = () => Promise.resolve(() => network.stop()).catch(A.nop).then(() => Promise.resolve(bluetooth.stop())).catch(A.nop);
 
     /* 
     A.unload = () => {
@@ -483,8 +483,8 @@ function main() {
 
             devices = A.C.devices;
         })
-        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()),() => false).then(x => !!x, () => false).then(x => scanBt = x))
-        .then(x => A.If('Will try to scan BT devices: %s',x))
+        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
+        .then(x => A.If('Will try to scan BT devices: %s', x))
         .then(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
             A.isLinuxApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
@@ -564,7 +564,7 @@ function main() {
                                     //                                    A.Df('add mac %s for ip %s in %s to %O', x, ip, item.name);
                                     if (x) {
                                         if (item.hasMAC) {
-//                                            A.If('mac for %O is %O', item, item.hasMAC);
+                                            //                                            A.If('mac for %O is %O', item, item.hasMAC);
                                             if (item.hasMAC.indexOf(x) < 0)
                                                 item.hasMAC.push(x);
                                         } else item.hasMAC = [x];
@@ -650,7 +650,7 @@ function main() {
                     return A.resolve();
                 }); // scan first time and generate states if they do not exist yet
             })
-            .then(() => A.cleanup('*',A.D('cleanup old states...'))) // clean up old states not created this time!
+            .then(() => A.cleanup('*', A.D('cleanup old states...'))) // clean up old states not created this time!
             .then(() => A.I('Adapter initialization finished!'), err => {
                 A.W(`radar initialization finished with error ${A.O(err)}, will stop adapter!`);
                 A.stop(1);
