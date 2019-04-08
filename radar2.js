@@ -483,7 +483,7 @@ function main() {
 
             devices = A.C.devices;
         })
-        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()),() => true).then(x => !!x, () => false).then(x => scanBt = x))
+        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()),() => false).then(x => !!x, () => false).then(x => scanBt = x))
         .then(x => A.If('Will try to scan BT devices: %s',x))
         .then(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
