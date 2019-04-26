@@ -69,6 +69,8 @@ sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libud
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp`)
+sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which hcitool`)
+sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which hciconfig`)
 ```
 
 Bei Windows steht arp-scan nicht zur Verfügung und es wird nur node-ping verwendet.
@@ -101,6 +103,12 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
 ## Changelog
+
+### 1.2.0
+
+* Möglichkeit zur Verwendung von hcitool anstatt noble unter linux geschaffen (default).
+* _LastHere wird bei Adapterrestart nicht geändert
+* Default Abfragezyklus auf 30 Sekunden geändert
 
 ### 1.0.7
 

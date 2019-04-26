@@ -301,7 +301,7 @@ function scanAll() {
     const prom = [];
     const btl = scanBt && A.ownKeys(btList).length;
 
-    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
+//    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
     prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
@@ -441,8 +441,12 @@ function main() {
                 A.C.scandelay = 15;
             scanDelay = A.C.scandelay * 1000;
 
-            bluetooth.init(btid, scanDelay * 0.7);
-
+            return bluetooth.init({
+                btid: btid,
+                scanTime: Math.floor(scanDelay * 0.85),
+                doHci: A.C.hcionly
+            });
+    }).then(() => {
             //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
 
             if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
@@ -581,7 +585,7 @@ function main() {
                     } else if (!item.bluetooth && !item.hasMAC)
                         return A.resolve(A.W(`Invalid Device should have IP or BT set ${A.O(item)}`));
                     scanList[item.name] = item;
-                    return A.getState(item.id + '._lastHere').then(st => st && st.ts ? A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), true) : A.wait(0)).catch(() => null)
+                    return A.getState(item.id + '._lastHere').then(st => st && st.ts ? A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), st.ts) : A.wait(0)).catch(() => null)
                         .then(() => ret).then(() => A.extendObject(item.id, {
                             type: 'state',
                             native: {

@@ -12,21 +12,259 @@ const assert = require('assert'),
     os = require('os'),
     net = require('net'),
     fs = require('fs'),
+    cp = require('child_process'),
+    stream = require('stream'),
     EventEmitter = require('events').EventEmitter;
 
+let macdb = require('./lib/vendors.json');
 
-let macdb = {};
+class ReadLineStream extends stream.Transform {
+    constructor(options) {
+        super(options);
+        this.lineBuffer = '';
+        // use objectMode to stop the output from being buffered
+        // which re-concatanates the lines, just without newlines.
+        this._readableState.objectMode = true;
+        // take the source's encoding if we don't have one
+        this.on('pipe', function (src) {
+            if (!this.encoding) {
+                this.encoding = src._readableState.encoding;
+            }
+        });
+    }
+
+    _transform(chunk, encoding, done) {
+        // decode binary chunks as UTF-8
+        if (Buffer.isBuffer(chunk)) {
+            if (!encoding || encoding == 'buffer') encoding = 'utf8';
+
+            chunk = chunk.toString(encoding);
+        }
+
+        this.lineBuffer += chunk;
+        var lines = this.lineBuffer.match(/.*?(?:\r\n|\r|\n)|.*?$/g);
+
+        while (lines.length > 1)
+            this.push(lines.shift());
+
+        this.lineBuffer = lines[0] || '';
+
+        done();
+    }
+
+    _flush(done) {
+        if (this.lineBuffer) {
+            this.push(this.lineBuffer);
+            this.lineBuffer = '';
+        }
+
+        done();
+    }
+}
+
+class ScanCmd extends EventEmitter {
+    constructor(args, options) {
+        super();
+        this._stdout = null;
+        this._stop = false;
+        this._args = args;
+        if (typeof args === 'string')
+            this._args = args.split(/\s+/);
+        options = options || {};
+        this._options = Object.assign({
+            killSignal: 'SIGINT',
+            timeout: 0,
+            spawnOptions: {
+                // detachment and ignored stdin are the key here: 
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
+            }
+        }, options);
+        this._cmd = null;
+        this._linepart = '';
+        this._timeout = null;
+        this._matches = {};
+        ScanCmd._cnt = ScanCmd._cnt || 0;
+        ScanCmd._all = ScanCmd._all || {};
+        A.exec('which ' + this._args[0]).then(x => typeof x === 'string' && x.length ? x.trim() : this._args[0], () => this._args[0])
+            .then(x => this._args[0] = x)
+            .then(() => this.init());
+        return this;
+    }
+
+    static runCmd(cmd, match, opt) {
+        opt = opt || {};
+        if (match)
+            opt.match = match;
+        return new Promise((res, rej) => {
+            let ret = [];
+            let pid = ++ScanCmd._cnt & 0xfffffff;
+
+            function finish(how, arg) {
+                proc.removeAllListeners();
+                how(arg);
+                ret = proc = null;
+                delete ScanCmd._all[pid];
+            }
+            let proc = new ScanCmd(cmd, opt);
+            ScanCmd._all[pid] = proc;
+            A.Df('started #%s %s', pid, cmd);
+            proc.on('line', line => ret.push(line));
+            proc.once('error', err => finish(rej, err));
+            proc.once('exit', code => code ? finish(rej, code) : finish(res, ret));
+        });
+    }
+
+    static stopAll() {
+        for (let x of Object.keys(ScanCmd._all)) {
+            ScanCmd._all[x].stop();
+            delete ScanCmd._all[x];
+        }
+    }
+
+    init() {
+        var self = this;
+        this._cmd = null;
+        this._matches = {};
+
+
+        function match(data) {
+            if (self._options.match) {
+                let m = data.match(self._options.match[0]);
+                if (m) {
+                    let r = {
+                        by: self._options.match[1]
+                    };
+                    m = m.slice(1);
+                    let ma = m[0];
+                    if (!self._matches[ma]) {
+                        for (let x = 0; x < m.length; x++)
+                            r[self._options.match[x + 2]] = m[x];
+                        if (r.address)
+                            r.vendor = Network.getMacVendor(r.address);
+                        self.emit('line', r);
+                        //                        A.N(() => self.emit('line', r));
+                        self._matches[ma] = m;
+                    }
+                }
+            } else
+                self.emit('line', data.trim());
+            //                          A.N(() => self.emit('line', data.trim()));
+        }
+
+        function error(data) {
+            A.N(() => {
+                self.emit('error', data);
+                //            A.Df('ScanCmd err: %O', data);
+                if (self._cmd && !self._stop)
+                    self.stop();
+            });
+        }
+
+        //        try {
+        this._cmd = cp.spawn(this._args[0], this._args.slice(1), this._options.spawnOptions);
+        //            A.I(`started ${this._args[0]} with ${this._args.slice(1)}`);
+        //        } catch (e) {
+        //            A.E(`spawn arror ${e}`);
+        //            this._cmd = null;
+        //        }
+        if (this._cmd) {
+            if (this._options.timeout > 0)
+                this._timeout = setTimeout(this.kill.bind(this), this._options.timeout);
+            else this._timeout = null;
+            this._cmd.unref();
+            //            this._cmd.kill('SIGTTIN');
+            self._stdout = self._cmd.stdout.pipe(new ReadLineStream());
+            //            self._stderr = self._cmd.stderr.pipe(new ReadLineStream());
+            //            self._cmd.stdout._readableState.highWaterMark = self._cmd.stderr._readableState.highWaterMark = 16;
+            //            self._cmd.stdout._readableState.objectMode = self._cmd.stderr._readableState.objectMode = true;
+            //            self._cmd.stdout._linepart = self._cmd.stderr._linepart = '';
+            //            A.If('stdout: %O', self._stdout);
+            self._stdout
+                //                .on('close', () => A.I('stdout_close'))
+                //            self._cmd.stdout.on('close', () => A.I('stdout_close'))
+                //                .on('end', () => A.I('stdout_end'))
+                .on('error', err => error(err))
+                //                .on('readable', () => readlines(self._cmd.stdout))
+                //                .on('data', data => readlines(self._cmd.stdout, data));
+                //                .on('data', data => A.If('stdout_data_line: %s', data.trim()));
+                .on('data', data => match(data));
+            //                self._cmd.stdout.on('data', data => A.If('stdout data: %s',data));
+            //            self._cmd.stderr.on('readable', () => readlines(self._cmd.stderr));
+            //            self._stderr.on('data', data => readlines(self._cmd.stderr, data));
+            self._cmd.stderr.on('data', data => error(data.toString().trim()));
+            self._cmd
+                .on('close', () => self.cleanUp())
+                //                .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
+                .on('error', err => error(err))
+                .on('exit', function (code) {
+                    //                    A.D(`${self._args} exit code: ${code}`);
+                    self.cleanUp();
+                    self.emit('exit', code);
+                    //                if (!self._stop && !self._single)
+                    //                    self.init();
+                });
+            //            self._cmd.stdout.resume();
+            //            self._cmd.stderr.resume();
+            //            A.I(`started ${this._args} resulting in ${this._cmd}`);
+        } else A.W(`Could not start ${this._args}`);
+        return this._cmd;
+    }
+
+    stop() {
+        this._stop = true;
+        this.kill();
+    }
+
+    cleanUp() {
+        this._stop = true;
+        if (this._timeout) {
+            clearTimeout(this._timeout);
+            this._timeout = null;
+        }
+        setTimeout(() => {
+            if (this._cmd) {
+                this._cmd.removeAllListeners();
+                if (this._cmd.stdout)
+                    this._cmd.stdout.removeAllListeners();
+                if (this._cmd.stderr)
+                    this._cmd.stderr.removeAllListeners();
+                this._cmd = null;
+                this._stdout = this._stderr = null;
+            }
+            this.emit('exit', 0);
+        }, 100);
+    }
+
+    kill() {
+        if (this._timeout) {
+            clearTimeout(this._timeout);
+            this._timeout = null;
+        }
+        if (this._cmd && !this._cmd.killed && !this._stop) {
+            A.Df('Kill %O with %s', this._args, this._options.killSignal);
+            if (this._options.killSignal === '^C')
+                this._cmd.stdin.write('\0x03');
+            else
+                this._cmd.kill(this._options.killSignal);
+            this.cleanUp();
+        }
+    }
+}
+
+ScanCmd._all = {};
 
 class Bluetooth extends EventEmitter {
     constructor() {
         super();
         this._nobleRunning = false;
         this._noble = null;
-        this._btid = 0;
-        this._len = 0;
+        this._btid = -1;
+        this._len = 25000;
         this._nbt = null;
         this._device = null;
         this._scan = null;
+        this._doHci = null;
     }
 
     get hasNoble() {
@@ -48,74 +286,113 @@ class Bluetooth extends EventEmitter {
     }
 
     startScan() {
-        const self = this;
-        if (!this._device)
-            return Promise.resolve([]);
-        if (this._scan)
+        if (this._device && this._scan)
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
-        this._scan = true;
-        return A.Ptime(self._device.scan()).then(x => x < 1000 ? self._device.scan() : Promise.resolve()).catch(e => e).then(res => ((self._scan = false), res));
+        if (this._device && this._noble) {
+            this._scan = true;
+            return Promise.all([
+                A.Ptime(this._device.scan()).then(x => x < 1000 ? this._device.scan() : Promise.resolve()).catch(A.nop),
+                this.startNoble()
+            ]).catch(A.nop).then(() => this._scan = false);
+        } else if (this._doHci)
+            return Promise.all([
+                ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'], {
+                    timeout: this._len
+                }).then(res => res.map(res => A.N(() => {
+                    res.btVendor = res.vendor;
+                    res.address = res.address.toLowerCase();
+                    delete res.vendor;
+                    this.emit('found', res);
+                })), A.nop),
+                ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
+                .then(res => res.map(res => A.N(() => {
+                    res.btVendor = res.vendor;
+                    res.address = res.address.toLowerCase();
+                    delete res.vendor;
+                    this.emit('found', res);
+                })), A.nop)
+            ]);
+        else A.Wf('Neither noble nor hcitool available to scan bluetooth!');
     }
 
-    init(btid, nobleTime) {
+    resetHci() {
+        return typeof this._doHci === 'string' ? ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.nop).then(() => A.wait(100))
+            .then(() => ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci))).catch(A.nop) : Promise.resolve();
+    }
+
+    get scanTime() {
+        return this._len;
+    }
+    set scanTime(len) {
+        this._len = (isNaN(parseInt(len)) || !len || len < 0) ? 10000 : parseInt(len);
+    }
+
+    init(options) {
         const self = this;
         const nid = 'NOBLE_HCI_DEVICE_ID';
-        this._btid = Number(btid);
-        if (!nobleTime || nobleTime < 0)
-            nobleTime = 10000;
-        this._len = parseInt(nobleTime);
+        options = Object.assign({
+            btid: -1,
+            scanTime: 25000,
+            doHci: true
+        }, options || {});
+        this._btid = isNaN(parseInt(options.btid)) ? -1 : parseInt(options.btid);
+        this.len = options.scanTime;
+        return A.isLinuxApp('hcitool').then(x => (this._doHci = x && options.doHci)).then(x => {
+            if (x)
+                return ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address'])
+                    .then(res =>
+                        this._btid < 0 && res.length ? res[0].name : res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ? 'hci' + this._btid : 'hci0', () => 'hci0')
+                    .then(res =>
+                        A.Ir(this._doHci = res, 'Will run hcitool-mode and not noble on device %s!', res))
+                    .then(() =>
+                        this.resetHci());
+            if (this._btid >= 0)
+                // eslint-disable-next-line no-process-env
+                process.env[nid] = this._btid;
 
-
-        if (isNaN(this._btid)) {
-            A.W(`BT interface number not defined in config, will use '-1' to deceide for noble`);
-            this._btid = -1;
-        }
-        //        this._hcicmd = `hcitool -i hci${btid} name `;
+            try {
+                this._noble = require('@abandonware/noble');
+                this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
+                //        this._noble.on('scanStart', () => A.D('Noble scan started'));
+                //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
+                this._noble.on('discover', function (per) {
+                    //                if (isStopping)
+                    //                    return res(stopNoble(idf));
+                    //                        A.D(`-myNoble discovers: ${A.O(per)}`);
+                    if (per && per.address)
+                        self.emit('found', {
+                            address: per.address.toLowerCase(),
+                            btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
+                            rssi: per.rssi,
+                            btVendor: Network.getMacVendor(per.address),
+                            by: 'noble'
+                            //                        vendor: Network.getMacVendor(per.address)
+                        });
+                });
+                //            this._noble.stopScanning();
+                A.I("found '@abandonware/noble'");
+            } catch (e) {
+                A.W(`Noble not available, Error: ${A.O(e)}`);
+                this._noble = null;
+            }
+            try {
+                this._nbt = require('node-bluetooth');
+                this._device = new this._nbt.DeviceINQ();
+                this._device.on('found', (address, name) => self.emit('found', {
+                    address: address,
+                    btName: name,
+                    btVendor: Network.getMacVendor(address),
+                    by: 'scan'
+                }));
+                A.I("found 'node-bluetooth'");
+            } catch (e) {
+                A.W('node-bluetooth not found!');
+            }
+            return null;
+        });
         //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
-        if (btid >= 0)
-            // eslint-disable-next-line no-process-env
-            process.env[nid] = btid;
-
-        try {
-            this._noble = require('@abandonware/noble');
-            this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
-            //        this._noble.on('scanStart', () => A.D('Noble scan started'));
-            //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
-            this._noble.on('discover', function (per) {
-                //                if (isStopping)
-                //                    return res(stopNoble(idf));
-                //                        A.D(`-myNoble discovers: ${A.O(per)}`);
-                if (per && per.address)
-                    self.emit('found', {
-                        address: per.address.toLowerCase(),
-                        btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
-                        rssi: per.rssi,
-                        btVendor: Network.getMacVendor(per.address),
-                        by: 'noble'
-                        //                        vendor: Network.getMacVendor(per.address)
-                    });
-            });
-            //            this._noble.stopScanning();
-            A.I("found '@abandonware/noble'");
-        } catch (e) {
-            A.W(`Noble not available, Error: ${A.O(e)}`);
-            this._noble = null;
-        }
-        try {
-            this._nbt = require('node-bluetooth');
-            this._device = new this._nbt.DeviceINQ();
-            this._device.on('found', (address, name) => self.emit('found', {
-                address: address,
-                btName: name,
-                btVendor: Network.getMacVendor(address),
-                by: 'scan'
-            }));
-            A.I("found 'node-bluetooth'");
-        } catch (e) {
-            A.W('node-bluetooth not found!');
-        }
     }
 
     stopNoble() {
@@ -145,6 +422,7 @@ class Bluetooth extends EventEmitter {
     stop() {
         this.stopNoble();
         this._noble = null;
+        ScanCmd.stopAll();
     }
 
 }
@@ -577,7 +855,7 @@ class Network extends EventEmitter {
                 self.combine(req.macAddress, req.ipAddress, req.hostName);
                 self.emit('request', req);
             })
-            .on('close', () => setTimeout(() => self._listener.init.bind(self._listener), 1000));
+            .on('close', () => self._listener && setTimeout(() => self._listener.init.bind(self._listener), 1000));
     }
 
 
@@ -698,21 +976,27 @@ class Network extends EventEmitter {
             let td = Date.now() - new Date(j.mtime).getTime();
             td = td / 1000 / 60 / 60 / 24 / 30;
             A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
-            try {
-                // eslint-disable-next-line no-sync
-                let f = fs.readFileSync(filename, 'utf8');
-                f = JSON.parse(f);
-                if (A.ownKeys(f).length > 1000) {
-                    macdb = f;
-                    if (td >= 1)
-                        f = readmacs();
-                    return Promise.resolve();
-                }
-            } catch (e) {
-                A.Wf('reading file %s error %O', filename, e);
-            }
+            if (td >= 1)
+                readmacs();
+            /*
+                        try {
+                            // eslint-disable-next-line no-sync
+                            let f = fs.readFileSync(filename, 'utf8');
+                            f = JSON.parse(f);
+                            if (A.ownKeys(f).length > 1000) {
+                                macdb = f;
+                                if (td >= 1)
+                                    f = readmacs();
+                                return Promise.resolve();
+                            }
+                        } catch (e) {
+                            A.Wf('reading file %s error %O', filename, e);
+                        }
+            */
         }
-        return readmacs();
+        //        return readmacs();
+        return Promise.resolve();
+
     }
 
     static getMacVendor(mac) {
@@ -790,3 +1074,4 @@ class Network extends EventEmitter {
 
 exports.Network = Network;
 exports.Bluetooth = Bluetooth;
+exports.ScanCmd = ScanCmd;

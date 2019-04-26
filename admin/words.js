@@ -6,6 +6,10 @@ systemDictionary = {
         "en": "Use long message text with description for warnings: ",
         "de": "Benutze langen Warnungstext mit genauer Beschreibung: "
     },
+    "hcionly": {
+        "en": "use hcitool instead of noble on linux",
+        "de": "Betutze 'hcitool' anstatt 'noble' auf linux"
+    },
     "radar2 settings": {
         "en": "radar2 settings",
         "de": "radar2-Einstellungen"

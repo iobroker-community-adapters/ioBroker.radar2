@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.0.7",
+        "version": "1.2.0",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
         "desc": {
@@ -37,6 +37,10 @@
             "Ink"
         ],
         "news": {
+            "1.2.0": {
+                "en": "Added possibility to use hcitool only on linux to avoice noble on unsupported nodejs platforms.",
+                "de": "Es wurde die Möglichkeit geschaffen nur hcitool anstatt noble auf Linux-RTechnern zu verwenden um inkompatible noble-Versionen zu umgehen"
+            },
             "1.0.7": {
                 "en": "Added check not to call BT scan if no BT devices are ready.",
                 "de": "Adapter prüft jetzt uinterLinux ob BT-Geräte vorhanden sind und mach keine BT-scans falls diese nicht gefunden werden um SIGSEGV zu verhindern"
@@ -104,7 +108,7 @@
                 "bluetooth": ""
             }
         ],
-        "scandelay": 20,
+        "scandelay": 30,
         "arp_scan_cmd": "-lgq --retry=5 --timeout=400",
         "btadapterid": -1,
         "printerdelay": 720,
@@ -115,6 +119,7 @@
         "delayaway": 2,
         "delayuwz": 120,
         "numuwz": 0,
+        "hcionly": true,
         "longuwz": false
     },
     "objects": [],  "instanceObjects": [
