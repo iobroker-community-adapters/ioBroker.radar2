@@ -4,11 +4,28 @@
         "version": "1.2.0",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": {
-            "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers"
+            "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
+            "de": "Radar2 für IP & Bluetooth-Geräte und infos mfrom UWZ, EZB und HP-Drucker",
+            "ru": "Radar2 для IP-устройств Bluetooth и М инфос найти, ЕЦБ и HP-принтеры",
+            "pt": "Radar2 para IP e dispositivos Bluetooth e infos mfrom UWZ, do BCE e do PS-Impressoras",
+            "nl": "Radar2 voor IP & Bluetooth-apparaten en info mfrom UWZ, ECB en HP-Printers",
+            "fr": "Radar2 de la propriété intellectuelle et les périphériques Bluetooth et les infos mfrom UWZ, de la BCE et HP Imprimantes",
+            "it": "Radar2 per IP e dispositivi Bluetooth e informazioni metri UWZ, BCE e HP-Stampanti",
+            "es": "Radar2 para la propiedad intelectual y los dispositivos Bluetooth y infos mfrom UWZ, el BCE y el HP-Impresoras",
+            "pl": "Radar2 IP urządzeń Bluetooth i M инфос znaleźć, EBC i HP-drukarki",
+            "zh-cn": "Radar2用于知识产权和蓝牙设备和相关信息mfrom UWZ，欧洲央行和HP-打印机"
         },
         "desc": {
             "en": "This adapter can scan IP and bluetooth addresses for availability/in reach and also get exchange rates from European Central Bank, Weather warning from UWZ  and get ink fill from HP printers",
-            "de": "Dieser Adapter überprüft IP-Adressen und Bluetooth-Adressen auf Verfügbarkeit/Anwesenheit. Er kann auch Wechselkurse der ECB, Unwetterwarnungen der UWZ und Tintenfüllstände für HP anzeigen"
+            "de": "Dieser Adapter überprüft IP-Adressen und Bluetooth-Adressen auf Verfügbarkeit/Anwesenheit. Er kann auch Wechselkurse der ECB, Unwetterwarnungen der UWZ und Tintenfüllstände für HP anzeigen",
+            "ru": "Этот адаптер может проверять IP-адреса и Bluetooth для доступности в пределах досягаемости, а также получить курсы от Европейского центрального банка, погодные предупреждения от найти и достать чернил заправить от принтеров HP",
+            "pt": "Este adaptador pode verificar IP e bluetooth endereços para disponibilidade/reach e também obter taxas de câmbio do Banco Central Europeu, o Tempo de aviso de UWZ e obter a tinta a preencher de impressoras HP",
+            "nl": "Deze adapter kunt scannen van IP-en bluetooth-adressen voor beschikbaarheid/in bereik en ook de wisselkoersen van de Europese Centrale Bank, Weer een waarschuwing van UWZ en krijgen inkt vullen van de HP-printers",
+            "fr": "Cet adaptateur peut scanner IP et des adresses bluetooth pour la disponibilité/reach, et également obtenir les taux de change de la Banque Centrale Européenne, d'alerte Météo de UWZ et obtenir d'encre de remplissage à partir d'imprimantes HP",
+            "it": "Questo adattatore è possibile eseguire la scansione IP e indirizzi bluetooth per la disponibilità/a raggiungere e anche ottenere tassi di cambio della Banca Centrale Europea, allerta Meteo da UWZ e ottenere riempire di inchiostro HP stampanti",
+            "es": "Este adaptador puede escanear IP y bluetooth direcciones de disponibilidad/en llegar y también obtener los tipos de cambio del Banco Central Europeo, el Tiempo de advertencia de UWZ y obtener de relleno de tinta de impresoras HP",
+            "pl": "Ten adapter może sprawdzić adresy IP i Bluetooth dla atrakcji w zasięgu ręki, a także uzyskać kursy od Europejskiego banku centralnego, ostrzeżenia pogodowe od znaleźć i zdobyć atramentu zatankować od drukarek HP",
+            "zh-cn": "这器可以扫描权和蓝牙地址可用性/在达和也得到的汇率从欧洲中央银行、天气预警，从UWZ，并得到墨水填写自惠普的打印机"
         },
         "authors": [
             "frankjoke <frankjoke@hotmail.com>"
@@ -41,31 +58,87 @@
         "news": {
             "1.2.0": {
                 "en": "Added possibility to use hcitool only on linux to avoice noble on unsupported nodejs platforms.",
-                "de": "Es wurde die Möglichkeit geschaffen nur hcitool anstatt noble auf Linux-RTechnern zu verwenden um inkompatible noble-Versionen zu umgehen"
+                "de": "Es wurde die Möglichkeit geschaffen nur hcitool anstatt noble auf Linux-RTechnern zu verwenden um inkompatible noble-Versionen zu umgehen",
+                "ru": "Добавлена возможность использовать hcitool только на Linux, чтобы голос благородный на неподдерживаемых платформ nodejs.",
+                "pt": "Adicionado a possibilidade de usar hcitool apenas no linux para avoz nobre não suportadas nodejs plataformas.",
+                "nl": "Mogelijkheid toegevoegd om te gebruiken hcitool alleen op linux te stem edele op niet-ondersteunde nodejs platforms.",
+                "fr": "Ajout de la possibilité d'utiliser hcitool seulement sur linux à voix noble sur la non prise en charge de nodejs plates-formes.",
+                "it": "Aggiunta la possibilità di utilizzare hcitool solo su linux per voce nobile non supportate nodejs piattaforme.",
+                "es": "Agregó que la posibilidad de utilizar hcitool sólo en linux para voz noble no compatible nodejs plataformas.",
+                "pl": "Dodano możliwość korzystania z hcitool tylko na Linux, aby głos szlachetny dla platform nodejs.",
+                "zh-cn": "增加可能使用hcitool只有在linux avoice贵上不支持node.js平台。"
             },
             "1.0.7": {
                 "en": "Added check not to call BT scan if no BT devices are ready.",
-                "de": "Adapter prüft jetzt uinterLinux ob BT-Geräte vorhanden sind und mach keine BT-scans falls diese nicht gefunden werden um SIGSEGV zu verhindern"
+                "de": "Adapter prüft jetzt uinterLinux ob BT-Geräte vorhanden sind und mach keine BT-scans falls diese nicht gefunden werden um SIGSEGV zu verhindern",
+                "ru": "Добавлена проверка, чтобы не вызвать сканирование БТ если БТ устройств готовы.",
+                "pt": "Adicionado verificar para não chamar a BT scan, se não BT dispositivos estão prontos.",
+                "nl": "Toegevoegd controleren niet om te bellen BT-scan als geen BT-apparaten zijn klaar voor gebruik.",
+                "fr": "Ajout d'une vérification de ne pas appeler BT scan si pas de BT appareils sont prêts.",
+                "it": "Aggiunto un controllo per non chiamare BT scansione se non i dispositivi BT sono pronti.",
+                "es": "Se ha añadido una comprobación de no llamar a BT scan si no BT dispositivos están listos.",
+                "pl": "Dodano sprawdzanie, aby nie wywołać skanowanie BT jeśli BT urządzeń gotowy.",
+                "zh-cn": "加入检查不叫BT扫描，如果没有BT设备都准备好了。"
             },
             "1.0.6": {
                 "en": "Added ._here state to overcome blocky problem, updated save logic that only changes in states will generate triggers.",
-                "de": "'._here' state hinzugefügt um Blocky-Bug zu umgehen. Änderungen angebracht das States nur geschrieben werden wenn sie sich ändern."
+                "de": "'._here' state hinzugefügt um Blocky-Bug zu umgehen. Änderungen angebracht das States nur geschrieben werden wenn sie sich ändern.",
+                "ru": "Добавил .Состояние _here, чтобы преодолеть проблему блочный, обновляются сохранения логики, что только изменения в состоянии генерировать триггеры.",
+                "pt": "Adicionado ._here estado para superar blocos problema, atualizado salvar a lógica de que apenas as alterações de estados irá gerar dispara.",
+                "nl": "Toegevoegd ._here staat te overwinnen hoekig probleem, bijgewerkt opslaan logica dat alleen veranderingen in de staten zal genereren triggers.",
+                "fr": "Ajouté ._here de l'état pour surmonter les blocs de problème, mis à jour enregistrer logique que seuls les changements dans les états de générer des déclencheurs.",
+                "it": "Aggiunto ._here stato per superare blocchi problema, aggiornato salva logica che cambia solo in stati genererà trigger.",
+                "es": "Añadido ._here estado para superar paralizados problema, actualizado guardar la lógica de que sólo los cambios en los estados de generar disparadores.",
+                "pl": "Dodał .Stan _here, aby przezwyciężyć ten problem, topornie, są aktualizowane zachowania logiki, że tylko zmiany w stanie wygenerować wyzwalacze.",
+                "zh-cn": "加入。_here国家克服块状的问题，更新保存的逻辑，只有改变在各国将产生的触发器。"
             },
             "1.0.3": {
                 "en": "Added possibility to add more than one BT mac address for a device",
-                "de": "Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden"
+                "de": "Es können jetzt mehrere BT-Mac-Adressen (durch ',' getrennt) pro Gerät angegeben werden",
+                "ru": "Добавлена возможность добавлять более одного БТ MAC-адрес устройства",
+                "pt": "Adicionado a possibilidade de adicionar mais de uma BT endereço mac de um dispositivo de",
+                "nl": "Mogelijkheid toegevoegd om meer dan één BT mac-adres van een apparaat",
+                "fr": "Ajout de la possibilité d'ajouter plus d'un BT adresse mac d'un périphérique",
+                "it": "Aggiunta la possibilità di aggiungere più di un BT indirizzo mac di un dispositivo",
+                "es": "Es posible agregar más de un BT dirección mac de un dispositivo",
+                "pl": "Dodano możliwość dodawania więcej niż jednego BT adres MAC urządzenia",
+                "zh-cn": "增加的可能性，以增加超过一BT mac地址的设备"
             },
             "1.0.2": {
                 "en": "final release of radar2, lasthere changed to '_lastHere', item data saved to native",
-                "de": "Finale Version des Adapters, lasthere auf '_lastHere' geändert und Geräte unter native abgespeichert"
+                "de": "Finale Version des Adapters, lasthere auf '_lastHere' geändert und Geräte unter native abgespeichert",
+                "ru": "финальный релиз radar2, lasthere изменен на '_lastHere', элемент данных сохранен родной",
+                "pt": "versão final do radar2, lasthere alterado para \"_lastHere', item de dados guardados nativo",
+                "nl": "de definitieve release van radar2, lasthere veranderd naar '_lastHere', item opgeslagen gegevens naar de native",
+                "fr": "sortie de la version finale de radar2, lasthere changé pour \"_lastHere', les données enregistrées natif",
+                "it": "versione finale di radar2, lasthere cambiato \"_lastHere', elemento di dati salvati nativo",
+                "es": "versión final de radar2, lasthere cambiado a '_lastHere', elemento de datos guardados a los nativos",
+                "pl": "ostateczna wersja radar2, lasthere zmieniony na '_lastHere', element danych zapisany ojczysty",
+                "zh-cn": "最后释放的radar2,lasthere改为'_lastHere'的项目保存数据的司机"
             },
             "1.0.1": {
                 "en": "Bug-release-beta and chang to @frankjoke/myadapter",
-                "de": "Bug-release-Beta and und Nutzung von @frankjoke/myadapter"
+                "de": "Bug-release-Beta and und Nutzung von @frankjoke/myadapter",
+                "ru": "Ошибка-релиз-бета-и Чжан @frankjoke/myadapter",
+                "pt": "Erro de lançamento beta e chang @frankjoke/myadapter",
+                "nl": "Bug-release-beta en chang @frankjoke/myadapter",
+                "fr": "Bug-version-beta et chang de @frankjoke/myadapter",
+                "it": "Bug-versione-beta e chang @frankjoke/myadapter",
+                "es": "Bug de liberación-beta y chang @frankjoke/myadapter",
+                "pl": "Błąd-wersja-beta-i Zhang @frankjoke/myadapter",
+                "zh-cn": "Bug-release-beta和长@frankjoke/myadapter"
             },
             "1.0.0": {
                 "en": "public release of new radar2-adapter with english information page",
-                "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite"
+                "de": "Ferige Version des radar2-Adapter mit Deutscher und Englischer Informationsseite",
+                "ru": "публичный релиз новой radar2-адаптер с английским информационной странице",
+                "pt": "lançamento público do novo radar2-adaptador de inglês com as informações da página",
+                "nl": "publieke release van de nieuwe radar2-adapter met het engels informatie pagina",
+                "fr": "publication de la nouvelle radar2-carte avec l'anglais, la page d'information",
+                "it": "rilascio pubblico del nuovo radar2-adattatore con inglese la pagina delle informazioni",
+                "es": "la publicación de la nueva radar2-adaptador con el inglés de la página de información",
+                "pl": "publiczne wydanie nowej radar2-adapter z angielskiego stronie informacyjnej",
+                "zh-cn": "公开发布的新radar2适配器与英文的信息网页"
             }
         },
         "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.radar2/master/admin/radar2.png",
@@ -73,7 +146,8 @@
         "compact": false
     },
     "native": {
-        "devices": [{
+        "devices": [
+            {
                 "name": "Ich-",
                 "ip": "localhost",
                 "macs": "",
@@ -124,7 +198,8 @@
         "hcionly": true,
         "longuwz": false
     },
-    "objects": [],  "instanceObjects": [
+    "objects": [],
+    "instanceObjects": [
         {
             "_id": "info",
             "type": "channel",
