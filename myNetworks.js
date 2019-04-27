@@ -289,14 +289,8 @@ class Bluetooth extends EventEmitter {
         if (this._device && this._scan)
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
-        if (this._device && this._noble) {
-            this._scan = true;
-            return Promise.all([
-                A.Ptime(this._device.scan()).then(x => x < 1000 ? this._device.scan() : Promise.resolve()).catch(A.nop),
-                this.startNoble()
-            ]).catch(A.nop).then(() => this._scan = false);
-        } else if (this._doHci)
-            return Promise.all([
+        if (this._doHci) {
+            return this.resetHci().then(() => Promise.all([
                 ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'], {
                     timeout: this._len
                 }).then(res => res.map(res => A.N(() => {
@@ -312,13 +306,23 @@ class Bluetooth extends EventEmitter {
                     delete res.vendor;
                     this.emit('found', res);
                 })), A.nop)
-            ]);
-        else A.Wf('Neither noble nor hcitool available to scan bluetooth!');
+            ]));
+        } else if (this._device && this._noble && !this._doHci) {
+            this._scan = true;
+            return Promise.all([
+                A.Ptime(this._device.scan()).then(x => x < 1000 ? this._device.scan() : Promise.resolve()).catch(A.nop),
+                this.startNoble()
+            ]).catch(A.nop).then(() => this._scan = false);
+        } else
+            return Promise.resolve(A.Wf('Neither noble nor hcitool available to scan bluetooth!'));
     }
 
     resetHci() {
-        return typeof this._doHci === 'string' ? ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.nop).then(() => A.wait(100))
-            .then(() => ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci))).catch(A.nop) : Promise.resolve();
+        return typeof this._doHci === 'string' ?
+            ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE)
+            .then(() => A.wait(100))
+            .then(() => ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci))).catch(A.pE) :
+            Promise.resolve();
     }
 
     get scanTime() {

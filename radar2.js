@@ -199,9 +199,9 @@ function setItem(item) {
         if (!lasthere)
             lasthere = item.lasthere = new Date(n - (delayAway * 1001 * 60));
 
-        let d = n - lasthere.getTime();
+        n -= lasthere.getTime();
         //                    A.I(A.F('item ',item.name, item.lasthere, d));
-        if (d > (delayAway * 1000 * 60))
+        if (n > (delayAway * 1000 * 60))
             anw = false;
     }
     //    if (!item.lasthere)
@@ -282,8 +282,10 @@ function foundBt(what) {
     const mac = what.address.toLowerCase();
     let item = btList[mac];
     if (item) {
-        item.btHere = new Date();
-        setItem(item);
+        if (!item.btHere) {
+            item.btHere = new Date();
+            setItem(item);
+        }
     } else {
         what.btVendor = Network.getMacVendor(mac);
         if (knownBTs.indexOf(mac) < 0)
@@ -301,7 +303,7 @@ function scanAll() {
     const prom = [];
     const btl = scanBt && A.ownKeys(btList).length;
 
-//    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
+    //    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
     prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
@@ -346,7 +348,8 @@ function scanAll() {
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`))
                 .then(() => A.makeState(item.id + '._here', item.anwesend, true)).catch(A.nop);
-        }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`))).then(() => {
+        }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`)))
+        .then(() => {
             //            let wh = whoHere.join(', ');
             //            if (oldWhoHere !== wh) {
             //                oldWhoHere = wh;
@@ -365,12 +368,14 @@ function scanAll() {
                 .then(() => A.makeState('_notHere', notHere))
                 .then(() => A.makeState('_isHere', whoHere));
         }).then(() => A.Df("radar2 found uBT's: %O", A.ownKeysSorted(ukBt)), A.Df("radar2 found uIP's: %O", A.ownKeysSorted(ukIp)), () => null)
-        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.f(ukBt[mac]), true))).then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
-        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.f(ukIp[ip]), true))).then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
+        .then(() => A.seriesIn(ukBt, (mac) => A.makeState('_uBTs.' + mac, A.f(ukBt[mac]), true)))
+        .then(() => A.makeState('_uBTs', A.O(A.ownKeysSorted(ukBt))))
+        .then(() => A.seriesIn(ukIp, (ip) => A.makeState('_uIPs.' + ip.split('.').join('_'), A.f(ukIp[ip]), true)))
+        .then(() => A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp))))
         .catch(err => A.W(`Scan devices returned error: ${A.O(err)}`))
         .then(() => {
             for (let item in scanList)
-                scanList[item].ipHere = scanList[item].btHere = null;
+                scanList[item].ipHere = scanList[item].btHere = 0;
             ukBt = {};
             ukIp = {};
         });
@@ -446,7 +451,7 @@ function main() {
                 scanTime: Math.floor(scanDelay * 0.85),
                 doHci: A.C.hcionly
             });
-    }).then(() => {
+        }).then(() => {
             //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
 
             if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
@@ -591,8 +596,9 @@ function main() {
                             native: {
                                 radar2: item
                             }
-                        }).catch(A.pE)).then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
-                        .then(() => (item.type === 'BT' || item.type === 'IP' || item.type === 'URL') ? Promise.resolve(setItem(item)).catch(A.pE) : null)
+                        }).catch(A.pE))
+                        .then(() => A.getState(item.id + '._lastHere')).catch(A.nop)
+                        //                        .then(() => (item.type === 'BT' || item.type === 'IP' || item.type === 'URL') ? Promise.resolve(setItem(item)).catch(A.pE) : null)
                         .then(() => A.I(`Init item ${item.name} with ${A.O(A.removeEmpty(item))}`), e => A.Wr(e, 'error item %s=%e', item.name, e));
                 }, 5);
             }).catch(A.pE)
