@@ -15,7 +15,7 @@ var adapterShortName = setup.adapterName.substring(setup.adapterName.indexOf('.'
 function checkConnectionOfAdapter(cb, counter) {
     counter = counter || 0;
     console.log('Try check #' + counter);
-    if (counter > 30) {
+    if (counter > 60) {
         if (cb) cb('Cannot check connection');
         return;
     }
