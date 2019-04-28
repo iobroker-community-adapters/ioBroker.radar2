@@ -214,9 +214,9 @@ function setItem(item) {
             //        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw)).catch(A.nop)
             .then(() => A.makeState(item.id + '._here', anw)).catch(A.nop);
-            //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
-            //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
-            //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
+        //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
+        //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
+        //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
     }
 }
 
@@ -404,11 +404,13 @@ function main() {
         foundIpMac(items);
         A.Df('found item %s by dhcp: %s, %s, %s', items.hostName, items.ipAddress, items.macAddress, Network.getMacVendor(items.macAddress));
     });
+
     network.on('arp-scan', found => foundIpMac({
         ipAddress: found[0],
         macAddress: found[1],
         by: 'arp'
     }));
+
     network.on('listenState', listen => A.makeState('info.connection', listen, true));
     bluetooth.on('found', what => foundBt(what));
 
@@ -484,7 +486,7 @@ function main() {
         })
         .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
         .then(x => A.If('Will try to scan BT devices: %s', x))
-        .then(() => A.N(() => 
+        .then(() => A.N(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
             A.isLinuxApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
             .then(x => doArp = x)
