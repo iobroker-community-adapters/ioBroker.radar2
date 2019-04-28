@@ -210,14 +210,13 @@ function setItem(item) {
     if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
-        A.makeState(idn + '._lastHere', A.dateTime(item.lasthere))
+        A.makeState(idn + '._lastHere', A.dateTime(item.lasthere)).catch(A.nop)
             //        A.makeState(idn + '.lasthere', item.lasthere)
-            .catch(A.nop).then(() => A.makeState(item.id, anw))
-            .catch(A.nop).then(() => A.makeState(item.id + '._here', anw))
+            .then(() => A.makeState(item.id, anw)).catch(A.nop)
+            .then(() => A.makeState(item.id + '._here', anw)).catch(A.nop);
             //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
             //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
             //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
-            .catch(() => true);
     }
 }
 
