@@ -429,6 +429,8 @@ function main() {
     network.init(true);
     Network.updateMacdb().then(() => {
 
+            A.debug = A.C.debug;
+
             if (!A.C.devices.length) {
                 A.W(`No to be scanned devices are configured for host ${A.adapter.host}! Will stop Adapter`);
                 return A.stop(true);
@@ -463,12 +465,6 @@ function main() {
                 A.C.printerdelay = 100;
             printerDelay = parseInt(A.C.printerdelay);
 
-            if (A.C.removeEnd && A.C.removeEnd.endsWith('!')) {
-                A.C.removeEnd = A.C.removeEnd.slice(0, -1);
-                A.debug = true;
-                A.I(`Debug mode set by adapter config ('!' as last letter in removeEnd)!`);
-            }
-
             if (A.C.knownBTs)
                 knownBTs = A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',');
             A.I('use known BT list: ' + A.O(knownBTs));
@@ -476,11 +472,6 @@ function main() {
             if (A.C.knownIPs)
                 knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
             A.I('use known IP list: ' + A.O(knownIPs));
-
-            if (A.C.removeEnd)
-                network.remName = A.C.removeEnd;
-            if (network.remName)
-                A.I('Remove name end for host names: ' + network.remName);
 
             A.timer = [];
             arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?

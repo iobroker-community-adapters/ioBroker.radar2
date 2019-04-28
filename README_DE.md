@@ -109,6 +109,7 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 * Möglichkeit zur Verwendung von hcitool anstatt noble unter linux geschaffen (default).
 * _LastHere wird bei Adapterrestart nicht geändert
 * Default Abfragezyklus auf 30 Sekunden geändert
+* Das löschen von Hostnamenenden aus Konfig entfernt und ein debug-flag hinzugefügt
 
 ### 1.0.7
 

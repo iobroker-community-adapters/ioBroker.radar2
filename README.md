@@ -104,6 +104,7 @@ This methodology of moving settings is working also between systems but may not 
 * You may use now hcitool as only BT scanner instead of noble on linux (standatd)
 * _LastHere will not be change on restart
 * Standard scan cycle set to 20 seconds
+* Removed the 'remove-end' field and replaced it with a debug flag
 
 ### 1.0.7
 

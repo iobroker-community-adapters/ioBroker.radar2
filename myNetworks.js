@@ -702,7 +702,6 @@ class Network extends EventEmitter {
         this._iflist = [];
         this._macs = null;
         this._ips = null;
-        this._remName = null;
         this._nif = os.networkInterfaces();
         this._iprCache = this._dnsCache = null;
         this._netping = null;
@@ -757,34 +756,18 @@ class Network extends EventEmitter {
         return Promise.resolve(ret).then(x => this.isMac(x) ? x : null, () => null);
     }
 
-    get remName() {
-        return this._remName;
-    }
-
-    set remName(val) {
-        this._remName = val;
-    }
-
     static get Ping() {
         return ping;
     }
 
-    removeName(address) {
-        var self = this;
-        var rn = this._remName.toLowerCase().trim();
-        if (!rn)
-            return address;
-        if (typeof address === 'string')
-            return address.toLowerCase().endsWith(rn) ? address.slice(0, -rn.length) : address;
-        if (Array.isArray(address) && rn && address[0] !== rn.slice(1))
-            return address.map((a) => self.removeName(a));
-        return address;
+    static isLocal(address) {
+        if (!Network.isIP4(address))
+            return false;
+        return (/10\.\d+\.\d+\.\d+/).test(address) || (/192\.168\.\d+\.\d+/).test(address) || (/172\.16\.\d+\.\d+/).test(address);
     }
 
-    init(dhcp, pingopt, removeName) {
+    init(dhcp, pingopt) {
         var self = this;
-        if (removeName)
-            this._remName = removeName.toLowerCase();
         pingopt = pingopt || {
             retries: 4,
             //    sessionId: (process.pid % 65535),
@@ -837,7 +820,7 @@ class Network extends EventEmitter {
             ]).then(() => arr.length > 0 ? arr : null);
         }));
 
-        this._iprCache = new A.CacheP((ip) => new Promise((res, rej) => dns.reverse(ip, (err, hosts) => err ? rej(err) : res(hosts))).then(arr => arr.length > 0 ? self.removeName(arr) : [], () => []));
+        this._iprCache = new A.CacheP(ip => A.c2p(dns.reverse)(ip).then(arr => arr.length > 0 ? arr.map(x => x.split('.')[0] !== 'fritz' && Network.isLocal(ip) && ip.split('.')[3] !== '1' ? x.split('.')[0] : x) : [], () => []));
 
         this.clearCache();
 
@@ -849,7 +832,6 @@ class Network extends EventEmitter {
                     ]);
                     this.combine(addr.mac, addr.address);
                 }
-
 
         if (!dhcp || self._listener) return;
         self._listener = new Dhcp();

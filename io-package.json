@@ -188,7 +188,7 @@
         "arp_scan_cmd": "-lgq --retry=5 --timeout=400",
         "btadapterid": -1,
         "printerdelay": 720,
-        "removeEnd": ".fritz.box",
+        "debug": false,
         "knownIPs": "1.1.1.1",
         "knownBTs": "01:12:23:34:45:56",
         "external": 60,

@@ -1,21 +1,20 @@
 <html>
-    <!-- Load ioBroker scripts and styles-->
-    <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
-    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+<!-- Load ioBroker scripts and styles-->
+<link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+<link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
 
-    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
-    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+<script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="../../socket.io/socket.io.js"></script>
 
-    <script type="text/javascript" src="../../js/translate.js"></script>
-    <script type="text/javascript" src="../../lib/js/materialize.js"></script>
-    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+<script type="text/javascript" src="../../js/translate.js"></script>
+<script type="text/javascript" src="../../lib/js/materialize.js"></script>
+<script type="text/javascript" src="../../js/adapter-settings.js"></script>
 
-    <!-- Load our own files -->
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <script type="text/javascript" src="words.js"></script>
+<!-- Load our own files -->
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript" src="words.js"></script>
 
 <script type="text/javascript">
-
 	// the function loadSettings has to exist ...
 	function load(settings, onChange) {
 		if (!settings) return;
@@ -54,7 +53,7 @@
 				obj[$this.attr('id')] = $this.val();
 			}
 		});
-		obj.devices =  table2values('devices');
+		obj.devices = table2values('devices');
 		callback(obj);
 	}
 </script>
@@ -77,21 +76,21 @@
 		</div>
 		<div class="col s4">
 			<label class="translate">Delay Away:</label>
-				<input class="value" id="delayaway" />
+			<input class="value" id="delayaway" />
 		</div>
 		<div class="col s4">
-			<input class="value" id="hcionly" type="checkbox" />
-			<label class="translate" for="ocionly">hcionly</label>
-			</div>
+			<label class="translate">BT adapter id:</label>
+			<input class="value" id="btadapterid" />
+		</div>
 	</div>
 	<div class="row">
 		<div class="col s6">
-			<label class="translate">Remove hostname ending:</label>
-			<input class="value" id="removeEnd" />
+			<input class="value" id="debug" type="checkbox" />
+			<label for="debug" class="translate">debug:</label>
 		</div>
 		<div class="col s6">
-			<label class="translate">BT adapter id:</label>
-				<input class="value" id="btadapterid" />
+			<input class="value" id="hcionly" type="checkbox" />
+			<label class="translate" for="hcionly">hcionly</label>
 		</div>
 	</div>
 	<div class="row">
@@ -101,7 +100,7 @@
 		</div>
 		<div class="col s6">
 			<label class="translate">External Network Scan Delay:</label>
-				<input class="value" id="external" />
+			<input class="value" id="external" />
 		</div>
 	</div>
 	<div class="row">
@@ -111,7 +110,7 @@
 		</div>
 		<div class="col s6">
 			<label class="translate">UWZ Delay:</label>
-				<input class="value" id="delayuwz" />
+			<input class="value" id="delayuwz" />
 		</div>
 	</div>
 	<div class="row">
@@ -121,7 +120,7 @@
 		</div>
 		<div class="col s6">
 			<label class="translate">known BT addresses:</label>
-				<input class="value" id="knownBTs" />
+			<input class="value" id="knownBTs" />
 		</div>
 	</div>
 	<div class="row">
@@ -131,7 +130,7 @@
 		</div>
 		<div class="col s6">
 			<label class="translate">Long Warning Message:</label>
-				<input class="value" id="longuwz" />
+			<input class="value" id="longuwz" />
 		</div>
 		<div class="divider"></div>
 		<div class="col s6">
