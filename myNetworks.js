@@ -663,21 +663,23 @@ class Dhcp extends EventEmitter {
                     self.emit('request', req);
                 }
             });
-            try {
-                if (this._listener) {
+            if (this._listener) {
+//                try {
                     this._listener.bind({
                         address: addr,
                         port: 67,
                         exclusive: false
                     }, () => A.If('Connected with %O for DHCP Scan', addr));
+/*
+                } catch (e) {
+                    this._listener.removeAllListeners();
+                    this._listener = null;
+                    A.W('could not bind to address: ' + addr + ', had error: ' + A.O(e));
                 }
-            } catch (e) {
-                this._listener.removeAllListeners();
-                this._listener = null;
-                A.W('could not bind to address: ' + addr + ', had error: ' + A.O(e));
+*/                
             }
         } catch (e) {
-            A.W(`could not start dhcp listener! Adapter will not be informed on new arrivals on network!`);
+            A.Wf(`could not start dhcp listener! Adapter will not be informed on new arrivals on network! %O`,e);
             try {
                 if (this._listener) {
                     this._listener.removeAllListeners();
