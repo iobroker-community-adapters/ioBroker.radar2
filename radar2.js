@@ -427,7 +427,6 @@ function main() {
 
     //    Network.updateMacdb()
     //    A.wait(1)
-    network.init(true);
     Network.updateMacdb().then(() => {
 
             A.debug = A.C.debug;
@@ -483,6 +482,7 @@ function main() {
             A.I(`radar2 set to scan every ${A.C.scandelay} seconds and printers every ${printerDelay} minutes.`);
 
             devices = A.C.devices;
+            return network.init(true);
         })
         .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
         .then(x => A.If('Will try to scan BT devices: %s', x))
