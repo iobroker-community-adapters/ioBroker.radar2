@@ -322,7 +322,7 @@ function scanAll() {
             }).catch(e => A.W(`ping error: ${A.O(e)}`)));
 
     return Promise.all(prom)
-        .then(() => A.wait(50))
+        .then(() => A.wait(5))
         .then(() => A.seriesInOI(scanList, item => {
             //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
             if (item.type !== 'IP' && item.type !== 'BT' && item.type !== 'URL')
