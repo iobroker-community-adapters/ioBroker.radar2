@@ -101,10 +101,10 @@ class ScanCmd extends EventEmitter {
             let pid = ++ScanCmd._cnt & 0xfffffff;
 
             function finish(how, arg) {
-                proc.removeAllListeners();
                 how(arg);
-                ret = proc = null;
+//                proc.removeAllListeners();
                 delete ScanCmd._all[pid];
+                ret = proc = null;
             }
             let proc = new ScanCmd(cmd, opt);
             ScanCmd._all[pid] = proc;
@@ -224,11 +224,13 @@ class ScanCmd extends EventEmitter {
         }
         setTimeout(() => {
             if (this._cmd) {
+/*                
                 this._cmd.removeAllListeners();
                 if (this._cmd.stdout)
                     this._cmd.stdout.removeAllListeners();
                 if (this._cmd.stderr)
                     this._cmd.stderr.removeAllListeners();
+*/
                 this._cmd = null;
                 this._stdout = this._stderr = null;
             }
