@@ -473,6 +473,7 @@ function main() {
                 knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
             A.I('use known IP list: ' + A.O(knownIPs));
 
+            network.init(true);
             A.timer = [];
             arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
                 A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
@@ -482,7 +483,6 @@ function main() {
             A.I(`radar2 set to scan every ${A.C.scandelay} seconds and printers every ${printerDelay} minutes.`);
 
             devices = A.C.devices;
-            return network.init(true);
         })
         .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
         .then(x => A.If('Will try to scan BT devices: %s', x))
