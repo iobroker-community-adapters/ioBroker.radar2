@@ -455,6 +455,7 @@ function main() {
             });
         }).then(() => {
             //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
+            network.init(true);
 
             if (!A.C.delayaway || parseInt(A.C.delayaway) < 2)
                 A.C.delayaway = 2;
@@ -473,7 +474,6 @@ function main() {
                 knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
             A.I('use known IP list: ' + A.O(knownIPs));
 
-            network.init(true);
             A.timer = [];
             arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
                 A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));

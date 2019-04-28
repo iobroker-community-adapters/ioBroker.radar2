@@ -102,15 +102,18 @@ class ScanCmd extends EventEmitter {
 
             function finish(how, arg) {
                 how(arg);
-//                proc.removeAllListeners();
-                delete ScanCmd._all[pid];
-                ret = proc = null;
+
+                //                proc.removeAllListeners();
+                setImmediate(() => {
+                    delete ScanCmd._all[pid];
+                    ret = proc = null;
+                });
             }
             let proc = new ScanCmd(cmd, opt);
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
-            proc.on('line', line => ret.push(line));
-            proc.once('error', err => finish(rej, err));
+            proc.on('line', line => ret && ret.push(line));
+            proc.once('error', err => setTimeout(() => finish(rej, err),100));
             proc.once('exit', code => code ? finish(rej, code) : finish(res, ret));
         });
     }
@@ -222,20 +225,20 @@ class ScanCmd extends EventEmitter {
             clearTimeout(this._timeout);
             this._timeout = null;
         }
-        setTimeout(() => {
-            if (this._cmd) {
-/*                
-                this._cmd.removeAllListeners();
-                if (this._cmd.stdout)
-                    this._cmd.stdout.removeAllListeners();
-                if (this._cmd.stderr)
-                    this._cmd.stderr.removeAllListeners();
-*/
-                this._cmd = null;
-                this._stdout = this._stderr = null;
-            }
-            this.emit('exit', 0);
-        }, 100);
+        //        setImmediate(() => {
+        if (this._cmd) {
+            /*                
+                            this._cmd.removeAllListeners();
+                            if (this._cmd.stdout)
+                                this._cmd.stdout.removeAllListeners();
+                            if (this._cmd.stderr)
+                                this._cmd.stderr.removeAllListeners();
+            */
+            this._cmd = null;
+            this._stdout = this._stderr = null;
+        }
+        this.emit('exit', 0);
+        //        }, 100);
     }
 
     kill() {
@@ -666,22 +669,22 @@ class Dhcp extends EventEmitter {
                 }
             });
             if (this._listener) {
-//                try {
-                    this._listener.bind({
-                        address: addr,
-                        port: 67,
-                        exclusive: false
-                    }, () => A.If('Connected with %O for DHCP Scan', addr));
-/*
-                } catch (e) {
-                    this._listener.removeAllListeners();
-                    this._listener = null;
-                    A.W('could not bind to address: ' + addr + ', had error: ' + A.O(e));
-                }
-*/                
+                //                try {
+                this._listener.bind({
+                    address: addr,
+                    port: 67,
+                    exclusive: false
+                }, () => A.If('Connected with %O for DHCP Scan', addr));
+                /*
+                                } catch (e) {
+                                    this._listener.removeAllListeners();
+                                    this._listener = null;
+                                    A.W('could not bind to address: ' + addr + ', had error: ' + A.O(e));
+                                }
+                */
             }
         } catch (e) {
-            A.Wf(`could not start dhcp listener! Adapter will not be informed on new arrivals on network! %O`,e);
+            A.Wf(`could not start dhcp listener! Adapter will not be informed on new arrivals on network! %O`, e);
             try {
                 if (this._listener) {
                     this._listener.removeAllListeners();
