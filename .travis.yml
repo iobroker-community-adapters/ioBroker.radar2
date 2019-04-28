@@ -24,5 +24,6 @@ addons:
       - libudev-dev
       - arp-scan 
       - bluetooth 
+      - bluez
       - libbluetooth-dev
       - libudev-dev

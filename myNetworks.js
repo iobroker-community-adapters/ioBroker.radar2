@@ -153,9 +153,9 @@ class ScanCmd extends EventEmitter {
         }
 
         function error(data) {
-            A.N(() => {
+            setImmediate(() => {
                 self.emit('error', data);
-                //            A.Df('ScanCmd err: %O', data);
+                A.Df('ScanCmd err: %O', data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
