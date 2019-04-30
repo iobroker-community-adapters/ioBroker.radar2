@@ -113,7 +113,7 @@ class ScanCmd extends EventEmitter {
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
             proc.on('line', line => ret && ret.push(line));
-            proc.once('error', err => setTimeout(() => finish(rej, err),100));
+            proc.once('error', err => setTimeout(() => finish(rej, err), 100));
             proc.once('exit', code => code ? finish(rej, code) : finish(res, ret));
         });
     }
@@ -129,7 +129,6 @@ class ScanCmd extends EventEmitter {
         var self = this;
         this._cmd = null;
         this._matches = {};
-
 
         function match(data) {
             if (self._options.match) {
