@@ -23,8 +23,8 @@ addons:
       - g++-4.8
       - libusb-1.0-0.dev
       - libudev-dev
-      - arp-scan 
-      - bluetooth 
+      - arp-scan
+      - bluetooth
       - bluez
       - libbluetooth-dev
       - libudev-dev
