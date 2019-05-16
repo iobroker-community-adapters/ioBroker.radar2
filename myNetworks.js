@@ -1048,8 +1048,8 @@ class Network extends EventEmitter {
             });
         }
 
-        if (!args.indexOf('--interface='))
-            return scan(args, this);
+        if (args.indexOf('--interface=') !== -1 || args.indexOf('-I') !== -1)
+                    return scan(args, this);
         var ifl = this.ip4addrs();
         //        A.D(`arp-scan Interfaces: ${A.F(ifl)}`);
         return Promise.all(ifl.map((i) => scan(args + ` --interface=${i}`, this)));
