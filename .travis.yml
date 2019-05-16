@@ -1,6 +1,7 @@
 os:
   - linux
   - windows
+sudo: required
 language: node_js
 node_js:
   - '6'
@@ -13,14 +14,15 @@ before_script:
   - npm -v
   - npm install winston@3.2.1
   - 'npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/master --production'
+  - sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which node))
 env:
-  - CXX=g++-4.8
+  - CXX=g++6-
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - g++-4.8
+      - g++-6
       - libusb-1.0-0.dev
       - libudev-dev
       - arp-scan
