@@ -13,6 +13,7 @@
     "debug:": "Parâmetros no modo de depuração!",
     "description": "IP pode ser o nome ou número (como fritz.caixa ou 168.192.0.1). Bluetooth é sempre '01:23:45:67:89:ab', ou ambos têm de estar lá.",
     "dont forget to save config!": "Não se esqueça de salvar a configuração antes de reiniciar o adaptador!",
+    "hcionly": "use Hci/l2ping em vez de Nobre",
     "known BT addresses:": "BT-endereços, que são conhecidas e não deve gerar 'desconhecido' entradas separadas por ',':",
     "known IP addresses:": "Endereços de IP, que são conhecidas e não deve gerar 'desconhecido' entradas separadas por ',':",
     "radar2 settings": "radar2 definições"

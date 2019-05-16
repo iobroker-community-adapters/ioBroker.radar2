@@ -131,6 +131,7 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
 
         function match(data) {
+//            A.Df('Data found for %s was %s',self._cmd,data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
@@ -157,7 +158,7 @@ class ScanCmd extends EventEmitter {
         function error(data) {
             setImmediate(() => {
                 self.emit('error', data);
-                A.Df('ScanCmd err: %O', data);
+//                A.Df('ScanCmd err: %O', data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
@@ -289,7 +290,7 @@ class Bluetooth extends EventEmitter {
         return new Promise(res => this._device.listPairedDevices(ret => res(ret)));
     }
 
-    startScan() {
+    startScan(macs) {
         if (this._device && this._scan)
             return Promise.reject(A.W(`BT already scanning!`));
         //        A.D(`start scanning!`);
@@ -303,6 +304,17 @@ class Bluetooth extends EventEmitter {
                     delete res.vendor;
                     this.emit('found', res);
                 })), A.nop),
+                this._dol2ping && macs && macs.length ?
+                A.seriesOf(macs, mac => ScanCmd.runCmd(this._dol2ping + mac , [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address']).then(res => {
+//                    A.Df('L2Ping returned for mac%s = %O', mac, res);
+                    if (res && res.length) {
+                        res = res[0];
+                        res.address = res.address.toLowerCase();
+                        res.btVendor = res.vendor;
+                        delete res.vendor;
+                        this.emit('found', res);
+                    }
+                }, A.nop)) :
                 ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
                 .then(res => res.map(res => A.N(() => {
                     res.btVendor = res.vendor;
@@ -346,59 +358,61 @@ class Bluetooth extends EventEmitter {
         }, options || {});
         this._btid = isNaN(parseInt(options.btid)) ? -1 : parseInt(options.btid);
         this.len = options.scanTime;
-        return A.isLinuxApp('hcitool').then(x => (this._doHci = x && options.doHci)).then(x => {
-            if (x)
-                return ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address'])
-                    .then(res =>
-                        this._btid < 0 && res.length ? res[0].name : res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ? 'hci' + this._btid : 'hci0', () => 'hci0')
-                    .then(res =>
-                        A.Ir(this._doHci = res, 'Will run hcitool-mode and not noble on device %s!', res))
-                    .then(() =>
-                        this.resetHci());
-            if (this._btid >= 0)
-                // eslint-disable-next-line no-process-env
-                process.env[nid] = this._btid;
+        return A.isLinuxApp('l2ping').then(() => this._dol2ping = 'l2ping ' + (this._btid < 0 ? '' : '-i hci' + this._btid) + ' -c 1 ', A.nop)
+            .then(() => this._dol2ping ? A.D('Will use l2Ping for scans insteade of hcitool scan in hcimode') : null)
+            .then(() => A.isLinuxApp('hcitool')).then(x => (this._doHci = x && options.doHci)).then(x => {
+                if (x)
+                    return ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address'])
+                        .then(res =>
+                            this._btid < 0 && res.length ? res[0].name : res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ? 'hci' + this._btid : 'hci0', () => 'hci0')
+                        .then(res =>
+                            A.Ir(this._doHci = res, 'Will run hcitool-mode and not noble on device %s!', res))
+                        .then(() =>
+                            this.resetHci());
+                if (this._btid >= 0)
+                    // eslint-disable-next-line no-process-env
+                    process.env[nid] = this._btid;
 
-            try {
-                this._noble = require('@abandonware/noble');
-                this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
-                //        this._noble.on('scanStart', () => A.D('Noble scan started'));
-                //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
-                this._noble.on('discover', function (per) {
-                    //                if (isStopping)
-                    //                    return res(stopNoble(idf));
-                    //                        A.D(`-myNoble discovers: ${A.O(per)}`);
-                    if (per && per.address)
-                        self.emit('found', {
-                            address: per.address.toLowerCase(),
-                            btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
-                            rssi: per.rssi,
-                            btVendor: Network.getMacVendor(per.address),
-                            by: 'noble'
-                            //                        vendor: Network.getMacVendor(per.address)
-                        });
-                });
-                //            this._noble.stopScanning();
-                A.I("found '@abandonware/noble'");
-            } catch (e) {
-                A.W(`Noble not available, Error: ${A.O(e)}`);
-                this._noble = null;
-            }
-            try {
-                this._nbt = require('node-bluetooth');
-                this._device = new this._nbt.DeviceINQ();
-                this._device.on('found', (address, name) => self.emit('found', {
-                    address: address,
-                    btName: name,
-                    btVendor: Network.getMacVendor(address),
-                    by: 'scan'
-                }));
-                A.I("found 'node-bluetooth'");
-            } catch (e) {
-                A.W('node-bluetooth not found!');
-            }
-            return null;
-        });
+                try {
+                    this._noble = require('@abandonware/noble');
+                    this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
+                    //        this._noble.on('scanStart', () => A.D('Noble scan started'));
+                    //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
+                    this._noble.on('discover', function (per) {
+                        //                if (isStopping)
+                        //                    return res(stopNoble(idf));
+                        //                        A.D(`-myNoble discovers: ${A.O(per)}`);
+                        if (per && per.address)
+                            self.emit('found', {
+                                address: per.address.toLowerCase(),
+                                btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
+                                rssi: per.rssi,
+                                btVendor: Network.getMacVendor(per.address),
+                                by: 'noble'
+                                //                        vendor: Network.getMacVendor(per.address)
+                            });
+                    });
+                    //            this._noble.stopScanning();
+                    A.I("found '@abandonware/noble'");
+                } catch (e) {
+                    A.W(`Noble not available, Error: ${A.O(e)}`);
+                    this._noble = null;
+                }
+                try {
+                    this._nbt = require('node-bluetooth');
+                    this._device = new this._nbt.DeviceINQ();
+                    this._device.on('found', (address, name) => self.emit('found', {
+                        address: address,
+                        btName: name,
+                        btVendor: Network.getMacVendor(address),
+                        by: 'scan'
+                    }));
+                    A.I("found 'node-bluetooth'");
+                } catch (e) {
+                    A.W('node-bluetooth not found!');
+                }
+                return null;
+            });
         //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
 
     }
@@ -564,69 +578,61 @@ class Dhcp extends EventEmitter {
                         continue;
                     case 255:
                         break; // end
-                    case 12:
-                        { // hostName
-                            offset = readString(msg, offset, p.options, 'hostName');
-                            break;
-                        }
-                    case 50:
-                        { // requestedIpAddress
-                            offset = readIp(msg, offset, p.options, 'requestedIpAddress');
-                            break;
-                        }
-                    case 53:
-                        { // dhcpMessageType
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 1);
-                            var mtype = msg.readUInt8(offset++);
-                            assert.ok(mtype >= 1);
-                            assert.ok(mtype <= 8);
-                            p.options.dhcpMessageType = DHCPMessageType[mtype];
-                            break;
-                        }
-                    case 58:
-                        { // renewalTimeValue
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 4);
-                            p.options.renewalTimeValue = msg.readUInt32BE(offset);
-                            offset += len;
-                            break;
-                        }
-                    case 59:
-                        { // rebindingTimeValue
-                            len = msg.readUInt8(offset++);
-                            assert.strictEqual(len, 4);
-                            p.options.rebindingTimeValue = msg.readUInt32BE(offset);
-                            offset += len;
-                            break;
-                        }
-                    case 61:
-                        { // clientIdentifier
-                            len = msg.readUInt8(offset++);
-                            p.options.clientIdentifier =
+                    case 12: { // hostName
+                        offset = readString(msg, offset, p.options, 'hostName');
+                        break;
+                    }
+                    case 50: { // requestedIpAddress
+                        offset = readIp(msg, offset, p.options, 'requestedIpAddress');
+                        break;
+                    }
+                    case 53: { // dhcpMessageType
+                        len = msg.readUInt8(offset++);
+                        assert.strictEqual(len, 1);
+                        var mtype = msg.readUInt8(offset++);
+                        assert.ok(mtype >= 1);
+                        assert.ok(mtype <= 8);
+                        p.options.dhcpMessageType = DHCPMessageType[mtype];
+                        break;
+                    }
+                    case 58: { // renewalTimeValue
+                        len = msg.readUInt8(offset++);
+                        assert.strictEqual(len, 4);
+                        p.options.renewalTimeValue = msg.readUInt32BE(offset);
+                        offset += len;
+                        break;
+                    }
+                    case 59: { // rebindingTimeValue
+                        len = msg.readUInt8(offset++);
+                        assert.strictEqual(len, 4);
+                        p.options.rebindingTimeValue = msg.readUInt32BE(offset);
+                        offset += len;
+                        break;
+                    }
+                    case 61: { // clientIdentifier
+                        len = msg.readUInt8(offset++);
+                        p.options.clientIdentifier =
                             createHardwareAddress(
                                 ARPHardwareType[msg.readUInt8(offset)],
                                 readAddressRaw(msg, offset + 1, len - 1));
-                            offset += len;
-                            break;
-                        }
-                    case 81:
-                        { // fullyQualifiedDomainName
-                            len = msg.readUInt8(offset++);
-                            p.options.fullyQualifiedDomainName = {
-                                flags: msg.readUInt8(offset),
-                                name: msg.toString('ascii', offset + 3, offset + len)
-                            };
-                            offset += len;
-                            break;
-                        }
-                    default:
-                        {
-                            len = msg.readUInt8(offset++);
-                            //console.log('Unhandled DHCP option ' + code + '/' + len + 'b');
-                            offset += len;
-                            break;
-                        }
+                        offset += len;
+                        break;
+                    }
+                    case 81: { // fullyQualifiedDomainName
+                        len = msg.readUInt8(offset++);
+                        p.options.fullyQualifiedDomainName = {
+                            flags: msg.readUInt8(offset),
+                            name: msg.toString('ascii', offset + 3, offset + len)
+                        };
+                        offset += len;
+                        break;
+                    }
+                    default: {
+                        len = msg.readUInt8(offset++);
+                        //console.log('Unhandled DHCP option ' + code + '/' + len + 'b');
+                        offset += len;
+                        break;
+                    }
                 }
             }
             return p;
@@ -1049,7 +1055,7 @@ class Network extends EventEmitter {
         }
 
         if (args.indexOf('--interface=') !== -1 || args.indexOf('-I') !== -1)
-                    return scan(args, this);
+            return scan(args, this);
         var ifl = this.ip4addrs();
         //        A.D(`arp-scan Interfaces: ${A.F(ifl)}`);
         return Promise.all(ifl.map((i) => scan(args + ` --interface=${i}`, this)));

@@ -13,6 +13,7 @@
     "debug:": "Commute sur le mode de débogage!",
     "description": "La propriété intellectuelle peut être un nom ou un numéro (comme fritz.ou de la boîte de 168.192.0.1). Bluetooth est toujours '01:23:45:67:89:ab', l'un ou deux d'entre eux ont d'être là.",
     "dont forget to save config!": "N'oubliez pas de sauvegarder la config avant le redémarrage de la carte!",
+    "hcionly": "utilisation Hci/l2ping au lieu de Noble",
     "known BT addresses:": "BT-adresses qui sont connus et ne devraient pas générer de \"inconnu\" entrées séparées par des ',':",
     "known IP addresses:": "Adresses IP qui sont connus et ne devraient pas générer de \"inconnu\" entrées séparées par des ',':",
     "radar2 settings": "radar2 paramètres"

@@ -310,7 +310,7 @@ function scanAll() {
     const btl = scanBt && A.ownKeys(btList).length;
 
     //    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
-    prom.push(btl ? bluetooth.startScan().catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
+    prom.push(btl ? bluetooth.startScan(A.ownKeys(btList)).catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
     prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
 

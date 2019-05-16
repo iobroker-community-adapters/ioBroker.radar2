@@ -13,6 +13,7 @@
     "debug:": "Passa in modalità di debug!",
     "description": "IP può essere il nome o il numero (come fritz.box o 168.192.0.1). Il Bluetooth è sempre '01:23:45:67:89:ab', uno o entrambi di loro devono essere lì.",
     "dont forget to save config!": "Non dimenticare di salvare la configurazione prima del riavvio della scheda!",
+    "hcionly": "utilizzare Hci/l2ping invece di Nobile",
     "known BT addresses:": "BT-gli indirizzi che sono noti e non deve generare 'unknown' voci separati da ',':",
     "known IP addresses:": "Gli indirizzi IP che sono noti e non deve generare 'unknown' voci separati da ',':",
     "radar2 settings": "radar2 impostazioni"

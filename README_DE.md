@@ -71,6 +71,7 @@ sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink 
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which hcitool`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which hciconfig`)
+sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which l2ping`)
 ```
 
 Bei Windows steht arp-scan nicht zur Verfügung und es wird nur node-ping verwendet.

@@ -13,6 +13,7 @@
     "debug:": "Schakelaars op de debug mode!",
     "description": "IP kunt u het nummer of de naam (als fritz.box of 168.192.0.1). Bluetooth is altijd '01:23:45:67:89:ab', van een of beide van hen te zijn.",
     "dont forget to save config!": "Vergeet niet op te slaan in de config vóór de start van de adapter!",
+    "hcionly": "gebruik Hci/l2ping in plaats van de Edele",
     "known BT addresses:": "BT-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
     "known IP addresses:": "IP-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
     "radar2 settings": "radar2 instellingen"

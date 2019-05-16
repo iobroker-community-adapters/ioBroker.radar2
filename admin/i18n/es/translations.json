@@ -13,6 +13,7 @@
     "debug:": "Interruptores en modo de depuración!",
     "description": "IP puede ser el nombre o número (como fritz.cuadro o 168.192.0.1). Bluetooth es siempre '01:23:45:67:89:ab', uno o ambos de ellos tienen que estar allí.",
     "dont forget to save config!": "No olvide guardar la configuración antes de reiniciar el adaptador!",
+    "hcionly": "el uso de Hci/l2ping en lugar de Noble",
     "known BT addresses:": "BT-direcciones que son conocidos y no debe generar 'desconocido' entradas separados por ',':",
     "known IP addresses:": "Las direcciones IP, que son conocidos y no debe generar 'desconocido' entradas separados por ',':",
     "radar2 settings": "radar2 configuración"

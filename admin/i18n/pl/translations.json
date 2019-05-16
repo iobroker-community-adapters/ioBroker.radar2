@@ -13,6 +13,7 @@
     "debug:": "Zostanie włączony tryb debugowania!",
     "description": "IP może być nazwa lub numer (jak fritz.skrzynia lub 168.192.0.1). Bluetooth zawsze '01:23:45:67:89:AB', jeden lub oba z nich muszą tam być.",
     "dont forget to save config!": "Nie zapomnij zapisać konfiguracji przed ponownym uruchomieniem zasilacza!",
+    "hcionly": "korzystanie z human machine interakcji/l2ping zamiast szlachetnych",
     "known BT addresses:": "BT-adresów, które są znane i nie powinny tworzyć \"nieznany\" rekordy oddzielone znakiem ',':",
     "known IP addresses:": "Adresów IP, które są znane i nie powinny tworzyć \"nieznany\" rekordy oddzielone znakiem ',':",
     "radar2 settings": "parametry radar2 "
