@@ -638,8 +638,8 @@ function main() {
                             }
                             return A.resolve();
                         });
-                } else return A.reject(A.W('No geo location data found configured in admin to calculate UWZ AREA ID!'));
-            }).catch(A.pE)
+                } else return A.reject();
+            }).catch(() => A.W('No geo location data found configured in admin to calculate UWZ AREA ID or ID not valid!'))
             .then(() => {
                 if (numecb.length && parseInt(A.C.external) > 0) {
                     A.I(A.F('Will scan ECB for ', numecb, ' every ', A.C.external, ' minutes'));
