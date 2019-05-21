@@ -1,6 +1,6 @@
 {
     "BT adapter id:": "na Linux: ilość adapter Bluetooth (0 = hci0):",
-    "Delay Away:": "Ile czasu (w minutach) powinno być urządzenie nie zostanie wykryte, zanim zostanie on oznaczony jako daleko' (>=2): ",
+    "Delay Away:": "Ile czasu (w minutach) powinno być urządzenie nie zostanie wykryte, zanim zostanie on oznaczony jako daleko' (>=1): ",
     "Device setup": "dostosowywanie ustawień urządzenia ",
     "External Network Scan Delay:": "Opóźnienie w minutach między zewnętrznymi skanowanie sieci IP (0 = Brak kontroli): ",
     "Long Warning Message:": "Korzystać z długą sms z opisem dla ostrzeżenia: ",
@@ -13,8 +13,9 @@
     "debug:": "Zostanie włączony tryb debugowania!",
     "description": "IP może być nazwa lub numer (jak fritz.skrzynia lub 168.192.0.1). Bluetooth zawsze '01:23:45:67:89:AB', jeden lub oba z nich muszą tam być.",
     "dont forget to save config!": "Nie zapomnij zapisać konfiguracji przed ponownym uruchomieniem zasilacza!",
-    "hcionly": "korzystanie z human machine interakcji/l2ping zamiast szlachetnych",
+    "hcionly": "używać Hcitool lescan zamiast \"szlachetnych\"",
     "known BT addresses:": "BT-adresów, które są znane i nie powinny tworzyć \"nieznany\" rekordy oddzielone znakiem ',':",
     "known IP addresses:": "Adresów IP, które są znane i nie powinny tworzyć \"nieznany\" rekordy oddzielone znakiem ',':",
+    "l2ponly": "używać zamiast l2ping skanowania BT ",
     "radar2 settings": "parametry radar2 "
 }

@@ -1,6 +1,6 @@
 {
     "BT adapter id:": "op Linux: aantal Bluetooth-adapter (0 = hci0):",
-    "Delay Away:": "Hoe lang (in minuten) moet een apparaat niet wordt gedetecteerd voordat het gemarkeerd als 'verwijderd' (>=2): ",
+    "Delay Away:": "Hoe lang (in minuten) moet een apparaat niet wordt gedetecteerd voordat het gemarkeerd als 'verwijderd' (>=1): ",
     "Device setup": "individuele apparaat instellen",
     "External Network Scan Delay:": "Vertraging in minuten tussen het Externe Netwerk IP-scan (0 = geen scan): ",
     "Long Warning Message:": "Gebruik lange tekst met beschrijving voor waarschuwingen: ",
@@ -13,8 +13,9 @@
     "debug:": "Schakelaars op de debug mode!",
     "description": "IP kunt u het nummer of de naam (als fritz.box of 168.192.0.1). Bluetooth is altijd '01:23:45:67:89:ab', van een of beide van hen te zijn.",
     "dont forget to save config!": "Vergeet niet op te slaan in de config vóór de start van de adapter!",
-    "hcionly": "gebruik Hci/l2ping in plaats van de Edele",
+    "hcionly": "gebruik Hcitool lescan in plaats van 'Nobele'",
     "known BT addresses:": "BT-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
     "known IP addresses:": "IP-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
+    "l2ponly": "gebruik l2ping in plaats BT scan",
     "radar2 settings": "radar2 instellingen"
 }

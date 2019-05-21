@@ -1,6 +1,6 @@
 {
     "BT adapter id:": "en Linux: número de adaptador Bluetooth (0 = hci0):",
-    "Delay Away:": "Cuánto tiempo (en minutos) debe ser un dispositivo no se detecta antes de que sea marcado como en la distancia' (>=2): ",
+    "Delay Away:": "Cuánto tiempo (en minutos) debe ser un dispositivo no se detecta antes de que sea marcado como en la distancia' (>=1): ",
     "Device setup": "individuales de configuración del dispositivo",
     "External Network Scan Delay:": "Retraso en minutos entre la Red Externa de la IP scan (0 = no scan): ",
     "Long Warning Message:": "El uso a largo mensaje de texto con la descripción de advertencias: ",
@@ -13,8 +13,9 @@
     "debug:": "Interruptores en modo de depuración!",
     "description": "IP puede ser el nombre o número (como fritz.cuadro o 168.192.0.1). Bluetooth es siempre '01:23:45:67:89:ab', uno o ambos de ellos tienen que estar allí.",
     "dont forget to save config!": "No olvide guardar la configuración antes de reiniciar el adaptador!",
-    "hcionly": "el uso de Hci/l2ping en lugar de Noble",
+    "hcionly": "uso Hcitool lescan en lugar de 'Noble'",
     "known BT addresses:": "BT-direcciones que son conocidos y no debe generar 'desconocido' entradas separados por ',':",
     "known IP addresses:": "Las direcciones IP, que son conocidos y no debe generar 'desconocido' entradas separados por ',':",
+    "l2ponly": "uso l2ping lugar BT scan",
     "radar2 settings": "radar2 configuración"
 }

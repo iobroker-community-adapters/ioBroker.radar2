@@ -195,7 +195,8 @@
         "delayaway": 2,
         "delayuwz": 120,
         "numuwz": 0,
-        "hcionly": true,
+        "hcionly": false,
+        "l2ponly": false,
         "longuwz": false
     },
     "objects": [],

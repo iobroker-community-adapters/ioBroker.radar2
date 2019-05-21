@@ -37,6 +37,26 @@ Es kann eingestellt werden ob der der lange (mit genauer Beschreibung für Orte 
 
 Die verfügbareb ECB-Währungen können mit `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` abgefragt werden.
 
+### Bluetooth-Nutzung
+
+Es gibt zwei verschiedene Arten von BT-Geräten: BT-LE (V 4.x +) und normales BT (V <= 3.x). Der Adapter verfügt über zwei verschiedene Scanfunktionen für jeden der verschiedenen Gerätetypen.
+
+ 1) für BT-LE: Befehl Noble (Nodejs modile) und der Befehl 'hcitool lescan'
+ 2) für normales BT: BT-Scan (Nodejs-Modul) und der Befehl 'l2ping'
+
+Jedes BT-Gerät kann nur eine der beiden Methoden zur selben Zeit verwenden.
+
+Edel und BT-Scan sind Module, die auf die Installation des Adapters mit npm kompiliert werden und das sollte auf Linux und auch die meisten Fenster Setups arbeiten.
+Hcitool und l2ping werden mit den Bluetooth-Tools im Setup-Skript installiert und sind nur für Linux verfügbar.
+
+In der Adapter-Konfiguration sollten BT-LE Macs mit einem '!' vor der MAC-Adresse markiert werden, um sie nicht mit normalen BT-Scans wie l2ping zu scannen.
+Normalerweise sind Edler ein bisschen besser als hcitool Lescan Geräte zu identifizieren, aber es erzeugt auch mehr Fehler und möglicherweise nicht auf allen Systemen installieren.
+Ebenso ist l2ping besser in der Lage, normale BT-Geräte zu finden, ist aber auf anderen Plattformen als Linux nicht verfügbar.
+Daher können Sie die Verwendung in der Adapterkonfiguration separat konfigurieren.
+
+Wenn Sie mehrere BT-Geräte verwenden, können Sie die Gerätenummer in der Konfiguration angeben. Die Standardeinstellung ist '-1', wobei die erste verfügbare verwendet wird. Eine Liste aller verfügbaren Geräte kann unter Linux mit "lescan dev" angezeigt werden.
+In ein und demselben Adapter können Sie nur ein Gerät verwenden. Wenn Sie mehrere Geräte scannen möchten, müssen Sie unterschiedliche Adapter oder Instanzen verwenden.
+
 ## Unterschiede zum alten radar-Adapter:
 
 Radar2 hört am Netzwerk mit um neuankömmlinge sofort zu entdecken. Das bedeutet wenn z.B. nach der Heimkehr das Häny sich ins lokale W-Lan einloggt).

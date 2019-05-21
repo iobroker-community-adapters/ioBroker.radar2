@@ -1,6 +1,6 @@
 {
     "BT adapter id:": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):",
-    "Delay Away:": "Abwesenheit in Minuten um als 'nicht da' zu gelten (>=2): ",
+    "Delay Away:": "Wie lange (in Minuten) sollte ein Gerät nicht erkannt wird, bevor es markiert als Weg' (>=1): ",
     "Device setup": "Individuelle Suchobjekt-Einstellungen",
     "External Network Scan Delay:": "Verzögerung in Minuten zwischen den externen Netwerkabfragen (wenn 0 dann ausgeschaltet): ",
     "Long Warning Message:": "Benutze langen Warnungstext mit genauer Beschreibung: ",
@@ -13,8 +13,9 @@
     "debug:": "Schaltet den debug-Modus!",
     "description": "IP-Adressen können als Name oder Zahlen angegeben werden. Bluetooth ist immer '01:23:45:67:89:ab', MAC-Adressen wie bei Bluetooth aber es können mehrere mit ',' getrennt angegeben werden. Eine der drei (IP, MAC oder BT) muß mindestens angegeben werden. MAC scan steht nur zur Verfügung wenn 'arp-scan' installiert ist",
     "dont forget to save config!": "Bitte Konfiguration speichern!",
-    "hcionly": "verwenden Hci/l2ping statt des Edlen",
+    "hcionly": "hcitool lescan anstelle von 'Noble' verwenden",
     "known BT addresses:": "BT-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
     "known IP addresses:": "IP-Adressen die bekannt sind und keine 'unknown'-Einträge generieren sollen, mit ',' separiert:",
+    "l2ponly": "l2ping anstatt BT scan verwenden",
     "radar2 settings": "radar2-Einstellungen"
 }
