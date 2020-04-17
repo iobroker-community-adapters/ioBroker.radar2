@@ -125,6 +125,10 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 
 ## Changelog
 
+### 1.2.1
+
+* updated to new adapter and js-controller versions
+
 ### 1.2.0
 
 * Möglichkeit zur Verwendung von hcitool anstatt noble unter linux geschaffen (default).
