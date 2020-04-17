@@ -31,9 +31,9 @@
     "node": ">=6.1.0"
   },
   "devDependencies": {
-    "axios": "^0.18.0",
-    "chai": "^4.1.2",
-    "gulp": "^4.0.1",
+    "axios": "^0.19.2",
+    "chai": "^4.2.0",
+    "gulp": "^4.0.2",
     "mocha": "^4.1.0"
   },
   "bugs": {
@@ -44,15 +44,15 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.2.4",
+    "@frankjoke/myadapter": "^1.2.5",
     "node-arp": "^1.0.6",
-    "ping": "^0.2.2",
-    "xml2js": "^0.4.17"
+    "ping": "^0.2.3",
+    "xml2js": "^0.4.23"
   },
   "optionalDependencies": {
     "net-ping": "^1.2.3",
-    "node-bluetooth": "^1.2.5",
-    "@abandonware/noble": "^1.9.2-2"
+    "node-bluetooth": "^1.2.6",
+    "@abandonware/noble": "^1.9.2-8"
   },
   "eslintConfig": {
     "env": {
