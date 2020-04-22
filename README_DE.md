@@ -85,7 +85,8 @@ Die Intervalle für HP-Ducker, ECB-, UWZ- und normale scans können getrennt ges
 Auf Linux sollte das tool `arp-scan` und `libcap2-bin` sowie einige Bluetooth treiber installiert werden installiert werden und die Rechte von arp-scan und node angepasst werden. 
 Bei Debian (Raspi-Stretch, Ubuntu, ...) schaut das so aus:
 ```
-sudo apt-get install libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
+sudo apt-get install -y coreutils libcap2-bin arp-scan bluetooth bluez libbluetooth-dev libudev-dev net-tools
+# Die Zeilen unten sollten nach jedem update von nodejs ausgeführt werden!
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp-scan`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which node`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which arp`)
@@ -93,6 +94,8 @@ sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink 
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which hciconfig`)
 sudo setcap cap_net_admin,cap_net_raw,cap_net_bind_service=+eip $(eval readlink -f `which l2ping`)
 ```
+
+Falls readlink oder hcitools nicht gefunden werden dann fehlen sie im Pfad, bei meinem kleinen Buster habe ich mit `sudo find / -name readlink` den Pfad `/usr/bin` gefunden, dieser war aber nicht im $PATH! Also im `.bashrc` eine Zeile mit `export PATH=$PATH:/usr/bin` eingefügt!
 
 Bei Windows steht arp-scan nicht zur Verfügung und es wird nur node-ping verwendet.
 
