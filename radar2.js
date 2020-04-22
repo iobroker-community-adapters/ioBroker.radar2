@@ -114,7 +114,8 @@ function scanHPs() {
             //        .then(result => A.I(`parser ${A.O(result,3)}`,result))
             .then(result => result.ConsumableConfigDyn ? result.ConsumableConfigDyn : result)
             .then(result => A.seriesOf(result.ConsumableInfo, item => {
-                    if (item.ConsumableTypeEnum !== "ink")
+                    if (item.ConsumableTypeEnum !== "ink" && 
+                    item.ConsumableTypeEnum !== "inkCartridge")
                         return A.resolve('No Ink');
                     //                    A.I(`parser ${A.O(item)}`);
                     let p = "P" + item.ConsumableStation,

@@ -123,6 +123,11 @@ This methodology of moving settings is working also between systems but may not 
 
 ## Changelog
 
+### 1.2.3
+
+* Updated to use the adapter for js-controller 3.0 
+* Updated HP printer routine to understand some newer inkjet printers
+
 ### 1.2.0
 
 * You may use now hcitool as only BT scanner instead of noble on linux (standatd)
