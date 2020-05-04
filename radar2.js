@@ -215,7 +215,7 @@ function setItem(item) {
         A.makeState(idn + '._lastHere', A.dateTime(item.lasthere)).catch(A.nop)
             //        A.makeState(idn + '.lasthere', item.lasthere)
             .then(() => A.makeState(item.id, anw)).catch(A.nop)
-            .then(() => A.makeState(item.id + '._here', anw)).catch(A.nop);
+            .then(() => A.makeState(item.id + '._here', !!anw)).catch(A.nop);
         //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
         //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
         //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -355,7 +355,7 @@ function scanAll() {
             }
             //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
             return A.makeState(item.id, item.anwesend, true).catch(e => A.W(`makesatte error: ${A.O(e)}`))
-                .then(() => A.makeState(item.id + '._here', item.anwesend, true)).catch(A.nop);
+                .then(() => A.makeState(item.id + '._here', !!item.anwesend, true)).catch(A.nop);
         }, 1).catch(e => A.W(`checkhere error: ${A.O(e)}`)))
         .then(() => {
             //            let wh = whoHere.join(', ');
@@ -403,6 +403,11 @@ process.on('SIGINT', () => {
 });
 
 */
+
+function testLinux(name) {
+    const res = A.isLinuxApp(name);
+    return res ? res : Promise.resolve(false);
+}
 
 function main() {
 
@@ -498,11 +503,11 @@ function main() {
 
             devices = A.C.devices;
         })
-        .then(() => A.isLinuxApp('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
+        .then(() => testLinux('hcitool').then(x => x && A.exec('hcitool dev').then(x => x.slice(8).trim()), () => false).then(x => !!x, () => false).then(x => scanBt = x))
         .then(x => A.If('Will try to scan BT devices: %s', x))
         .then(() => setImmediate(() =>
             //    A.exec(`!${btbindir}bluetoothview /scomma ${btbindir}btf.txt`).then(x => doBtv = x && x.length > 0, () => doBtv = false)
-            A.isLinuxApp('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
+            testLinux('arp-scan').then(x => x ? A.exec('arp-scan').then(x => x ? `"${arpcmd}" on ${network.ip4addrs()}` : false, () => A.W("Adapter nut running as root or iobroker has no sudo right, cannot use arp-scan!")) : false)
             .then(x => doArp = x)
             //        .then(() => A.isApp('hcitool').then(x => doHci = x))
             .then(() => {
