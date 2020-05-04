@@ -452,8 +452,14 @@ class Bluetooth extends EventEmitter {
             .then(() => {
                 //            A.D(`starting noble for ${len/1000} seconds`);
                 self._nobleRunning = true;
+                try {
+
                 self._noble.startScanning();
                 return A.wait(len).then(() => self.stopNoble());
+                } catch(e) {
+                    self._nobleRunning = false;
+                    self.stopNoble();
+                }
             }).catch(err => A.I(`Noble scan Err ${A.O(err)}`, err));
     }
 
