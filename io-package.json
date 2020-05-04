@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.2.4",
+        "version": "1.2.5",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": {
             "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -56,7 +56,7 @@
             "Ink"
         ],
         "news": {
-            "1.2.4": {
+            "1.2.5": {
                 "en": "updated adapter to use new myAdapter awhich should work on js-controller 2.x and 3.x.",
                 "de": "Adapter benutzt neue Version von MyAdapter und sollte jetzt mit js-controller 2 und 3 arbeiten."
             },

@@ -1,6 +1,6 @@
 "use strict";
 
-// V 1.2 March 2019
+// V 1.5 May 2020
 
 const A = require('@frankjoke/myadapter').MyAdapter;
 

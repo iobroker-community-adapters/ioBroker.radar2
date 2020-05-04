@@ -128,7 +128,7 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 
 ## Changelog
 
-### 1.2.3
+### 1.2.5
 
 * Updated to use the adapter for js-controller 3.0 
 * Updated HP printer routine to understand some newer inkjet printers
