@@ -712,8 +712,8 @@ async function main(adapter) {
         A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
         const ms = await A.Ptime(scanAll());
         A.I(`first scan took ${ms/1000} seconds`);
-        if (scanDelay <= ms/1000) {
-            scanDelay = A.toInteger((ms+2000)/1000);
+        if (scanDelay <= ms) {
+            scanDelay = A.toInteger(ms + 2000);
             delayAway = updatedelaway(delayAway);
             A.W(`scanDelay increased to ${scanDelay} seconds, delayAway to ${delayAway} minutes!`);
         }
