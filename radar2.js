@@ -12,7 +12,10 @@
 
 const A = require('./fjadapter-core'),
     xml2js = require('xml2js');
-const {Network, Bluetooth} = require('./myNetworks');
+const {
+    Network,
+    Bluetooth
+} = require('./myNetworks');
 
 const scanList = {},
     ipList = {},
@@ -249,7 +252,7 @@ async function foundIpMac(what) {
 
     }
 
-//    A.Df(`foundIpMac: %s, %s, %j`, ip, mac, found ? ipList[ip] : what);
+    //    A.Df(`foundIpMac: %s, %s, %j`, ip, mac, found ? ipList[ip] : what);
     if (mac) {
         const item = macList[mac];
         what.getMacVendor = Network.getMacVendor(mac);
@@ -281,7 +284,7 @@ async function foundIpMac(what) {
 /// 
 /// @param {object} what - object with one or more of {address, by, ... } 
 async function foundBt(what) {
-//    A.Df("-BtFound %j", what); // REM
+    //    A.Df("-BtFound %j", what); // REM
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
     if (item) {
@@ -513,7 +516,7 @@ async function main(adapter) {
     }
 
     delayAway = updatedelaway(A.toInteger(A.C.delayaway));
-    
+
     A.D(`radar2 set to flag items away if they are not seen for ${delayAway} minutes`);
 
     if (!A.C.printerdelay || parseInt(A.C.printerdelay) < 100)
@@ -711,7 +714,7 @@ async function main(adapter) {
         A.I(`first scan took ${ms/1000} seconds`);
         if (scanDelay <= ms) {
             delayAway = updatedelaway(delayAway);
-            scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds, scanDelay to ${scanDelay /60 / 1000} minutes!`);
+            scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds, delayAway to ${delayAway /60 / 1000} minutes!`);
         }
         A.timer.push(setInterval(scanAll, scanDelay));
         if (parseInt(A.C.external) > 0) {
