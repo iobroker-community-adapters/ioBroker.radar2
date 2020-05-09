@@ -713,8 +713,9 @@ async function main(adapter) {
         const ms = await A.Ptime(scanAll());
         A.I(`first scan took ${ms/1000} seconds`);
         if (scanDelay <= ms) {
+            scanDelay = A.toInteger((ms+2000)/1000);
             delayAway = updatedelaway(delayAway);
-            scanDelay = A.W(`scanDelay increased to ${(ms+2000)/1000} seconds, delayAway to ${delayAway /60 / 1000} minutes!`);
+            A.W(`scanDelay increased to ${scanDelay} seconds, delayAway to ${delayAway /60 / 1000} minutes!`);
         }
         A.timer.push(setInterval(scanAll, scanDelay));
         if (parseInt(A.C.external) > 0) {
