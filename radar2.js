@@ -628,7 +628,7 @@ async function main(adapter) {
                         if (res)
                             res.forEach((i) => item.rip.push(i));
                     }
-                item.rip.forEach((ip) => ipList[ip] && ipList[ip] == item ?
+                item.rip.forEach((ip) => ipList[ip] && ipList[ip] !== item ?
                     A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) :
                     (ipList[ip] = item));
                 for (const ip of item.rip) {
