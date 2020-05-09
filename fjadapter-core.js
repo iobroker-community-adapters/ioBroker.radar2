@@ -371,7 +371,6 @@ class MyAdapter {
 
 	static init(amodule, options, ori_main) {
 		//        assert(!adapter, `myAdapter:(${ori_adapter.name}) defined already!`);
-		debugger;
 		if (typeof ori_main !== "function")
 			throw "No main function defined!";
 		amain = ori_main;

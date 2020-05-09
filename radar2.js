@@ -715,7 +715,7 @@ async function main(adapter) {
         if (scanDelay <= ms) {
             scanDelay = A.toInteger((ms+2000)/1000);
             delayAway = updatedelaway(delayAway);
-            A.W(`scanDelay increased to ${scanDelay} seconds, delayAway to ${delayAway /60 / 1000} minutes!`);
+            A.W(`scanDelay increased to ${scanDelay} seconds, delayAway to ${delayAway} minutes!`);
         }
         A.timer.push(setInterval(scanAll, scanDelay));
         if (parseInt(A.C.external) > 0) {
