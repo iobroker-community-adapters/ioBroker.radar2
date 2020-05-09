@@ -325,6 +325,7 @@ async function scanAll() {
             else
                 await A.wait(1);
 
+            // eslint-disable-next-line no-unused-vars
             for (const [key, it] of Object.entries(scanList))
                 if (!it.btHere && !it.ipHere && it.rip && it.rip.length > 0) {
                     //                        A.Df('check unreached %s: %O', it.name, it);
@@ -624,7 +625,8 @@ async function main(adapter) {
                         item.rip.push(addr);
                     else {
                         const res = await network.dnsResolve(addr);
-                        res.forEach((i) => item.rip.push(i));
+                        if (res)
+                            res.forEach((i) => item.rip.push(i));
                     }
                 item.rip.forEach((ip) => ipList[ip] && ipList[ip] == item ?
                     A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) :
