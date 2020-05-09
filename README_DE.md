@@ -128,6 +128,12 @@ Die Geräteliste ist bei radar und radar2 gleich, der einzige Unterschied ist da
 
 ## Changelog
 
+### 1.9.9 beta 
+
+* beta! Kompletten Adapter auf nodejs 10.x+ umgeschrieben und Fehler korrigiert
+* Sollte mit js-controller 2 und 3 arbeiten.
+* Neue Einstellungen lassed das Erzeugen von uBT's oder uIp's states ausschalten. 
+
 ### 1.2.5
 
 * Updated to use the adapter for js-controller 3.0 

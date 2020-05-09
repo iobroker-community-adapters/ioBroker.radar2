@@ -1,7 +1,7 @@
 {
   "name": "iobroker.radar2",
   "description": "Radar2 for IP and Bluetooth device check, it also can scan HP printers ink and ECB currency to EUR as well as UWZ weather warnings",
-  "version": "1.2.5",
+  "version": "1.9.9",
   "author": "frankjoke <frankjoke@hotmail.com>",
   "contributors": [
     "frankjoke <frankjoke@hotmail.com>"
@@ -28,13 +28,14 @@
     "url": "https://github.com/frankjoke/ioBroker.radar2"
   },
   "engines": {
-    "node": ">=6.1.0"
+    "node": ">=10.0.0",
+    "npm": ">=6.0.0"
   },
   "devDependencies": {
     "axios": "^0.19.2",
     "chai": "^4.2.0",
     "gulp": "^4.0.2",
-    "mocha": "^4.1.0"
+    "mocha": "^7.1.2"
   },
   "bugs": {
     "url": "https://github.com/frankjoke/ioBroker.radar2/issues"
@@ -44,8 +45,11 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.2.7",
+    "@iobroker/adapter-core": "^2.4.0",
+    "bluetooth-serial-port": "^2.2.7",
+    "copyfiles": "^2.2.0",
     "node-arp": "^1.0.6",
+    "node-ble": "^1.1.0",
     "ping": "^0.2.3",
     "xml2js": "^0.4.23"
   },

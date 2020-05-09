@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "1.2.5",
+        "version": "1.9.9",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": {
             "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -56,6 +56,10 @@
             "Ink"
         ],
         "news": {
+            "1.9.9": {
+                "en": "beta! rewritten adapter with bug fixes and updated to node 10.x+ included fj-adapter-core awhich should work on js-controller 2.x and 3.x.",
+                "de": "beta! Kompletten Adapter auf nodejs 10.x+ umgeschrieben und Fehler korrigiert. Mit js-controller 2 und 3 arbeiten."
+            },
             "1.2.5": {
                 "en": "updated adapter to use new myAdapter awhich should work on js-controller 2.x and 3.x.",
                 "de": "Adapter benutzt neue Version von MyAdapter und sollte jetzt mit js-controller 2 und 3 arbeiten."
@@ -199,6 +203,8 @@
         "delayaway": 2,
         "delayuwz": 120,
         "numuwz": 0,
+        "suBT": false,
+        "suIP": true,
         "hcionly": false,
         "l2ponly": false,
         "longuwz": false
