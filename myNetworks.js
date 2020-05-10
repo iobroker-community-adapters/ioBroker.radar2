@@ -199,10 +199,10 @@ class ScanCmd extends EventEmitter {
             self._cmd.stderr.on('data', data => error(data.toString().trim()));
             self._cmd
                 .on('close', () => self.cleanUp())
-                //                .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
+                                .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
                 .on('error', err => error(err))
                 .on('exit', function (code) {
-                    //                    A.D(`${self._args} exit code: ${code}`);
+                                        A.D(`${self._args} exit code: ${code}`);
                     self.cleanUp();
                     self.emit('exit', code);
                     //                if (!self._stop && !self._single)
