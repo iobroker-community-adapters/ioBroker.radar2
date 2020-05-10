@@ -93,7 +93,7 @@ class ScanCmd extends EventEmitter {
         return this;
     }
 
-    static runCmd(cmd, match, opt) {
+    static async runCmd(cmd, match, opt) {
         opt = opt || {};
         if (match)
             opt.match = match;
@@ -132,7 +132,7 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
 
         function match(data) {
-            //            A.Df('Data found for %s was %s',self._cmd,data);
+            A.Df('Data found for %s was %s',self._cmd,data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
@@ -159,7 +159,7 @@ class ScanCmd extends EventEmitter {
         function error(data) {
             setImmediate(() => {
                 self.emit('error', data);
-                //                A.Df('ScanCmd err: %O', data);
+                A.Df('ScanCmd err: %O', data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
@@ -249,6 +249,7 @@ class ScanCmd extends EventEmitter {
         }
         if (this._cmd && !this._cmd.killed && !this._stop) {
             A.Df('Kill %O with %s', this._args, this._options.killSignal);
+            debugger;
             if (this._options.killSignal === '^C')
                 this._cmd.stdin.write('\0x03');
             else
