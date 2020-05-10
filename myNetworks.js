@@ -70,7 +70,7 @@ class ScanCmd extends EventEmitter {
         this._stop = false;
         this._args = args;
         if (typeof args === 'string')
-            this._args = args.split(/\s+/);
+            this._args = args.split(/[\s\n]+/);
         options = options || {};
         this._options = Object.assign({
             killSignal: 'SIGINT',
@@ -87,12 +87,15 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
         ScanCmd._cnt = ScanCmd._cnt || 0;
         ScanCmd._all = ScanCmd._all || {};
-        A.exec('which ' + this._args[0]).then(x => typeof x === 'string' && x.length ? x.trim() : this._args[0], () => this._args[0])
-            .then(x => this._args[0] = x)
-            .then(() => this.init());
+        ScanCmd.checkInit(this);
         return this;
     }
-
+    static async checkInit(that) {
+        const x = await A.exec('which ' + that._args[0]).catch(() => that._args[0]);
+        that._args[0] = x.trim();
+        that.init();
+        return null;
+    }
     static async runCmd(cmd, match, opt) {
         opt = opt || {};
         if (match)
