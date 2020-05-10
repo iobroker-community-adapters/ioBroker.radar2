@@ -249,7 +249,7 @@ class ScanCmd extends EventEmitter {
         }
         if (this._cmd && !this._cmd.killed && !this._stop) {
             A.Df('Kill %O with %s', this._args, this._options.killSignal);
-            debugger;
+            
             if (this._options.killSignal === '^C')
                 this._cmd.stdin.write('\0x03');
             else
