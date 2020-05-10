@@ -57,6 +57,23 @@ class CacheP {
 	get cache() {
 		return this._cache;
 	}
+	cacheSync(item, prefereCache = true, fun) {
+		const cached = this.isCached(item);
+		if (cached && prefereCache)
+			return cached;
+		fun = fun || this._fun;
+		if (typeof fun == "function") try {
+			const res = fun(item);
+			if (res) {
+				this._cache[item] = res;
+				return res;
+			}	
+		} finally {
+			// empty
+		}
+
+		return null;
+	}
 }
 
 class HrTime {

@@ -145,7 +145,7 @@ class ScanCmd extends EventEmitter {
                         for (let x = 0; x < m.length; x++)
                             r[self._options.match[x + 2]] = m[x];
                         if (r.address)
-                            r.vendor = Network.getMacVendor(r.address);
+                            r.vendor = Network.getMacV(r.address);
                         self.emit('line', r);
                         //                        A.N(() => self.emit('line', r));
                         self._matches[ma] = m;
@@ -297,6 +297,7 @@ class Bluetooth extends EventEmitter {
             return A.W(`BT already scanning!`);
         const scans = [];
         this._scan = true;
+        
         //        A.I(`start scanning BT!`); // REM
         if (this._noble)
             scans.push(this.startNoble());
@@ -387,7 +388,7 @@ class Bluetooth extends EventEmitter {
             this._device.on('found', (address, name) => self.emit('found', {
                 address: address,
                 btName: name,
-                btVendor: Network.getMacVendor(address),
+                btVendor: Network.getMacV(address),
                 by: 'scan'
             }));
             A.I("found and will use 'node-bluetooth scan'");
@@ -396,6 +397,7 @@ class Bluetooth extends EventEmitter {
             A.I('node-bluetooth not found!');
         }
         if (this._doHci && await A.isLinuxApp('hcitool')) {
+            
             const res = await ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address']);
             this._doHci = this._btid < 0 && res.length ?
                 res[0].name :
@@ -403,45 +405,47 @@ class Bluetooth extends EventEmitter {
                 'hci' + this._btid : 'hci0', () => 'hci0';
             if (this._doHci) {
                 A.If('Will run hcitool-mode and not noble on device %s!', res);
-                this.resetHci();
+                await this.resetHci();
             }
-        }
-        if (this._btid >= 0)
-            // eslint-disable-next-line no-process-env
-            process.env[nid] = this._btid;
+        } else {
+            if (this._btid >= 0)
+                // eslint-disable-next-line no-process-env
+                process.env[nid] = this._btid;
 
-        try {
-            this._noble = require('@abandonware/noble');
-            this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
-            //        this._noble.on('scanStart', () => A.D('Noble scan started'));
-            //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
-            this._noble.on('discover', function (per) {
-                //                if (isStopping)
-                //                    return res(stopNoble(idf));
-                const {
-                    address,
-                    advertisement,
-                    rssi
-                } = per;
-                const btVendor = Network.getMacVendor(address);
-                //                A.Df("-myNoble discovers %s, %j %s", address, advertisement, rssi, btVendor); // REM
-                if (per && address)
-                    self.emit('found', {
-                        address: address.toLowerCase(),
-                        btName: (advertisement && advertisement.localName) ? advertisement.localName : "N/A",
-                        rssi,
-                        btVendor,
-                        by: 'noble'
-                    });
-            });
-            //            this._noble.stopScanning();
-            A.I("found and will use '@abandonware/noble'");
-        } catch (e) {
-            A.W(`Noble not available, Error: ${A.O(e)}`);
-            this._noble = null;
+            try {
+                this._noble = require('@abandonware/noble');
+                this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
+                //        this._noble.on('scanStart', () => A.D('Noble scan started'));
+                //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
+                this._noble.on('discover', function (per) {
+                    //                if (isStopping)
+                    //                    return res(stopNoble(idf));
+                    const {
+                        address,
+                        advertisement,
+                        rssi
+                    } = per;
+                    const btVendor = Network.getMacV(address);
+                    //                A.Df("-myNoble discovers %s, %j %s", address, advertisement, rssi, btVendor); // REM
+                    if (per && address)
+                        self.emit('found', {
+                            address: address.toLowerCase(),
+                            btName: (advertisement && advertisement.localName) ? advertisement.localName : "N/A",
+                            rssi,
+                            btVendor,
+                            by: 'noble'
+                        });
+                });
+                //            this._noble.stopScanning();
+                A.I("found and will use '@abandonware/noble'");
+            } catch (e) {
+                A.W(`Noble not available, Error: ${A.O(e)}`);
+                this._noble = null;
+            }
+            //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+            if (! this._noble)
+                A.W('Neither hcitool nor noble available to scan Bluetooth!');
         }
-        //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
-
     }
 
     stopNoble() {
@@ -739,6 +743,7 @@ class Dhcp extends EventEmitter {
         }
     }
 }
+
 class Network extends EventEmitter {
     constructor(dodhcp) {
         super();
@@ -879,7 +884,7 @@ class Network extends EventEmitter {
             for (const addr of this._nif[nif])
                 if (addr.internal !== undefined && !addr.internal) {
                     this._iflist.push([
-                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
+                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacV(addr.mac)
                     ]);
                     this.combine(addr.mac, addr.address);
                 }
@@ -959,7 +964,7 @@ class Network extends EventEmitter {
                 names.push(n);
         const im = this._ips.get(ip);
         if (!im[mac]) {
-            im[mac] = Network.getMacVendor(mac);
+            im[mac] = Network.getMacV(mac);
             im.names = names;
         }
         if (names.length === (name ? 1 : 0)) this.dnsReverse(ip).then(list => {
@@ -973,7 +978,7 @@ class Network extends EventEmitter {
         const wm = this._macs.get(mac);
         if (!wm[ip]) {
             wm[ip] = names;
-            wm.vendor = Network.getMacVendor(mac);
+            wm.vendor = Network.getMacV(mac);
         }
     }
 
@@ -1044,6 +1049,10 @@ class Network extends EventEmitter {
             if (mac.startsWith(i.oui))
                 return i.companyName;
         return 'N/A';
+    }
+
+    static getMacV(mac) {
+        return mvcache.cacheSync(mac.trim().toLowerCase());
     }
 
     ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 
@@ -1121,6 +1130,8 @@ class Network extends EventEmitter {
         return true;
     }
 }
+
+const mvcache = new A.CacheP(Network.getMacVendor);
 
 exports.Network = Network;
 exports.Bluetooth = Bluetooth;

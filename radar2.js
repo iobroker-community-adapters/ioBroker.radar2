@@ -255,7 +255,7 @@ async function foundIpMac(what) {
     //    A.Df(`foundIpMac: %s, %s, %j`, ip, mac, found ? ipList[ip] : what);
     if (mac) {
         const item = macList[mac];
-        what.getMacVendor = Network.getMacVendor(mac);
+        what.getMacVendor = Network.getMacV(mac);
         if (ip)
             network.combine(mac, ip, [...(what.hosts || []), ...(what.hostName && [what.hostName] || [])]);
         //        A.Df('found mac %s of %O: %O', mac, what, item);
@@ -284,7 +284,7 @@ async function foundIpMac(what) {
 /// 
 /// @param {object} what - object with one or more of {address, by, ... } 
 async function foundBt(what) {
-    //    A.Df("-BtFound %j", what); // REM
+    A.Df("-BtFound %j", what); // REM
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
     if (item) {
@@ -293,7 +293,7 @@ async function foundBt(what) {
             await setItem(item);
         }
     } else {
-        what.btVendor = Network.getMacVendor(mac);
+        what.btVendor = Network.getMacV(mac);
         if (knownBTs.indexOf(mac) < 0)
             ukBt[mac] = what;
         //        A.D(A.F('bt notf', what));
@@ -444,11 +444,11 @@ async function testLinux(name) {
 async function main(adapter) {
 
     network.on('request', items => {
-        items.macVendor = Network.getMacVendor(items.macAddress);
+        items.macVendor = Network.getMacV(items.macAddress);
         delete items.type;
         items.by = 'dhcp';
         foundIpMac(items);
-        A.Df('found item %s by dhcp: %s, %s, %s', items.hostName, items.ipAddress, items.macAddress, Network.getMacVendor(items.macAddress));
+        A.Df('found item %s by dhcp: %s, %s, %s', items.hostName, items.ipAddress, items.macAddress, Network.getMacV(items.macAddress));
     });
 
     network.on('arp-scan', found => foundIpMac({
@@ -581,7 +581,7 @@ async function main(adapter) {
                 if (mac && Network.isMac(mac)) {
                     item.type = 'IP';
                     item.hasMAC = item.hasMAC ? item.hasMAC.concat(mac) : [mac];
-                    item.ipVendor = Network.getMacVendor(mac);
+                    item.ipVendor = Network.getMacV(mac);
                     if (macList[mac]) A.W(`mac address ${mac} in ${item.name} was used already for another device ${macList[mac].name}, this is forbidden!`);
                     else macList[mac] = item;
                 } else if (mac)
@@ -605,7 +605,7 @@ async function main(adapter) {
                         } else {
                             btList[b] = item;
                             item.type = 'BT';
-                            item.btVendor = Network.getMacVendor(b);
+                            item.btVendor = Network.getMacV(b);
                         }
                     } else if (b !== '')
                         A.W(`Invalid bluetooth address '${b}' in ${item.name} , 6 hex numbers separated by ':'`);
