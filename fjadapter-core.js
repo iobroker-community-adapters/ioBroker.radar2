@@ -67,7 +67,7 @@ class CacheP {
 			if (res) {
 				this._cache[item] = res;
 				return res;
-			}	
+			}
 		} finally {
 			// empty
 		}
@@ -734,11 +734,11 @@ class MyAdapter {
 		return res;
 	}
 
-	static pTimeout(pr, time, callback) {
+	static async pTimeout(pr, time, callback) {
 		const t = parseInt(time);
 		assert(typeof t === "number" && t > 0, `pTimeout requires a positive number as second argument for the ms`);
 		let st = null;
-		assert(callback && typeof callback === "function", `pTimeout requires optionally a function for callback as third argument`);
+		assert(!callback || callback && typeof callback === "function", `pTimeout requires optionally a function for callback as third argument`);
 		return new Promise((resolve, reject) => {
 			const rs = res => {
 					if (st) clearTimeout(st);
@@ -759,7 +759,7 @@ class MyAdapter {
 		});
 	}
 
-	static Ptime(promise, arg) {
+	static async Ptime(promise, arg) {
 		const start = Date.now();
 		if (typeof promise === "function")
 			promise = promise(arg);

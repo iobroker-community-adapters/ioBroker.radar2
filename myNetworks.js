@@ -338,7 +338,7 @@ class Bluetooth extends EventEmitter {
                     delete res.vendor;
                     this.emit('found', res);
                 }
-            })));
+            })).then(x => (A.D("Promise.all dol2ping finished", x))));
         }
         if (this._device)
             scans.push(A.Ptime(this._device.scan())
@@ -356,7 +356,7 @@ class Bluetooth extends EventEmitter {
         if (!scans.length)
             scans.push(Promise.resolve(A.Wf('Neither noble nor hcitool available to scan bluetooth!')));
 
-        await Promise.all(scans).catch(err => A.Wf("Scan Error: %O", err));
+        await Promise.all(scans).then(res => A.Df("Promise.All startScan returned %j", res), err => A.Wf("Scan Error: %O", err));
         this._scan = false;
         return true;
     }
