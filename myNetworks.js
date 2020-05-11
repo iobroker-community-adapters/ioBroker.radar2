@@ -92,8 +92,10 @@ class ScanCmd extends EventEmitter {
         return this;
     }
     static async runCmd(cmd, match, opt) {
-        opt = opt || {};
-        if (match)
+        if (typeof match == "object") {
+            opt = match;
+        } else opt = opt || {};
+        if (Array.isArray(match))
             opt.match = match;
 
         async function checkInit(that) {
@@ -108,24 +110,30 @@ class ScanCmd extends EventEmitter {
             const pid = ++ScanCmd._cnt & 0xfffffff;
 
             async function finish(how, arg) {
-                await how(arg);
-
-                //                proc.removeAllListeners();
                 setImmediate(() => {
                     delete ScanCmd._all[pid];
                     //                    ret = proc = null;
                 });
+                return await how(arg);
+                //                proc.removeAllListeners();
             }
             const proc = new ScanCmd(cmd, opt, pid);
             checkInit(proc);
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
-            proc.on('line', line =>
-                ret && ret.push(line));
-            proc.on('error', err =>
-                setTimeout(() => finish(rej, err), 10));
-            proc.on('exit', code =>
-                code ? finish(rej, code) : finish(res, ret));
+            proc.on('line', line => {
+                A.Df("proc raised new Line in %s", cmd);
+                return ret && ret.push(line);
+            });
+            proc.on('error', err => {
+                A.Df('proc raised error %j', err);
+                setTimeout(() => finish(rej, err), 10);
+            });
+            proc.on('exit', code => {
+                A.Df("proc raised exit: %j", code);
+                // code ? finish(rej, code) : 
+                finish(res, ret);
+            });
         });
     }
 
@@ -142,7 +150,7 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
 
         function match(data) {
-            A.Df('Data found for #%d was %s', self._pid, data);
+//            A.Df('Data found for #%d was %s', self._pid, data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
@@ -310,10 +318,10 @@ class Bluetooth extends EventEmitter {
             scans.push(this.startNoble());
         if (this._doHci)
             scans.push(this.resetHci().then(async () => {
-                    const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci),
-                        [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'], {
-                            timeout: this._len
-                        });
+                    const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), {
+                        match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
+                        timeout: this._len
+                    });
                     for (const item of res) {
                         await A.wait(0);
                         item.btVendor = item.vendor;
@@ -327,7 +335,8 @@ class Bluetooth extends EventEmitter {
 
         if (this._dol2ping && macs && macs.length) {
             scans.push(Promise.all(macs.map(async mac => {
-                let res = await ScanCmd.runCmd(this._dol2ping + mac, [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'], {
+                let res = await ScanCmd.runCmd(this._dol2ping + mac, {
+                    match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
                     timeout: 4000
                 });
                 //                    A.Df('L2Ping returned for mac%s = %O', mac, res);

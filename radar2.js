@@ -284,10 +284,10 @@ async function foundIpMac(what) {
 /// 
 /// @param {object} what - object with one or more of {address, by, ... } 
 async function foundBt(what) {
-    A.Df("-BtFound %j", what); // REM
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-    if (item) {
+        A.Df("-BtFound %j, %j", what, item); // REM
+        if (item) {
         if (!item.btHere) {
             item.btHere = new Date();
             await setItem(item);
