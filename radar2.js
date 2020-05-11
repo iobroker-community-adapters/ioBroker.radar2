@@ -440,6 +440,8 @@ async function testLinux(name) {
     return res ? res : false;
 }
 
+A.timer = [];
+
 // eslint-disable-next-line no-unused-vars
 async function main(adapter) {
 
@@ -531,7 +533,6 @@ async function main(adapter) {
         knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
     A.D('use known IP list: ' + A.O(knownIPs));
 
-    A.timer = [];
     arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
         A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
     if (A.C.arp_scan_cmd.indexOf('--interface') < 0)

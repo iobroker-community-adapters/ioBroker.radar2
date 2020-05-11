@@ -63,12 +63,14 @@ class ReadLineStream extends stream.Transform {
     }
 }
 
+const checkPath = new A.CacheP(async (item) => await A.exec('which ' + item).catch(() => item));
 class ScanCmd extends EventEmitter {
-    constructor(args, options) {
+    constructor(args, options, pid) {
         super();
         this._stdout = null;
         this._stop = false;
         this._args = args;
+        this._pid = pid;
         if (typeof args === 'string')
             this._args = args.split(/[\s\n]+/);
         options = options || {};
@@ -91,7 +93,7 @@ class ScanCmd extends EventEmitter {
         return this;
     }
     static async checkInit(that) {
-        const x = await A.exec('which ' + that._args[0]).catch(() => that._args[0]);
+        const x = await checkPath.cacheItem(that._args[0]);
         that._args[0] = x.trim();
         that.init();
         return null;
@@ -101,24 +103,27 @@ class ScanCmd extends EventEmitter {
         if (match)
             opt.match = match;
         return new Promise((res, rej) => {
-            let ret = [];
+            const ret = [];
             const pid = ++ScanCmd._cnt & 0xfffffff;
 
-            function finish(how, arg) {
-                how(arg);
+            async function finish(how, arg) {
+                await how(arg);
 
                 //                proc.removeAllListeners();
                 setImmediate(() => {
                     delete ScanCmd._all[pid];
-                    ret = proc = null;
+//                    ret = proc = null;
                 });
             }
-            let proc = new ScanCmd(cmd, opt);
+            const proc = new ScanCmd(cmd, opt, pid);
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
-            proc.on('line', line => ret && ret.push(line));
-            proc.once('error', err => setTimeout(() => finish(rej, err), 100));
-            proc.once('exit', code => code ? finish(rej, code) : finish(res, ret));
+            proc.on('line', line => 
+                ret && ret.push(line));
+            proc.on('error', err => 
+                setTimeout(() => finish(rej, err), 10));
+            proc.on('exit', code => 
+                code ? finish(rej, code) : finish(res, ret));
         });
     }
 
@@ -135,7 +140,7 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
 
         function match(data) {
-            A.Df('Data found for %s was %s',self._cmd,data);
+            A.Df('Data found for #%d was %s',self._pid ,data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
@@ -204,8 +209,8 @@ class ScanCmd extends EventEmitter {
                 .on('close', () => self.cleanUp())
                                 .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
                 .on('error', err => error(err))
-                .on('exit', function (code) {
-                                        A.D(`${self._args} exit code: ${code}`);
+                .on('exit', (code) => {
+                    A.D(`${self._args} exit code: ${code}`);
                     self.cleanUp();
                     self.emit('exit', code);
                     //                if (!self._stop && !self._single)
@@ -251,7 +256,7 @@ class ScanCmd extends EventEmitter {
             this._timeout = null;
         }
         if (this._cmd && !this._cmd.killed && !this._stop) {
-            A.Df('Kill %O with %s', this._args, this._options.killSignal);
+            A.Df('Kill with %s #%d:%s', this._options.killSignal, this._pid, this._args.join(","));
             
             if (this._options.killSignal === '^C')
                 this._cmd.stdin.write('\0x03');
