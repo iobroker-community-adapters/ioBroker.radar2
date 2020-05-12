@@ -317,9 +317,9 @@ class Bluetooth extends EventEmitter {
 
         //        A.I(`start scanning BT!`); // REM
         if (this._noble)
-            scans.push(this.startNoble());
+            scans.push(Promise.resolve(this.startNoble()));
         if (this._doHci)
-            scans.push(this.resetHci().then(async () => {
+            scans.push(Promise.resolve(this.resetHci().then(async () => {
                     const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), {
                         match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
                         timeout: this._len
@@ -332,8 +332,8 @@ class Bluetooth extends EventEmitter {
                         this.emit('found', item);
                     }
                 })
-                .catch(A.nop));
-        else if (!this._noble) A.D('Neither noble nor hcitool available!');
+                .catch(A.nop)));
+        else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
 
         if (this._dol2ping && macs && macs.length) {
             scans.push(Promise.all(macs.map(async mac => {
@@ -352,9 +352,9 @@ class Bluetooth extends EventEmitter {
             })).then(x => (A.D("Promise.all dol2ping finished", x))));
         }
         if (this._device)
-            scans.push(A.Ptime(this._device.scan())
+            scans.push(Promise.resolve(A.Ptime(this._device.scan())
                 .then(x => x < 1000 ? this._device.scan() : null)
-                .catch(A.nop));
+                .catch(A.nop)));
         /*            ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
                    .then(res => res.map(res => A.N(() => {
                        res.btVendor = res.vendor;
@@ -365,11 +365,12 @@ class Bluetooth extends EventEmitter {
          */
         //        else A.D('Neither BT scan nor l2ping are available to scan normal BT devices!');
         if (!scans.length)
-            scans.push(Promise.resolve(A.Wf('Neither noble nor hcitool available to scan bluetooth!')));
-
-        await Promise.all(scans).then(res => A.Df("Promise.All startScan returned %j", res), err => A.Wf("Scan Error: %O", err));
+            return A.Df('No BT scan because no entry available!');
+        A.Df("startScan before Promise.all with %s", A.O(scans));
+        const res = await Promise.all(scans).catch(err => A.Wf("Scan Error: %O", err));
+        A.Df("startScan returned Promise.All %j", res);
         this._scan = false;
-        return true;
+        return res;
     }
 
     async resetHci() {
