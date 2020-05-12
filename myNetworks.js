@@ -91,7 +91,7 @@ class ScanCmd extends EventEmitter {
         ScanCmd._all = ScanCmd._all || {};
         return this;
     }
-    static async runCmd(cmd, match, opt) {
+    static runCmd(cmd, match, opt) {
         if (typeof match == "object") {
             opt = match;
         } else opt = opt || {};
@@ -105,19 +105,21 @@ class ScanCmd extends EventEmitter {
             return null;
         }
 
-        return new Promise((res, rej) => {
+        return new Promise(async (res, rej) => {
             const ret = [];
             const pid = ++ScanCmd._cnt & 0xfffffff;
+            let resolved = false;
+            const proc = new ScanCmd(cmd, opt, pid);
 
             async function finish(how, arg) {
-                setImmediate(() => {
-                    delete ScanCmd._all[pid];
-                    //                    ret = proc = null;
-                });
+                if (resolved) return res(ret);
+                delete ScanCmd._all[pid];
+                resolved = true;
+                proc.removeAllListeners(); 
+                await A.wait(0);
                 return await how(arg);
                 //                proc.removeAllListeners();
             }
-            const proc = new ScanCmd(cmd, opt, pid);
             checkInit(proc);
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
@@ -127,11 +129,11 @@ class ScanCmd extends EventEmitter {
             });
             proc.on('error', err => {
                 A.Df('proc raised error %j', err);
-                setTimeout(() => finish(rej, err), 10);
+                finish(rej, err);
             });
             proc.on('exit', code => {
                 A.Df("proc raised exit: %j", code);
-                // code ? finish(rej, code) : 
+                // code ? finish(rej, code) :
                 finish(res, ret);
             });
         });
