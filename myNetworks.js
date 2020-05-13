@@ -114,9 +114,9 @@ class ScanCmd extends EventEmitter {
                 if (resolved) return res(ret);
                 delete ScanCmd._all[pid];
                 resolved = true;
-//                proc.removeAllListeners();
-                await A.wait(0);
-                return await how(arg);
+                //                proc.removeAllListeners();
+                await A.wait(1);
+                return how(arg);
                 //                proc.removeAllListeners();
             }
             checkInit(proc);
@@ -207,17 +207,17 @@ class ScanCmd extends EventEmitter {
                 //                .on('close', () => A.I('stdout_close'))
                 //            self._cmd.stdout.on('close', () => A.I('stdout_close'))
                 //                .on('end', () => A.I('stdout_end'))
-                .on('error', err => error(err))
+                // .on('error', err => error(err))
                 //                .on('readable', () => readlines(self._cmd.stdout))
                 //                .on('data', data => readlines(self._cmd.stdout, data));
                 //                .on('data', data => A.If('stdout_data_line: %s', data.trim()));
-                .on('data', data => match(data));
+                .on('data', data => setImmediate(() => match(data)));
             //                self._cmd.stdout.on('data', data => A.If('stdout data: %s',data));
             //            self._cmd.stderr.on('readable', () => readlines(self._cmd.stderr));
             //            self._stderr.on('data', data => readlines(self._cmd.stderr, data));
-            self._cmd.stderr.on('data', data => error(data.toString().trim()));
+            //            self._cmd.stderr.on('data', data => error(data.toString().trim()));
             self._cmd
-                .on('close', () => self.cleanUp())
+                // .on('close', () => self.cleanUp())
                 .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
                 .on('error', err => error(err))
                 .on('exit', (code) => {
@@ -257,7 +257,7 @@ class ScanCmd extends EventEmitter {
             this._cmd = null;
             this._stdout = this._stderr = null;
         }
-        this.emit('exit', 0);
+        // this.emit('exit', 0);
         //        }, 100);
     }
 
@@ -310,6 +310,53 @@ class Bluetooth extends EventEmitter {
     }
 
     async startScan(macs) {
+        async function scanmacs(that) {
+            for (const mac of macs) {
+                await A.wait(1);
+                try {
+                    const res = await ScanCmd.runCmd(that._dol2ping + mac, {
+                        match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
+                        timeout: 4000
+                    }).catch(() => null);
+                    if (res && res.length) {
+                        const ret = res[0];
+                        ret.address = ret.address.toLowerCase();
+                        ret.btVendor = ret.vendor;
+                        delete ret.vendor;
+                        that.emit('found', ret);
+                    }
+                } catch (e) {
+                    // emptyfind ouit if connection refused can be used!
+                }
+                //                    A.Df('L2Ping returned for mac%s = %O', mac, res);
+            }
+        }
+
+        async function scanhci(that) {
+            const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', that._doHci), {
+                match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
+                timeout: that._len
+            }).catch(() => null);
+            //                    A.Df("lescan returned: %O", res);
+            if (res)
+                for (const item of res) {
+                    await A.wait(0);
+                    item.btVendor = item.vendor;
+                    item.address = item.address.toLowerCase();
+                    delete item.vendor;
+                    that.emit('found', item);
+                }
+        }
+
+        // async function scannodebt(that) {
+        //     try {
+        //         const x = A.Ptime(that._device.scan());
+        //         if (x < 1000) await that._device.scan();
+        //     } catch (e) {
+        //         //empty
+        //     }
+        // }
+
         if (this._device && this._scan)
             return A.W(`BT already scanning!`);
         const scans = [];
@@ -322,60 +369,16 @@ class Bluetooth extends EventEmitter {
         }
         if (this._doHci) {
             A.D("startScan prepare doHci");
-            scans.push(Promise.resolve(this.resetHci().then(async () => {
-                    const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), {
-                        match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
-                        timeout: this._len
-                    }).catch(() => null);
-                    if (res)
-                        for (const item of res) {
-                            await A.wait(0);
-                            item.btVendor = item.vendor;
-                            item.address = item.address.toLowerCase();
-                            delete item.vendor;
-                            this.emit('found', item);
-                        }
-                })
-                .catch(A.nop)));
+            await this.resetHci();
+            scans.push(scanhci(this));
         } else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
 
         if (this._dol2ping && macs && macs.length) {
             // A.D("startScan prepare noble");
-            scans.push(Promise.all(macs.map(async mac => {
-
-                let res = null;
-                try {
-                    res = await ScanCmd.runCmd(this._dol2ping + mac, {
-                        match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
-                        timeout: 4000
-                    }).catch(() => null);
-                } catch (e) {
-                    // emptyfind ouit if connection refused can be used!
-                }
-                //                    A.Df('L2Ping returned for mac%s = %O', mac, res);
-                if (res && res.length) {
-                    res = res[0];
-                    res.address = res.address.toLowerCase();
-                    res.btVendor = res.vendor;
-                    delete res.vendor;
-                    this.emit('found', res);
-                }
-            })));
-        } else if (this._device) {
-            // A.D("startScan node-bluetooth");
-            scans.push(Promise.resolve(A.Ptime(this._device.scan())
-                .then(x => x < 1000 ? this._device.scan() : null)
-                .catch(A.nop)).then(ret => A.Df("node-bluetooth returned %O", ret)));
-            /*            ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
-                       .then(res => res.map(res => A.N(() => {
-                           res.btVendor = res.vendor;
-                           res.address = res.address.toLowerCase();
-                           delete res.vendor;
-                           this.emit('found', res);
-                       })), A.nop)
-             */
-            //        else A.D('Neither BT scan nor l2ping are available to scan normal BT devices!');
+            scans.push(scanmacs(this));
         }
+        // if (this._device && !this._dol2ping)
+        //     scans.push(scannodebt(this));
         if (!scans.length)
             return A.Df('No BT scan because no entry available!');
         // A.Df("startScan before Promise.all with %s", A.O(scans));
@@ -388,12 +391,13 @@ class Bluetooth extends EventEmitter {
     async resetHci() {
         if (typeof this._doHci !== 'string')
             return false;
-        await ScanCmd.runCmd(A.f('hciconfig %s reset', this._doHci)).catch(A.pE);
-        await A.wait(50);
-        //     await ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE);
-        // await A.wait(50);
-        // await ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci)).catch(A.pE);
-        return true;
+        // await ScanCmd.runCmd(A.f('hciconfig %s reset', this._doHci)).catch(A.pE);
+        // await A.wait(200);
+        let x = await ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE);
+        x = await A.wait(100);
+        x = await ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci)).catch(A.pE);
+        x = await A.wait(100);
+        return x;
     }
 
     get scanTime() {
@@ -419,8 +423,8 @@ class Bluetooth extends EventEmitter {
         try {
             const res = A.isLinuxApp('l2ping');
             if (res)
-                this._dol2ping = 'l2ping ' + (this._btid < 0 ? '-i hci0' : '-i hci' + this._btid) + ' -c 1 ';
-        } catch(e) {
+                this._dol2ping = 'l2ping ' + (this._btid < 0 ? '' : '-i hci' + this._btid) + ' -c 1 ';
+        } catch (e) {
             // empty
         }
         if (this._dol2ping) A.I('Will use l2Ping for BT scans.');
@@ -436,8 +440,8 @@ class Bluetooth extends EventEmitter {
         //     }));
         //     A.I("found and will use 'node-bluetooth scan'");
         // } catch (e) {
-            this._device = null;
-            // A.I('node-bluetooth not found!');
+        this._device = null;
+        // A.I('node-bluetooth not found!');
         // }
         if (this._doHci && await A.isLinuxApp('hcitool')) {
 
@@ -1084,9 +1088,10 @@ class Network extends EventEmitter {
 
     static getMacVendor(mac) {
         mac = mac.trim().toLowerCase();
-        const r = Network.isMac(mac) && macdb[mac.split(':').slice(0, 3).join('')];
+        const smac = mac.split(':').slice(0, 3).join('');
+        const r = Network.isMac(mac) && macdb[smac];
         if (r)
-            return r;
+            return macdb[smac];
         mac = mac.toUpperCase();
         for (const i of macdb1)
             if (mac.startsWith(i.oui))

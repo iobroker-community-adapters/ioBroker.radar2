@@ -96,7 +96,7 @@ async function scanExtIP() {
 
 async function scanECBs() {
     for (const item of devices)
-        if (item.type === 'ECB') {
+        if (item.type === 'ECB') try {
             const idn = item.id + '.';
             //    A.I(`ScanECB: ${item.id}`);
             const body = await A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2);
@@ -111,12 +111,15 @@ async function scanECBs() {
                     await A.makeState(idn + ccur, rate);
                 }
             }
+        } catch(e) {
+            A.Wf("Error on accessing ECB data:", e);
         }
+    return A.wait(1);
 }
 
 async function scanHPs() {
     for (const pitem of devices)
-        if (pitem && pitem.type === 'printer') {
+        if (pitem && pitem.type === 'printer') try {
             const idn = pitem.id + '.';
             const below10 = [];
             const body = await A.get('http://' + pitem.ip + '/DevMgmt/ConsumableConfigDyn.xml', 2);
@@ -146,7 +149,10 @@ async function scanHPs() {
                 }
             await A.makeState(idn + 'ink', below10.length > 0 ? below10.join(', ') : 'All >10%');
             await A.makeState(pitem.id, '' + A.dateTime(new Date()));
+        } catch(e) {
+            A.Wf("Had error when reaching printer '%s'. Check link address!", pitem.id);
         }
+        return A.wait(1);
 }
 
 
@@ -181,6 +187,7 @@ async function getUWZ() {
     } catch (e) {
         A.W(`Error in getUWZ: ${e}`);
     }
+    return A.wait(1);
 }
 
 
@@ -286,7 +293,7 @@ async function foundIpMac(what) {
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-        // A.Df("-BtFound %j, %j", what, item); // REM
+        A.Df("-BtFound %j, %j", what, item); // REM
         if (item) {
         if (!item.btHere) {
             item.btHere = new Date();

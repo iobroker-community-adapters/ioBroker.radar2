@@ -60,7 +60,7 @@ class CacheP {
 	cacheSync(item, prefereCache = true, fun) {
 		const cached = this.isCached(item);
 		if (cached && prefereCache)
-			return cached;
+			return this._cache[item];
 		fun = fun || this._fun;
 		if (typeof fun == "function") try {
 			const res = fun(item);

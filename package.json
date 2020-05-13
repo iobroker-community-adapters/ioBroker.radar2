@@ -28,8 +28,8 @@
     "url": "https://github.com/frankjoke/ioBroker.radar2"
   },
   "engines": {
-    "node": ">=10.0.0",
-    "npm": ">=6.0.0"
+    "node": ">=8.10.0",
+    "npm": ">=6.4.0"
   },
   "devDependencies": {
     "axios": "^0.19.2",
@@ -46,8 +46,6 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.4.0",
-    "bluetooth-serial-port": "^2.2.7",
-    "copyfiles": "^2.2.0",
     "node-arp": "^1.0.6",
     "node-ble": "^1.1.0",
     "ping": "^0.2.3",
