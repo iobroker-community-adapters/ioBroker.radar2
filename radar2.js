@@ -286,7 +286,7 @@ async function foundIpMac(what) {
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-        A.Df("-BtFound %j, %j", what, item); // REM
+        // A.Df("-BtFound %j, %j", what, item); // REM
         if (item) {
         if (!item.btHere) {
             item.btHere = new Date();

@@ -123,15 +123,15 @@ class ScanCmd extends EventEmitter {
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
             proc.on('line', line => {
-                A.Df("proc raised new Line in %s", cmd);
+                // A.Df("proc raised new Line in %s", cmd);
                 return ret && ret.push(line);
             });
             proc.on('error', err => {
-                A.Df('proc raised error %j', err);
+                // A.Df('proc raised error %j', err);
                 finish(rej, err);
             });
             proc.on('exit', code => {
-                A.Df("proc raised exit: %j", code);
+                // A.Df("proc raised exit: %j", code);
                 // code ? finish(rej, code) :
                 finish(res, ret);
             });
@@ -221,7 +221,7 @@ class ScanCmd extends EventEmitter {
                 .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
                 .on('error', err => error(err))
                 .on('exit', (code) => {
-                    A.D(`${self._args} exit code: ${code}`);
+                    // A.D(`${self._args} exit code: ${code}`);
                     self.cleanUp();
                     self.emit('exit', code);
                     //                if (!self._stop && !self._single)
@@ -263,7 +263,7 @@ class ScanCmd extends EventEmitter {
 
     kill() {
         if (this._cmd && !this._cmd.killed && !this._stop) {
-            A.Df('Kill with %s #%d:%s', this._options.killSignal, this._pid, this._args.join(","));
+            // A.Df('Kill with %s #%d:%s', this._options.killSignal, this._pid, this._args.join(","));
 
             if (this._options.killSignal === '^C')
                 this._cmd.stdin.write('\0x03');
@@ -317,8 +317,8 @@ class Bluetooth extends EventEmitter {
 
         //        A.I(`start scanning BT!`); // REM
         if (this._noble) {
-            A.D("startScan prepare noble");
-            scans.push(Promise.resolve(this.startNoble()).then(ret => A.Df("startNoble returned %O", ret)));
+            // A.D("startScan prepare noble");
+            scans.push(Promise.resolve(this.startNoble()));
         }
         if (this._doHci) {
             A.D("startScan prepare doHci");
@@ -336,11 +336,11 @@ class Bluetooth extends EventEmitter {
                             this.emit('found', item);
                         }
                 })
-                .catch(A.nop)).then(ret => A.Df("_dohci returned %O", ret)));
+                .catch(A.nop)));
         } else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
 
         if (this._dol2ping && macs && macs.length) {
-            A.D("startScan prepare noble");
+            // A.D("startScan prepare noble");
             scans.push(Promise.all(macs.map(async mac => {
 
                 let res = null;
@@ -360,9 +360,9 @@ class Bluetooth extends EventEmitter {
                     delete res.vendor;
                     this.emit('found', res);
                 }
-            })).then(x => (A.D("Promise.all dol2ping finished", x))));
+            })));
         } else if (this._device) {
-            A.D("startScan node-bluetooth");
+            // A.D("startScan node-bluetooth");
             scans.push(Promise.resolve(A.Ptime(this._device.scan())
                 .then(x => x < 1000 ? this._device.scan() : null)
                 .catch(A.nop)).then(ret => A.Df("node-bluetooth returned %O", ret)));
@@ -378,9 +378,9 @@ class Bluetooth extends EventEmitter {
         }
         if (!scans.length)
             return A.Df('No BT scan because no entry available!');
-        A.Df("startScan before Promise.all with %s", A.O(scans));
+        // A.Df("startScan before Promise.all with %s", A.O(scans));
         const res = await Promise.all(scans).catch(err => A.Wf("Scan Error: %O", err));
-        A.Df("startScan returned Promise.All %j", res);
+        // A.Df("startScan returned Promise.All %j", res);
         this._scan = false;
         return res;
     }
@@ -416,26 +416,29 @@ class Bluetooth extends EventEmitter {
         this._doHci = options.doHci;
         this._btid = isNaN(parseInt(options.btid)) ? -1 : parseInt(options.btid);
         this.len = options.scanTime;
-        if (this._doL2p) {
+        try {
             const res = A.isLinuxApp('l2ping');
             if (res)
                 this._dol2ping = 'l2ping ' + (this._btid < 0 ? '-i hci0' : '-i hci' + this._btid) + ' -c 1 ';
+        } catch(e) {
+            // empty
         }
         if (this._dol2ping) A.I('Will use l2Ping for BT scans.');
-        else try {
-            this._nbt = require('@frankjoke/node-bluetooth');
-            this._device = new this._nbt.DeviceINQ();
-            this._device.on('found', (address, name) => self.emit('found', {
-                address: address,
-                btName: name,
-                btVendor: Network.getMacV(address),
-                by: 'scan'
-            }));
-            A.I("found and will use 'node-bluetooth scan'");
-        } catch (e) {
+        else A.I("cannot search for bluetooth (non-BLE) devices!");
+        // else try {
+        //     this._nbt = require('@frankjoke/node-bluetooth');
+        //     this._device = new this._nbt.DeviceINQ();
+        //     this._device.on('found', (address, name) => self.emit('found', {
+        //         address: address,
+        //         btName: name,
+        //         btVendor: Network.getMacV(address),
+        //         by: 'scan'
+        //     }));
+        //     A.I("found and will use 'node-bluetooth scan'");
+        // } catch (e) {
             this._device = null;
-            A.I('node-bluetooth not found!');
-        }
+            // A.I('node-bluetooth not found!');
+        // }
         if (this._doHci && await A.isLinuxApp('hcitool')) {
 
             const res = await ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address']);
@@ -934,7 +937,7 @@ class Network extends EventEmitter {
         self._listener.on('error', e => self.emit('error', e))
             .on('listenState', s => self.emit('listenState', s))
             .on('request', (req) => {
-                A.Df("Dhcp got request: %j", req); // REM
+                // A.Df("Dhcp got request: %j", req); // REM
                 self.combine(req.macAddress, req.ipAddress, req.hostName);
                 self.emit('request', req);
             })
