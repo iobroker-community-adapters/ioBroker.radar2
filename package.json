@@ -54,9 +54,9 @@
     "xml2js": "^0.4.23"
   },
   "optionalDependencies": {
-    "net-ping": "^1.2.3",
-    "node-bluetooth": "^1.2.6",
-    "@abandonware/noble": "^1.9.2-8"
+    "@abandonware/noble": "^1.9.2-8",
+    "@frankjoke/node-bluetooth": "^1.2.9",
+    "net-ping": "^1.2.3"
   },
   "eslintConfig": {
     "env": {

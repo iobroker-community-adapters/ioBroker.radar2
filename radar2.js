@@ -381,8 +381,8 @@ async function scanAll() {
             notHere.push(item.id);
 
         //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
-        await A.makeState(item.id, item.anwesend);
-        await A.makeState(item.id + '._here', item.anwesend);
+        await A.makeState(item.id, !!item.anwesend);
+        await A.makeState(item.id + '._here', !!item.anwesend);
         if (!item.anwesend)
             await A.makeState(item.id + '._whathere', "");
         await A.wait(1);

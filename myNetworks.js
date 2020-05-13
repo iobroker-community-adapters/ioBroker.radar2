@@ -87,10 +87,9 @@ class ScanCmd extends EventEmitter {
         this._linepart = '';
         this._timeout = null;
         this._matches = {};
-        ScanCmd._cnt = ScanCmd._cnt || 0;
-        ScanCmd._all = ScanCmd._all || {};
         return this;
     }
+
     static runCmd(cmd, match, opt) {
         if (typeof match == "object") {
             opt = match;
@@ -115,7 +114,7 @@ class ScanCmd extends EventEmitter {
                 if (resolved) return res(ret);
                 delete ScanCmd._all[pid];
                 resolved = true;
-                proc.removeAllListeners(); 
+//                proc.removeAllListeners();
                 await A.wait(0);
                 return await how(arg);
                 //                proc.removeAllListeners();
@@ -152,7 +151,7 @@ class ScanCmd extends EventEmitter {
         this._matches = {};
 
         function match(data) {
-//            A.Df('Data found for #%d was %s', self._pid, data);
+            //            A.Df('Data found for #%d was %s', self._pid, data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
@@ -179,7 +178,7 @@ class ScanCmd extends EventEmitter {
         function error(data) {
             setImmediate(() => {
                 self.emit('error', data);
-                A.Df('ScanCmd err: %O', data);
+                A.Df('ScanCmd err: %s %O', self._args.join(", "), data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
@@ -275,6 +274,7 @@ class ScanCmd extends EventEmitter {
     }
 }
 
+ScanCmd._cnt = 0;
 ScanCmd._all = {};
 
 class Bluetooth extends EventEmitter {
@@ -316,31 +316,42 @@ class Bluetooth extends EventEmitter {
         this._scan = true;
 
         //        A.I(`start scanning BT!`); // REM
-        if (this._noble)
-            scans.push(Promise.resolve(this.startNoble()));
-        if (this._doHci)
+        if (this._noble) {
+            A.D("startScan prepare noble");
+            scans.push(Promise.resolve(this.startNoble()).then(ret => A.Df("startNoble returned %O", ret)));
+        }
+        if (this._doHci) {
+            A.D("startScan prepare doHci");
             scans.push(Promise.resolve(this.resetHci().then(async () => {
                     const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), {
                         match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
                         timeout: this._len
-                    });
-                    for (const item of res) {
-                        await A.wait(0);
-                        item.btVendor = item.vendor;
-                        item.address = item.address.toLowerCase();
-                        delete item.vendor;
-                        this.emit('found', item);
-                    }
+                    }).catch(() => null);
+                    if (res)
+                        for (const item of res) {
+                            await A.wait(0);
+                            item.btVendor = item.vendor;
+                            item.address = item.address.toLowerCase();
+                            delete item.vendor;
+                            this.emit('found', item);
+                        }
                 })
-                .catch(A.nop)));
-        else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
+                .catch(A.nop)).then(ret => A.Df("_dohci returned %O", ret)));
+        } else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
 
         if (this._dol2ping && macs && macs.length) {
+            A.D("startScan prepare noble");
             scans.push(Promise.all(macs.map(async mac => {
-                let res = await ScanCmd.runCmd(this._dol2ping + mac, {
-                    match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
-                    timeout: 4000
-                });
+
+                let res = null;
+                try {
+                    res = await ScanCmd.runCmd(this._dol2ping + mac, {
+                        match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
+                        timeout: 4000
+                    }).catch(() => null);
+                } catch (e) {
+                    // emptyfind ouit if connection refused can be used!
+                }
                 //                    A.Df('L2Ping returned for mac%s = %O', mac, res);
                 if (res && res.length) {
                     res = res[0];
@@ -350,20 +361,21 @@ class Bluetooth extends EventEmitter {
                     this.emit('found', res);
                 }
             })).then(x => (A.D("Promise.all dol2ping finished", x))));
-        }
-        if (this._device)
+        } else if (this._device) {
+            A.D("startScan node-bluetooth");
             scans.push(Promise.resolve(A.Ptime(this._device.scan())
                 .then(x => x < 1000 ? this._device.scan() : null)
-                .catch(A.nop)));
-        /*            ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
-                   .then(res => res.map(res => A.N(() => {
-                       res.btVendor = res.vendor;
-                       res.address = res.address.toLowerCase();
-                       delete res.vendor;
-                       this.emit('found', res);
-                   })), A.nop)
-         */
-        //        else A.D('Neither BT scan nor l2ping are available to scan normal BT devices!');
+                .catch(A.nop)).then(ret => A.Df("node-bluetooth returned %O", ret)));
+            /*            ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
+                       .then(res => res.map(res => A.N(() => {
+                           res.btVendor = res.vendor;
+                           res.address = res.address.toLowerCase();
+                           delete res.vendor;
+                           this.emit('found', res);
+                       })), A.nop)
+             */
+            //        else A.D('Neither BT scan nor l2ping are available to scan normal BT devices!');
+        }
         if (!scans.length)
             return A.Df('No BT scan because no entry available!');
         A.Df("startScan before Promise.all with %s", A.O(scans));
@@ -376,9 +388,11 @@ class Bluetooth extends EventEmitter {
     async resetHci() {
         if (typeof this._doHci !== 'string')
             return false;
-        await ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE);
-        await A.wait(100);
-        await ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci)).catch(A.pE);
+        await ScanCmd.runCmd(A.f('hciconfig %s reset', this._doHci)).catch(A.pE);
+        await A.wait(50);
+        //     await ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE);
+        // await A.wait(50);
+        // await ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci)).catch(A.pE);
         return true;
     }
 
@@ -405,11 +419,11 @@ class Bluetooth extends EventEmitter {
         if (this._doL2p) {
             const res = A.isLinuxApp('l2ping');
             if (res)
-                this._dol2ping = 'l2ping ' + (this._btid < 0 ? '' : '-i hci' + this._btid) + ' -c 1 ';
+                this._dol2ping = 'l2ping ' + (this._btid < 0 ? '-i hci0' : '-i hci' + this._btid) + ' -c 1 ';
         }
         if (this._dol2ping) A.I('Will use l2Ping for BT scans.');
-        try {
-            this._nbt = require('node-bluetooth');
+        else try {
+            this._nbt = require('@frankjoke/node-bluetooth');
             this._device = new this._nbt.DeviceINQ();
             this._device.on('found', (address, name) => self.emit('found', {
                 address: address,
