@@ -41,6 +41,7 @@
         "readme": "https://github.com/frankjoke/ioBroker.radar2/blob/master/README.md",
         "loglevel": "info",
         "icon": "radar2.png",
+        "dataSource": "push",
         "keywords": [
             "ping",
             "ip",

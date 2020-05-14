@@ -145,20 +145,18 @@ const util = require("util"),
 
 const objects = {},
 	stq = new Sequence(),
+	states = {},
+	createdStates = {},
 	sstate = {},
 	mstate = {};
 
 
 let adapter, aoptions, aname, amain, timer,
-	onUnload = null,
 	stopping = false,
 	inDebug = false,
 	curDebug = 1,
 	// allStates = null,
-	stateChange = null,
-	objChange = null,
-	onStop = null,
-	states = {},
+	// stateChange = null,
 	systemconf = null;
 let messages = (mes) => Promise.resolve(MyAdapter.W(`Message ${this.O(mes)} received and no handler defined!`));
 
@@ -197,10 +195,10 @@ class IobAdapter extends acore.Adapter {
 		this.on("stateChange", this.onStateChange.bind(this));
 		this.on("message", this.onMessage.bind(this));
 		this.on("unload", this.onUnload.bind(this));
-		stateChange = options.stateChange;
-		objChange = options.objChange;
-		onStop = options.onStop;
-		onUnload = options.onUnload;
+		this._stateChange = options.stateChange;
+		this._objChange = options.objChange;
+		this._onStop = options.onStop;
+		this._onUnload = options.onUnload;
 	}
 
 	/**
@@ -218,7 +216,7 @@ class IobAdapter extends acore.Adapter {
 	 */
 	async onUnload(callback) {
 		try {
-			await Promise.resolve(onUnload ? onUnload(null) : null).catch(e => this.Wf(e));
+			await Promise.resolve(this._onUnload ? this._onUnload(null) : null).catch(e => this.Wf(e));
 			MyAdapter.stop(null, callback);
 			callback();
 		} catch (e) {
@@ -232,11 +230,13 @@ class IobAdapter extends acore.Adapter {
 	 * @param {ioBroker.Object | null | undefined} obj
 	 */
 	onObjectChange(id, obj) {
-		if (typeof objChange == "function")
-			setTimeout(() => objChange(id, obj), 0);
+		//		MyAdapter.Df("Object %s was changed top %O", id, obj);
+		if (typeof this._objChange == "function")
+			setTimeout(() => this._objChange(id, obj), 0);
 		if (obj) {
 			// The object was changed
-			this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
+			objects[id] = obj;
+			//			this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
 		} else if (id) {
 			// The object was deleted
 			if (states[id])
@@ -245,7 +245,7 @@ class IobAdapter extends acore.Adapter {
 				delete sstate[id];
 			if (objects[id])
 				delete objects[id];
-			this.log.info(`object ${id} deleted`);
+			//			this.log.info(`object ${id} deleted`);
 		}
 	}
 
@@ -255,19 +255,20 @@ class IobAdapter extends acore.Adapter {
 	 * @param {ioBroker.State | null | undefined} state
 	 */
 	onStateChange(id, state) {
-		if (stateChange && (!state || state.from !== 'system.adapter.' + this.ains))
-			setTimeout(() => stateChange(id, state).catch(err => this.W(`Error in StateChange for ${id} = ${this.O(err)}`)));
+		//		MyAdapter.Df("State %s was changed top %O", id, state);
+		if (this._stateChange && (!state || state.from !== 'system.adapter.' + this.ains))
+			setImmediate(() => this._stateChange(id, state).catch(err => this.W(`Error in StateChange for ${id} = ${this.O(err)}`)));
 		// if (allStates) 
 		// 	allStates(id, state).catch(e => this.W(`Error in AllStates for ${id} = ${this.O(e)}`)));
 		if (state) {
 			states[id] = state;
 			// The state was changed
-			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+			//			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
 		} else if (id) {
 			// The state was deleted
 			delete states[id];
 			delete sstate[id];
-			this.log.info(`state ${id} deleted`);
+			//			this.log.info(`state ${id} deleted`);
 		}
 	}
 
@@ -333,7 +334,10 @@ class MyAdapter {
 				await adapter.delStateAsync(id, opt).catch(this.nop);
 				await adapter.delObjectAsync((delete states[id], id), opt).catch(this.nop);
 			};
-			states = await adapter.getStatesAsync("*").catch(err => this.W(err));
+			const ms = await adapter.getStatesAsync("*").catch(err => this.W(err));
+			for (const s of Object.keys(ms))
+				states[s] = ms[s];
+			//			console.log(states);
 			let res = await this.getObjects("*");
 			const len = res.length;
 			for (const i of res) {
@@ -375,8 +379,8 @@ class MyAdapter {
 				//                this.If('loaded adapter config: %O', adapter.config);
 			}
 			MyAdapter.D(`${adapter.name} received ${len} objects and ${this.ownKeys(states).length} states, with config ${this.ownKeys(adapter.config)}`);
-			if (stateChange) adapter.subscribeStates("*");
-			if (objChange) adapter.subscribeObjects("*");
+			adapter.subscribeStates("*");
+			if (adapter._objChange) adapter.subscribeObjects("*");
 			//                .then(() => objChange ? MyAdapter.c2p(adapter.subscribeObjects)('*').then(a => MyAdapter.I('eso '+a),a => MyAdapter.I('eso '+a)) : MyAdapter.resolve())
 			this.I(aname + " initialization started...");
 			//			process.on('rejectionHandled', (reason, promise) => this.Wr(true, 'Promise problem rejectionHandled of Promise %s with reason %s', promise, reason));
@@ -621,12 +625,12 @@ class MyAdapter {
 		assert(typeof y === "function", "Error: messages handler not a function!");
 		messages = y;
 	}
-	static get stateChange() {
-		return stateChange;
-	}
-	static set stateChange(y) {
-		stateChange = (assert(typeof y === "function", "Error: StateChange handler not a function!"), y);
-	}
+	// static get stateChange() {
+	// 	return stateChange;
+	// }
+	// static set stateChange(y) {
+	// 	stateChange = (assert(typeof y === "function", "Error: StateChange handler not a function!"), y);
+	// }
 	// static get allStates() {
 	// 	return allStates;
 	// }
@@ -836,8 +840,8 @@ class MyAdapter {
 	static async stop(dostop, callback) { // dostop 
 		if (stopping) return;
 		try {
-			if (onStop)
-				onStop(dostop);
+			if (adapter._onStop)
+				adapter._onStop(dostop);
 		} finally {
 			stopping = true;
 			if (timer) {
@@ -1055,9 +1059,6 @@ class MyAdapter {
 		return false;
 	}
 
-	static clearStates() {
-		states = {};
-	}
 	static get getMyStates() {
 		return states;
 	}
@@ -1109,6 +1110,8 @@ class MyAdapter {
 	static async myGetState(id) {
 		if (states[id])
 			return states[id];
+		if (!id.startsWith(this.ain) && states[this.ain + id])
+			return states[this.ain + id]
 		let nid = sstate[id];
 		if (nid && states[nid])
 			return states[nid];
@@ -1140,9 +1143,10 @@ class MyAdapter {
 			id = id.id;
 		} else throw new Error(this.W(`Invalid makeState id: ${this.O(id)}`));
 
-		if ((!options.define || typeof ido !== "object") && (states[id] || states[this.ain + id]))
-			return this.changeState(id, value, options);
+		const idl = id.startsWith(this.ain) ? id : this.ain + id;
 
+		if ((!options.define || typeof ido !== "object") && createdStates[idl])
+			return this.changeState(id, value, options);
 		//        this.Df(`Make State ack:%s %s = %s`, ack, id, value); ///TC
 		const st = {
 			common: {
@@ -1154,7 +1158,7 @@ class MyAdapter {
 				type: this.T(value)
 			},
 			type: "state",
-			_id: id
+			_id: idl
 		};
 		if (options.common) Object.assign(st.common, options.common);
 		if (st.common.type === "object") st.common.type = "mixed";
@@ -1168,32 +1172,41 @@ class MyAdapter {
 		if (st.common.write)
 			st.common.role = st.common.role.replace(/^value/, "level");
 		//    this.I(`will create state:${id} with ${this.O(st)}`);
-		addSState(id, this.ain + id);
-		await adapter.extendObjectAsync(id, st, null).catch(e => (this.Wf("error %j extend object %s", e, id), null));
-		this.Df("created State %s", id); // REM
+		addSState(id, idl);
+		createdStates[idl] = id;
+		await adapter.extendObjectAsync(idl, st, null).catch(e => (this.Wf("error %j extend object %s", e, idl), null));
+		this.Df("created State %s", idl); // REM
 		if (st.common.state === "state" && !objects[this.ain + id]) {
-			objects[this.ain + id] = st;
+			objects[idl] = st;
 		}
-		return this.changeState(id, value, options);
+		return this.changeState(idl, value, options);
 	}
 
 	static async cleanup(name) {
 		//        .then(() => A.I(A.F(A.sstate)))
 		//        .then(() => A.I(A.F(A.ownKeysSorted(A.states))))
 		const res = await this.getObjects(name);
-		//		debugger;
 		for (const item of res) { // clean all states which are not part of the list
 			//            this.I(`Check ${this.O(item)}`);
-			if (!item.id.startsWith(this.ain))
+			const id = item.id;
+			if (!id || !id.startsWith(this.ain) || createdStates[id])
 				continue;
-			const id = item.id.slice(this.ain.length);
 			//            this.I(`check state ${item.id} and ${id}: ${states[item.id]} , ${states[id]}`);
-			if (!id || states[item.id] || states[id])
-				continue;
-			this.Df("Cleanup and delete item %s", id);
-			await adapter.deleteStateAsync(id).catch(MyAdapter.nop);
+			if (states[id]) {
+				this.Df("Cleanup delete state %s", id);
+				await adapter.deleteStateAsync(id).catch(MyAdapter.nop);
+			}
 			//				.catch(err => this.D(`Del State err: ${this.O(err)}`));
-			await adapter.delObjectAsync(id).catch(MyAdapter.nop);
+			let found = false;
+			for (const cs of Object.keys(createdStates))
+				if (cs.startsWith(id + '.')) {
+					found = true;
+					break;
+				}
+			if (!found) {
+				this.Df("Cleanup delete object %s", id);
+				await adapter.delObjectAsync(id).catch(MyAdapter.nop);
+			}
 			//				.catch(err => this.D(`Del Object err: ${this.O(err)}`)); ///TC
 			await this.wait(10);
 		}
@@ -1206,16 +1219,7 @@ class MyAdapter {
 	}
 }
 
-/* MyAdapter._util = util;
-MyAdapter._fs = fs;
-MyAdapter._assert = assert;
-MyAdapter._http = http;
-MyAdapter._https = https;
-MyAdapter._url = url;
-MyAdapter._dns = dns;
-MyAdapter._os = os;
-MyAdapter._child_process = require('child_process');
- */
+
 MyAdapter.Sequence = Sequence;
 //MyAdapter.Setter = Setter;
 MyAdapter.CacheP = CacheP;

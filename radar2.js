@@ -2,7 +2,7 @@
  *      iobroker radar2 Adapter
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
- *      v 1.2.5 May 2020
+ *      v 1.5.0 May 2020
  */
 /* eslint-env node,es6 */
 /*jslint node: true, bitwise: true, sub:true */
@@ -51,6 +51,9 @@ A.init(module, {
         await network.stop().catch(A.nop);
         await bluetooth.stop().catch(A.nop);
         return A.If("Unload adapter now with %s", how);
+    },
+    async objChange(id, obj) {
+        A.Df("Should change obj %s to %O", id, obj);
     },
 }, main);
 
@@ -111,7 +114,7 @@ async function scanECBs() {
                     await A.makeState(idn + ccur, rate);
                 }
             }
-        } catch(e) {
+        } catch (e) {
             A.Wf("Error on accessing ECB data:", e);
         }
     return A.wait(1);
@@ -149,10 +152,10 @@ async function scanHPs() {
                 }
             await A.makeState(idn + 'ink', below10.length > 0 ? below10.join(', ') : 'All >10%');
             await A.makeState(pitem.id, '' + A.dateTime(new Date()));
-        } catch(e) {
+        } catch (e) {
             A.Wf("Had error when reaching printer '%s'. Check link address!", pitem.id);
         }
-        return A.wait(1);
+    return A.wait(1);
 }
 
 
@@ -225,7 +228,7 @@ async function setItem(item) {
         //        A.makeState(idn + '.lasthere', item.lasthere)
         await A.makeState(item.id, !!anw);
         await A.makeState(item.id + '._here', !!anw);
-        await A.makeState(item.id + '._whathere', whathere);
+        await A.makeState(item.id + '._whatHere', whathere);
         //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
         //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
         //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -293,8 +296,8 @@ async function foundIpMac(what) {
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-        A.Df("-BtFound %j, %j", what, item); // REM
-        if (item) {
+    A.Df("-BtFound %j, %j", what, item); // REM
+    if (item) {
         if (!item.btHere) {
             item.btHere = new Date();
             await setItem(item);
@@ -308,11 +311,12 @@ async function foundBt(what) {
 }
 
 async function scanAll() {
+
     function makeId(str, name) {
         if (name && Array.isArray(name))
             name = name[0];
         str = name ? name + '_' + str : str;
-        return str.replace(/[\][* ,;'"`<>\\?.]/g, '_');
+        return str.replace(/[\][* ,;'"`<>\\?.]/g, '-');
     }
 
     //    A.D(`New scan stated now.`);
@@ -391,7 +395,7 @@ async function scanAll() {
         await A.makeState(item.id, !!item.anwesend);
         await A.makeState(item.id + '._here', !!item.anwesend);
         if (!item.anwesend)
-            await A.makeState(item.id + '._whathere', "");
+            await A.makeState(item.id + '._whatHere', "");
         await A.wait(1);
     }
     //            let wh = whoHere.join(', ');
@@ -416,15 +420,17 @@ async function scanAll() {
     if (suBt)
         for (const mac of ubt)
             await A.makeState('_uBTs.' + makeId(mac, ukBt[mac].btName), A.f(ukBt[mac]));
+    ukBt = {};
     await A.makeState('_uBTs', ubt);
+
     if (suIp)
         for (const ip of uip)
             await A.makeState('_uIPs.' + makeId(ip, ukIp[ip].hosts), A.f(ukIp[ip]));
     await A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp)));
+    ukIp = {};
+
     for (const item in scanList)
         scanList[item].ipHere = scanList[item].btHere = 0;
-    ukBt = {};
-    ukIp = {};
 
 }
 
@@ -502,8 +508,6 @@ async function main(adapter) {
         A.W(`BT interface number not defined in config, will use '0'`);
         btid = 0;
     }
-    //    A.Df("states: %j", A.getMyStates);
-    A.clearStates();
 
     scanDelay = A.toInteger(A.C.scandelay);
     scanDelay = 1000 * (scanDelay < 15 ? 15 : scanDelay);
@@ -632,19 +636,25 @@ async function main(adapter) {
                 item.rip = !item.rip ? [] : !Array.isArray(item.rip) ? [item.rip] : item.rip;
                 const list = item.ip.split(',').map(x => x.trim());
                 for (const addr of list)
-                    if (Network.isIP(addr))
-                        item.rip.push(addr);
-                    else {
+                    if (Network.isIP(addr)) {
+                        if (item.rip.indexOf(addr) < 0)
+                            item.rip.push(addr);
+                    } else {
                         const res = await network.dnsResolve(addr);
                         if (res)
-                            res.forEach((i) => item.rip.push(i));
+                            for (const i of res)
+                                if (item.rip.indexOf(i) < 0) item.rip.push(i);
                     }
                 item.rip.forEach((ip) => ipList[ip] && ipList[ip] !== item ?
                     A.W(`ip address ${ip} in ${item.name} was used already for another device ${ipList[ip].name}, this is forbidden!`) :
                     (ipList[ip] = item));
                 for (const ip of item.rip) {
                     const x = await network.ping(ip).catch(A.nop).then(() => Network.getMac(ip));
-                    if (x) {
+                    if (x)
+                    // if (macList[x] && macList[x] !== item)
+                    //     A.W(`mac address '${x}' was used already for another device ${macList[x].name}`);
+                    // else 
+                    {
                         if (item.hasMAC) {
                             //                                            A.If('mac for %O is %O', item, item.hasMAC);
                             if (item.hasMAC.indexOf(x) < 0)
@@ -729,7 +739,7 @@ async function main(adapter) {
         if (parseInt(A.C.external) > 0) {
             A.I(A.F('will scan external network every ', A.C.external, ' minutes'));
             A.timer.push(setInterval(scanExtIP, parseInt(A.C.external) * 1000 * 60));
-            return scanExtIP();
+            await scanExtIP();
         }
         // scan first time and generate states if they do not exist yet
 
