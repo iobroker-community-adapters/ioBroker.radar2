@@ -52,9 +52,9 @@ A.init(module, {
         await bluetooth.stop().catch(A.nop);
         return A.If("Unload adapter now with %s", how);
     },
-    async objChange(id, obj) {
-        A.Df("Should change obj %s to %O", id, obj);
-    },
+    // async objChange(id, obj) {
+    //     A.Df("Should change obj %s to %O", id, obj);
+    // },
 }, main);
 
 
@@ -125,7 +125,7 @@ async function scanHPs() {
         if (pitem && pitem.type === 'printer') try {
             const idn = pitem.id + '.';
             const below10 = [];
-            const body = await A.get('http://' + pitem.ip + '/DevMgmt/ConsumableConfigDyn.xml', 2);
+            const body = await A.get('http://' + pitem.ip[0] + '/DevMgmt/ConsumableConfigDyn.xml', 2);
             let result = await xmlParseString(body.trim());
             if (!result) return null;
             result = result.ConsumableConfigDyn ? result.ConsumableConfigDyn : result;
@@ -296,7 +296,7 @@ async function foundIpMac(what) {
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-    A.Df("-BtFound %j, %j", what, item); // REM
+    A.Df("-BtFound %s with %j", item && item.id || "unknown", what); // REM
     if (item) {
         if (!item.btHere) {
             item.btHere = new Date();
@@ -326,10 +326,19 @@ async function scanAll() {
 
     const prom = [];
     const btl = scanBt && A.ownKeys(btList).length;
-
     //    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan(A.ownKeys(scansBTs)).catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
-    prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
+    prom.push(A.wait(1).then(async () => {
+        for (const [name, item]  of Object.entries(scanList))  if (item.type === "URL") {
+            for (const url of item.ip) {
+                await A.wait(10);
+                await A.get(url.trim(), {method: "HEAD"})
+                    .then(() => setItem(item, (item.ipHere = new Date())), () => null)
+            }           
+        }
+        return true;
+    }));
+//    prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
 
         prom.push(A.wait(1).then(async () => {
@@ -585,11 +594,18 @@ async function main(adapter) {
                 continue;
             }
             item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
-            item.ip = item.ip ? item.ip.trim() : '';
+            item.ip = !item.ip ? [] : Array.isArray(item.ip) ? item.ip : item.ip.split(",");
+            item.ip = item.ip.map(i => i.trim());
+            if (item.ip.length == 1  && !item.ip[0])
+                item.ip.splice(0,1);
             item.type = '';
-            item.macs = item.macs ? item.macs : '';
-            item.macs.split(',').forEach(val => {
-                const mac = val && (typeof val === 'string') ? val.trim().toLowerCase() : null;
+            item.macs = item.macs ? item.macs : [];
+            let mmacs = Array.isArray(item.macs) ? item.macs : item.macs.split(',');
+            mmacs = mmacs.map(i => i.trim().toLowerCase());
+            if (mmacs.length == 1 && !mmacs[0])
+                mmacs.splice(0, 1);
+            for (const val of mmacs) {
+                const mac = val && (typeof val === 'string') ? val.toLowerCase() : null;
                 if (mac && Network.isMac(mac)) {
                     item.type = 'IP';
                     item.hasMAC = item.hasMAC ? item.hasMAC.concat(mac) : [mac];
@@ -598,44 +614,44 @@ async function main(adapter) {
                     else macList[mac] = item;
                 } else if (mac)
                     A.W(`invalid MAC address in ${item.name}: '${val}'`);
-            });
+            }
             delete item.macs;
-            item.bluetooth = item.bluetooth ? item.bluetooth.toLowerCase() : '';
-            item.bluetooth = item.bluetooth.split(',').map(x => x.trim());
+            item.bluetooth = item.bluetooth ? item.bluetooth : [];
+            if (!Array.isArray(item.bluetooth))
+                item.bluetooth = item.bluetooth.split(',');
+            item.bluetooth = item.bluetooth.map(x => x.trim().toLowerCase());
             if (item.bluetooth.length == 1 && !item.bluetooth[0])
-                delete item.bluetooth;
-            else
-                for (let b of item.bluetooth) {
-                    const le = b.startsWith('!');
-                    if (le)
-                        b = b.slice(1).trim();
-                    if (Network.isMac(b)) {
-                        if (!le)
-                            scansBTs[b] = item;
-                        if (btList[b] && btList[b] !== item) {
-                            A.W(`bluetooth address ${b} in ${item.name} was used already for another device ${btList[b].name}, this is forbidden!`);
-                        } else {
-                            btList[b] = item;
-                            item.type = 'BT';
-                            item.btVendor = Network.getMacV(b);
-                        }
-                    } else if (b !== '')
-                        A.W(`Invalid bluetooth address '${b}' in ${item.name} , 6 hex numbers separated by ':'`);
-                }
-            if (item.ip && item.name.startsWith('HP-')) {
+                item.bluetooth.splice(0, 1);
+            for (let b of item.bluetooth) {
+                const le = b.startsWith('!');
+                if (le)
+                    b = b.slice(1).trim();
+                if (Network.isMac(b)) {
+                    if (!le)
+                        scansBTs[b] = item;
+                    if (btList[b] && btList[b] !== item) {
+                        A.W(`bluetooth address ${b} in ${item.name} was used already for another device ${btList[b].name}, this is forbidden!`);
+                    } else {
+                        btList[b] = item;
+                        item.type = 'BT';
+                        item.btVendor = Network.getMacV(b);
+                    }
+                } else if (b !== '')
+                    A.W(`Invalid bluetooth address '${b}' in ${item.name} , 6 hex numbers separated by ':'`);
+            }
+            if (item.ip.length && item.name.startsWith('HP-')) {
                 item.type = 'printer';
                 numhp = numhp.concat(item.name);
-            } else if (item.ip && item.name.startsWith('ECB-')) {
+            } else if (item.ip.length && item.name.startsWith('ECB-')) {
                 item.type = 'ECB';
                 numecb = numecb.concat(item.ip);
-            } else if (item.ip.startsWith('http')) {
+            } else if (item.ip.length && item.ip[0].startsWith('http')) {
                 item.type = 'URL';
-            } else if (item.ip.length > 1) {
+            } else if (item.ip.length) {
                 if (item.type !== 'BT')
                     item.type = 'IP';
                 item.rip = !item.rip ? [] : !Array.isArray(item.rip) ? [item.rip] : item.rip;
-                const list = item.ip.split(',').map(x => x.trim());
-                for (const addr of list)
+                for (const addr of item.ip)
                     if (Network.isIP(addr)) {
                         if (item.rip.indexOf(addr) < 0)
                             item.rip.push(addr);
@@ -668,7 +684,7 @@ async function main(adapter) {
                     }
                 }
                 delete item.ip;
-            } else if (!item.bluetooth && !item.hasMAC) {
+            } else if (!item.bluetooth.length && !item.hasMAC) {
                 A.W(`Invalid Device should have IP or BT set ${A.O(item)}`);
                 continue;
             }
@@ -724,7 +740,6 @@ async function main(adapter) {
             A.timer.push(setInterval(scanHPs, printerDelay * 1000 * 60));
             await scanHPs();
         }
-
 
         A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)})`);
         A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);

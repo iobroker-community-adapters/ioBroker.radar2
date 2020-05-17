@@ -713,10 +713,10 @@ class MyAdapter {
 	}
 
 	static async wait(time, arg) {
-		time = parseInt(this.toNumber(time || 0));
+		time = parseInt(this.toNumber(time));
 
 		if (time < 0) return this.nextTick(arg);
-		return await new Promise((resolve) =>
+		return new Promise((resolve) =>
 			setTimeout(() => resolve(arg), time)
 		);
 	}
@@ -767,10 +767,10 @@ class MyAdapter {
 		const start = Date.now();
 		if (typeof promise === "function")
 			promise = promise(arg);
-		return Promise.resolve(promise).then(() => {
-			const end = Date.now();
-			return end - start;
-		});
+		await Promise.resolve(promise).catch(() => null);
+
+		const end = Date.now();
+		return end - start;
 	}
 	static O(obj, level) {
 		return util.inspect(obj, {
@@ -1032,10 +1032,15 @@ class MyAdapter {
 	}
 */
 	static async get(url, retry) { // get a web page either with http or https and return a promise for the data, could be done also with request but request is now an external package and http/https are part of nodejs.
+		const options = {};
+		if (typeof retry === "object") {
+			Object.assign(options, retry);
+			retry = options.retry || 1;
+		}
 		retry = this.toInteger(retry);
 		let res;
 		while (retry >= 0) try {
-			res = await axios.get(url);
+			res = await axios(url, options);
 			return res && res.data;
 		} catch (e) {
 			if (retry <= 0)
@@ -1123,14 +1128,12 @@ class MyAdapter {
 		return s;
 	}
 
-
 	static async makeState(ido, value, ack, always, define) {
 		//        ack = ack === undefined || !!ack;
 		//                this.Df(`Make State %s and set value to:%O ack:%s`,typeof ido === 'string' ? ido : ido.id,value,ack); ///TC
-		let options = {};
-		if (typeof ack == "object") {
-			options = ack;
-		} else options.ack = ack;
+		const options = typeof ack == "object" ? ack : {
+			ack
+		};
 		if (always) options.always = always;
 		if (define) options.define = define;
 

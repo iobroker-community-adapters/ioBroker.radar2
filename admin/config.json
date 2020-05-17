@@ -1,0 +1,229 @@
+{
+    "configTool": [
+        {
+            "label": "Config",
+            "icon": "mdi-cog",
+            "items": [
+                {
+                    "type": "number",
+                    "min": 15,
+                    "max": 300,
+                    "label": "Scan Delay:",
+                    "placeholder": "Delay in seconds between scans",
+                    "hint": "Delay in seconds between scans, >=15 and <=300 seconds",
+                    "value": "scandelay",
+                    "sm3": true,
+                    "prepend-icon": "mdi-timer",
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "persistent-hint": true,
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": 1,
+                    "max": 60,
+                    "label": "Delay Away:",
+                    "hint": "Delay in minutes after which an item is set to be away.",
+                    "value": "delayaway",
+                    "sm3": true,
+                    "prepend-icon": "mdi-timer-off",
+                    "persistent-hint": true,
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": -1,
+                    "max": 9,
+                    "label": "BT adapter id:",
+                    "hint": "The BT adapter id (x in hcix), -1 for first, or 0-9 for specific used for other than noble",
+                    "value": "btadapterid",
+                    "sm3": true,
+                    "prepend-icon": "mdi-bluetooth-connect",
+                    "persistent-hint": true,
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": 0,
+                    "max": 1440,
+                    "label": "External Network Scan Delay:",
+                    "hint": "Time in minutes after which external network IP is checked, 0 = off",
+                    "value": "external",
+                    "sm3": true,
+                    "persistent-hint": true,
+                    "prepend-icon": "mdi-check-network",
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": 0,
+                    "max": 1440,
+                    "label": "Printer Delay:",
+                    "hint": "Time in minutes aftzer which printer ink fill is checked, 0 = off",
+                    "value": "printerdelay",
+                    "persistent-hint": true,
+                    "sm3": true,
+                    "prepend-icon": "mdi-bluetooth-connect",
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": 0,
+                    "max": 1440,
+                    "label": "UWZ Delay:",
+                    "hint": "Time in minutes after UWZ will be checked, 0 = off",
+                    "value": "delayuwz",
+                    "persistent-hint": true,
+                    "sm3": true,
+                    "prepend-icon": "mdi-weather-cloudy-alert",
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "number",
+                    "min": 0,
+                    "max": 10,
+                    "label": "Max UWZ vars:",
+                    "hint": "maximum number of UWZ messages",
+                    "value": "numuwz",
+                    "persistent-hint": true,
+                    "sm3": true,
+                    "prepend-icon": "mdi-weather-sunny-alert",
+                    "rules": [
+                        "numberRule"
+                    ],
+                    "cols": 3
+                },
+                {
+                    "type": "switch",
+                    "label": "Long Warning Message:",
+                    "value": "longuwz",
+                    "cols": 2
+                },
+                {
+                    "type": "switch",
+                    "label": "hcionly",
+                    "value": "hcionly",
+                    "cols": 2
+                },
+                {
+                    "type": "switch",
+                    "label": "debug:",
+                    "value": "debug",
+                    "cols": 2
+                },
+                {
+                    "type": "switch",
+                    "label": "Save unknow IP data",
+                    "value": "suIP",
+                    "cols": 2
+                },
+                {
+                    "type": "switch",
+                    "label": "Save unknown BT data",
+                    "value": "suBT",
+                    "cols": 2
+                },
+                {
+                    "text": "arp-scan cmdline:",
+                    "type": "string",
+                    "value": "arp_scan_cmd",
+                    "align": "start",
+                    "cols": 2,
+                    "hint": "arp-scan command line arguments to be used.",
+                    "persistent-hint": true
+                },
+                {
+                    "type": "table",
+                    "label": "Device setup",
+                    "value": "devices",
+                    "disable-sort": false,
+                    "cols": 12,
+                    "items": [
+                        {
+                            "text": "Name",
+                            "type": "string",
+                            "value": "name",
+                            "align": "start",
+                            "rules": [
+                                "uniqueTableRule"
+                            ],
+                            "sortable": true,
+                            "divider": true,
+                            "default": "device",
+                            "width": "15%"
+                        },
+                        {
+                            "text": "IP",
+                            "type": "chips",
+                            "value": "ip",
+                            "align": "left",
+                            "sortable": false,
+                            "divider": true,
+                            "default": [],
+                            "width": "25%",
+                            "convertold": "stringToArrayWith"
+                        },
+                        {
+                            "text": "IP MAC",
+                            "value": "macs",
+                            "type": "chips",
+                            "align": "start",
+                            "default": [],
+                            "sortable": false,
+                            "divider": true,
+                            "width": "25%",
+                            "convertold": "stringToArrayWith"
+                        },
+                        {
+                            "text": "BlueTooth MAC",
+                            "value": "bluetooth",
+                            "type": "chips",
+                            "align": "start",
+                            "default": [],
+                            "sortable": false,
+                            "divider": true,
+                            "width": "25%",
+                            "convertold": "stringToArrayWith"
+                        },
+                        {
+                            "text": "Enabled",
+                            "type": "checkbox",
+                            "value": "enabled",
+                            "sortable": false,
+                            "align": "center",
+                            "default": true,
+                            "divider": true,
+                            "width": "5%"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "translation": {
+        "getMissing": {
+            "de": "FehlendeTexte"
+        },
+        "Port": {
+            "de": "IP Port"
+        }
+    },
+    "icon": "radar2.png"
+}
