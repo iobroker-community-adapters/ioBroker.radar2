@@ -104,7 +104,7 @@
                     "value": "numuwz",
                     "persistent-hint": true,
                     "sm3": true,
-                    "prepend-icon": "mdi-weather-sunny-alert",
+                    "prepend-icon": "mdi-weather-cloudy-alert",
                     "rules": [
                         "numberRule"
                     ],
@@ -114,7 +114,8 @@
                     "type": "switch",
                     "label": "Long Warning Message:",
                     "value": "longuwz",
-                    "cols": 2
+                    "prepend-icon": "mdi-weather-cloudy-alert",
+                    "cols": 3
                 },
                 {
                     "type": "switch",
@@ -145,7 +146,7 @@
                     "type": "string",
                     "value": "arp_scan_cmd",
                     "align": "start",
-                    "cols": 2,
+                    "cols": 3,
                     "hint": "arp-scan command line arguments to be used.",
                     "persistent-hint": true
                 },
@@ -225,5 +226,9 @@
             "de": "IP Port"
         }
     },
-    "icon": "radar2.png"
+    "icon": "radar2.png",
+    "readme": {
+        "de": "README_de.md",
+        "en": "README.md"
+    }
 }
