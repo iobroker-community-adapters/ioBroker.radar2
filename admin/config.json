@@ -239,7 +239,7 @@
                             "align": "center",
                             "default": true,
                             "divider": true,
-                            "width": "5%",
+                            "width": "4%",
                             "convertold": "value[item.value] = typeof value[item.value] !== 'boolean' ? true : value[item.value]" 
                         }
                     ]
