@@ -99,7 +99,7 @@ async function scanExtIP() {
 
 async function scanECBs() {
     for (const item of devices)
-        if (item.type === 'ECB') try {
+        if (item.type === 'ECB' && item.enabled) try {
             const idn = item.id + '.';
             //    A.I(`ScanECB: ${item.id}`);
             const body = await A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2);
@@ -122,7 +122,7 @@ async function scanECBs() {
 
 async function scanHPs() {
     for (const pitem of devices)
-        if (pitem && pitem.type === 'printer') try {
+        if (pitem && pitem.type === 'printer' && pitem.enabled) try {
             const idn = pitem.id + '.';
             const below10 = [];
             const body = await A.get('http://' + pitem.ip[0] + '/DevMgmt/ConsumableConfigDyn.xml', 2);
@@ -546,11 +546,11 @@ async function main(adapter) {
     printerDelay = parseInt(A.C.printerdelay);
 
     if (A.C.knownBTs)
-        knownBTs = A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',');
+        knownBTs = typeof A.C.knownBTs === "string" ? A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',') : A.C.knownBTs;
     A.D('use known BT list: ' + A.O(knownBTs));
 
     if (A.C.knownIPs)
-        knownIPs = A.C.knownIPs.replace(/['[\]\s]/g, '').split(',');
+        knownIPs = typeof A.C.knownIPs === "string" ? A.C.knownIPs.replace(/['[\]\s]/g, '').split(',') : A.C.knownIPs;
     A.D('use known IP list: ' + A.O(knownIPs));
 
     arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
@@ -583,6 +583,8 @@ async function main(adapter) {
     try {
         // eslint-disable-next-line complexity
         for (const item of devices) {
+            if (typeof item.enabled !== "boolean")
+                item.enabled = true;
             if (item.name)
                 item.name = item.name.trim().replace(/[\s.]/g, '_');
             if (!item.name || item.name.length < 2) {
@@ -741,7 +743,7 @@ async function main(adapter) {
             await scanHPs();
         }
 
-        A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)})`);
+        A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)}) and ${Object.entries(scanList).filter(i => i[1].enabled).length} enabled.`);
         A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
         const ms = await A.Ptime(scanAll());
         A.I(`first scan took ${ms/1000} seconds`);

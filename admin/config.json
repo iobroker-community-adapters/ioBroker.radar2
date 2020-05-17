@@ -74,7 +74,7 @@
                     "value": "printerdelay",
                     "persistent-hint": true,
                     "sm3": true,
-                    "prepend-icon": "mdi-bluetooth-connect",
+                    "prepend-icon": "mdi-printer",
                     "rules": [
                         "numberRule"
                     ],
@@ -118,6 +118,10 @@
                     "cols": 3
                 },
                 {
+                    "ruler": "hr",
+                    "cols": 12
+                },
+                {
                     "type": "switch",
                     "label": "hcionly",
                     "value": "hcionly",
@@ -142,7 +146,7 @@
                     "cols": 2
                 },
                 {
-                    "text": "arp-scan cmdline:",
+                    "label": "arp-scan cmdline:",
                     "type": "string",
                     "value": "arp_scan_cmd",
                     "align": "start",
@@ -151,10 +155,34 @@
                     "persistent-hint": true
                 },
                 {
+                    "ruler": "hr",
+                    "cols": 12
+                },
+                {
+                    "label": "known IP addresses:",
+                    "type": "chips",
+                    "value": "knownIPs",
+                    "align": "start",
+                    "cols": 12,
+                    "hint": "List of known IP's which should not be flagged as unknown!",
+                    "persistent-hint": true,
+                    "convertold": "stringToArrayWith"
+                },
+                {
+                    "label": "known BT addresses:",
+                    "type": "chips",
+                    "value": "knownBTs",
+                    "align": "start",
+                    "cols": 12,
+                    "hint": "List of known BT mac's which should not be flagged as unknown!",
+                    "persistent-hint": true,
+                    "convertold": "stringToArrayWith"
+                },
+                {
                     "type": "table",
                     "label": "Device setup",
                     "value": "devices",
-                    "disable-sort": false,
+                    "disable-sort": true,
                     "cols": 12,
                     "items": [
                         {
@@ -211,7 +239,8 @@
                             "align": "center",
                             "default": true,
                             "divider": true,
-                            "width": "5%"
+                            "width": "5%",
+                            "convertold": "value[item.value] = typeof value[item.value] !== 'boolean' ? true : value[item.value]" 
                         }
                     ]
                 }
