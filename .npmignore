@@ -5,3 +5,9 @@ test
 .travis.yml
 *debug.log
 appveyor.yml
+launch.json
+sftp.json
+.esl*
+old*
+admin_o
+
