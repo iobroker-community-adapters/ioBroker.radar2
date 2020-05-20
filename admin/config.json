@@ -129,12 +129,6 @@
                 },
                 {
                     "type": "switch",
-                    "label": "debug:",
-                    "value": "debug",
-                    "cols": 2
-                },
-                {
-                    "type": "switch",
                     "label": "Save unknow IP data",
                     "value": "suIP",
                     "cols": 2
@@ -150,9 +144,15 @@
                     "type": "string",
                     "value": "arp_scan_cmd",
                     "align": "start",
-                    "cols": 3,
+                    "cols": 4,
                     "hint": "arp-scan command line arguments to be used.",
                     "persistent-hint": true
+                },
+                {
+                    "type": "switch",
+                    "label": "debug:",
+                    "value": "debug",
+                    "cols": 2
                 },
                 {
                     "ruler": "hr",
@@ -250,9 +250,6 @@
     "translation": {
         "getMissing": {
             "de": "FehlendeTexte"
-        },
-        "Port": {
-            "de": "IP Port"
         }
     },
     "icon": "radar2.png",
