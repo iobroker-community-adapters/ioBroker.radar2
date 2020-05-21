@@ -11,12 +11,12 @@ const assert = require('assert'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
-    fs = require('fs'),
+    // fs = require('fs'),
     cp = require('child_process'),
     stream = require('stream'),
     EventEmitter = require('events').EventEmitter;
 
-const macdb = require('./lib/vendors.json');
+//const macdb = require('./lib/vendors.json');
 const macdb1 = require('./lib/macaddress.io-db.json')
 
 class ReadLineStream extends stream.Transform {
@@ -1037,7 +1037,7 @@ class Network extends EventEmitter {
     dnsResolve(name) {
         return this._dnsCache.cacheItem(name);
     }
-
+/*
     static async updateMacdb() {
         const filename = __dirname + '/lib/vendors.json';
 
@@ -1085,13 +1085,13 @@ class Network extends EventEmitter {
         return true;
 
     }
-
+*/
     static getMacVendor(mac) {
         mac = mac.trim().toLowerCase();
-        const smac = mac.split(':').slice(0, 3).join('');
-        const r = Network.isMac(mac) && macdb[smac];
-        if (r)
-            return macdb[smac];
+        // const smac = mac.split(':').slice(0, 3).join('');
+        // const r = Network.isMac(mac) && macdb[smac];
+        // if (r)
+        //     return macdb[smac];
         mac = mac.toUpperCase();
         for (const i of macdb1)
             if (mac.startsWith(i.oui))

@@ -18,7 +18,8 @@
                         "numberRule"
                     ],
                     "persistent-hint": true,
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -33,7 +34,8 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -48,7 +50,8 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -63,7 +66,8 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -78,7 +82,8 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -93,7 +98,8 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "type": "number",
@@ -108,14 +114,18 @@
                     "rules": [
                         "numberRule"
                     ],
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6,
+                    "disabled": "!parseInt(conf.delayuwz)"
                 },
                 {
                     "type": "switch",
                     "label": "Long Warning Message:",
                     "value": "longuwz",
                     "prepend-icon": "mdi-weather-cloudy-alert",
-                    "cols": 3
+                    "cols": 3,
+                    "sm": 6,
+                    "disabled": "!parseInt(conf.delayuwz)"
                 },
                 {
                     "ruler": "hr",
@@ -125,19 +135,8 @@
                     "type": "switch",
                     "label": "hcionly",
                     "value": "hcionly",
-                    "cols": 2
-                },
-                {
-                    "type": "switch",
-                    "label": "Save unknow IP data",
-                    "value": "suIP",
-                    "cols": 2
-                },
-                {
-                    "type": "switch",
-                    "label": "Save unknown BT data",
-                    "value": "suBT",
-                    "cols": 2
+                    "cols": 3,
+                    "sm": 4
                 },
                 {
                     "label": "arp-scan cmdline:",
@@ -145,14 +144,30 @@
                     "value": "arp_scan_cmd",
                     "align": "start",
                     "cols": 4,
+                    "sm": 8,
                     "hint": "arp-scan command line arguments to be used.",
                     "persistent-hint": true
                 },
                 {
                     "type": "switch",
+                    "label": "Save unknow IP data",
+                    "value": "suIP",
+                    "cols": 2,
+                    "sm": 4
+                },
+                {
+                    "type": "switch",
+                    "label": "Save unknown BT data",
+                    "value": "suBT",
+                    "cols": 2,
+                    "sm": 4
+                },
+                {
+                    "type": "switch",
                     "label": "debug:",
                     "value": "debug",
-                    "cols": 2
+                    "cols": 2,
+                    "sm": 4
                 },
                 {
                     "ruler": "hr",
@@ -240,7 +255,7 @@
                             "default": true,
                             "divider": true,
                             "width": "4%",
-                            "convertold": "value[item.value] = typeof value[item.value] !== 'boolean' ? true : value[item.value]" 
+                            "convertold": "value[item.value] = typeof value[item.value] !== 'boolean' ? true : value[item.value]"
                         }
                     ]
                 }

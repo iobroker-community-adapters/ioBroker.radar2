@@ -164,12 +164,11 @@ async function scanHPs() {
 /// 
 async function getUWZ() {
     try {
-        const body = await A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2);
-        const data = JSON.parse(body); //        .then(x => A.Ir(x,'GetUWZ returned %O',x))
+        const data = await A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2);
         const wr = data && data.results;
         if (!wr)
             throw new Error('UWZ data err: ' + A.O(data));
-        const w = w.map(i => (lang === 'de' ?
+        const w = wr.map(i => (lang === 'de' ?
             (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) :
             (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
         let wt = w.join(numuwz < 0 ? '<br>\n' : '\n');
@@ -178,14 +177,13 @@ async function getUWZ() {
             wlast = wt;
             A.I(`UWZ found the following (changed) warnings: ${wt}`);
             if (numuwz > 0) {
-                for (const x of Object.keys(w))
-                    if (Number(x) < numuwz)
-                        await A.makeState('_UWZ' + x, w[x]);
+                for (const x in w)
+                    if (x < numuwz) await A.makeState('_UWZ' + x, w[x]);
+                    else break;
 
                 for (let n = w.length; n < numuwz; n++)
-                    await A.makeState('_UWZ' + n++, '');
-            } else
-                await A.makeState('_UWZ', wlast);
+                    await A.makeState('_UWZ' + n, '');
+            } else await A.makeState('_UWZ', wlast);
         }
     } catch (e) {
         A.W(`Error in getUWZ: ${e}`);
@@ -329,16 +327,19 @@ async function scanAll() {
     //    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan(A.ownKeys(scansBTs)).catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
     prom.push(A.wait(1).then(async () => {
-        for (const [name, item]  of Object.entries(scanList))  if (item.type === "URL") {
-            for (const url of item.ip) {
-                await A.wait(10);
-                await A.get(url.trim(), {method: "HEAD"})
-                    .then(() => setItem(item, (item.ipHere = new Date())), () => null)
-            }           
-        }
+        for (const [name, item] of Object.entries(scanList))
+            if (item.type === "URL") {
+                for (const url of item.ip) {
+                    await A.wait(10);
+                    await A.get(url.trim(), {
+                            method: "HEAD"
+                        })
+                        .then(() => setItem(item, (item.ipHere = new Date())), () => null)
+                }
+            }
         return true;
     }));
-//    prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
+    //    prom.push(A.seriesInOI(scanList, item => item.type === 'URL' ? A.get(item.ip.trim()).then(() => setItem(item, (item.ipHere = new Date()))).catch(e => e) : A.resolve(), 1));
     if (A.ownKeys(macList).length + A.ownKeys(ipList).length)
 
         prom.push(A.wait(1).then(async () => {
@@ -464,6 +465,13 @@ async function testLinux(name) {
 
 A.timer = [];
 
+/* process.on('uncaughtException', function(error) {
+    errorManagement.handler.handleError(error);
+    if(!errorManagement.handler.isTrustedError(error))
+    process.exit(1)
+   });
+   
+ */
 // eslint-disable-next-line no-unused-vars
 async function main(adapter) {
 
@@ -502,7 +510,7 @@ async function main(adapter) {
 
     //    Network.updateMacdb()
     //    A.wait(1)
-    await Network.updateMacdb();
+//    await Network.updateMacdb();
 
     if (A.C.debug)
         A.debug = A.C.debug;
@@ -598,8 +606,8 @@ async function main(adapter) {
             item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
             item.ip = !item.ip ? [] : Array.isArray(item.ip) ? item.ip : item.ip.split(",");
             item.ip = item.ip.map(i => i.trim());
-            if (item.ip.length == 1  && !item.ip[0])
-                item.ip.splice(0,1);
+            if (item.ip.length == 1 && !item.ip[0])
+                item.ip.splice(0, 1);
             item.type = '';
             item.macs = item.macs ? item.macs : [];
             let mmacs = Array.isArray(item.macs) ? item.macs : item.macs.split(',');
@@ -707,28 +715,26 @@ async function main(adapter) {
             await scanExtIP();
 
         A.I(`Adapter identified macs: (${A.ownKeys(macList)}), \nips: (${A.ownKeys(ipList)}), \nbts LE: (${A.ownKeys(btList)}), \nbts norm: (${A.ownKeys(scansBTs)})`);
-        const res = await A.getObjectList({
-            include_docs: true
-        });
-        const r = {};
+        // const res = await A.getObjectList({
+        //     include_docs: true
+        // });
+        // const r = {};
+        // res.rows.map(i => r[i.doc._id] = i.doc);
         if (!A.C.delayuwz || parseInt(A.C.delayuwz) <= 0)
             A.I(`No UWZ warning because of Delay is ${A.C.delayuwz}`);
         else {
             delayuwz = parseInt(A.C.delayuwz);
             numuwz = parseInt(A.C.numuwz);
             longuwz = Boolean(A.C.longuwz);
-            res.rows.map(i => r[i.doc._id] = i.doc);
             lang = A.C.lang;
             if (A.C.latitude && A.C.longitude) {
                 const res = await A.get(`http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=lookupCoord&lat=${A.C.latitude}&lon=${A.C.longitude}`, 2)
                     .catch(e => A.W(`Culd not get UWZ Area ID: ${e} for Laenge: ${A.C.longitude} Breite: ${A.C.latitude}`, null));
-                if (res && res.AREA_ID) {
-                    doUwz = res.AREA_ID ? res.AREA_ID : null;
-                    if (doUwz && delayuwz > 0) {
-                        A.I(`will scan UWZ with code ${res.AREA_ID} every ${delayuwz} minutes`);
-                        A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
-                        await getUWZ();
-                    }
+                doUwz = res && res[0] && res[0].AREA_ID;
+                if (doUwz && delayuwz > 0) {
+                    A.I(`will scan UWZ with code ${doUwz} every ${delayuwz} minutes`);
+                    A.timer.push(setInterval(getUWZ, delayuwz * 1000 * 60));
+                    await getUWZ();
                 }
             } else A.W('No geo location data found configured in admin to calculate UWZ AREA ID or ID not valid!');
         }
