@@ -695,7 +695,7 @@ async function main(adapter) {
                 }
                 delete item.ip;
             } else if (!item.bluetooth.length && !item.hasMAC) {
-                A.W(`Invalid Device should have IP or BT set ${A.O(item)}`);
+                A.W(`Invalid Device '${item.name}' should have IP or BT set!`);
                 continue;
             }
             scanList[item.name] = item;
