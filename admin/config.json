@@ -135,7 +135,7 @@
                     "type": "switch",
                     "label": "hcionly",
                     "value": "hcionly",
-                    "cols": 3,
+                    "cols": 2,
                     "sm": 4
                 },
                 {
