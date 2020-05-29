@@ -225,7 +225,7 @@ async function setItem(item) {
         await A.makeState(idn + '._lastHere', A.dateTime(item.lasthere));
         //        A.makeState(idn + '.lasthere', item.lasthere)
         await A.makeState(item.id, !!anw);
-        await A.makeState(item.id + '._here', !!anw);
+//        await A.makeState(item.id + '._here', !!anw);
         await A.makeState(item.id + '._whatHere', whathere);
         //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
         //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
@@ -403,7 +403,9 @@ async function scanAll() {
 
         //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
         await A.makeState(item.id, !!item.anwesend);
-        await A.makeState(item.id + '._here', !!item.anwesend);
+        if (!item.anwesend) item.countHere = 0;
+        else item.countHere = (item.countHere || 0) + 1;
+        await A.makeState(item.id + '._here', item.countHere);
         if (!item.anwesend)
             await A.makeState(item.id + '._whatHere', "");
         await A.wait(1);
