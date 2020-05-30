@@ -28,7 +28,7 @@
     "url": "https://github.com/frankjoke/ioBroker.radar2"
   },
   "engines": {
-    "node": ">=8.10.0",
+    "node": ">=8.18.0",
     "npm": ">=6.4.0"
   },
   "devDependencies": {

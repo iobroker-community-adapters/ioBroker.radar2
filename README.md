@@ -117,11 +117,22 @@ If you need to scan s specific interface only you can add for example ` --interf
 This methodology of moving settings is working also between systems but may not work if other adapter has different structure. The device list is the same for radar and radar2, the only difference is that in radar2 you can have multiple ip addresses/entry separated by ','.
 
 ## Important/Wichtig
-* Adapter needs node >= v6.*!
+* Adapter needs node >= v8.18! and npm >=6.4
 * Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
 
 ## Changelog
+
+### 1.9.9 = beta for V2.0.0
+
+* Removed node-blöuetooth because package is not updated to run on recent nodejs versions
+* Updated noble to more recent version
+* Completely rewritten logic for pinging BT with l2ping, or hcitool lescan
+* Updated scan methot to reduce process load and also increase hit rate
+* Completely re-written config page with new option
+* Added possibility to switch off storing of _unknown's
+* Changed comutation of `._here` from boolean to number showing number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
+* Changes to adapter to run on latest js-controller versions (and on older ones as well)
 
 ### 1.2.5
 
