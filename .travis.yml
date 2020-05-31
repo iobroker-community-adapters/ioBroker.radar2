@@ -35,4 +35,5 @@ addons:
 script:
   - npm run test:package
   - export DEBUG=testing:*
+  - node testme
   - npm run test:integration
