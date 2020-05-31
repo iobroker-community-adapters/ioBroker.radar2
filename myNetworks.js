@@ -2,7 +2,7 @@
 
 // V 1.5 May 2020
 
-const A = require('@frankjoke/myadapter').MyAdapter;
+const A = require('./fjadapter-core');
 
 const assert = require('assert'),
     dgram = require('dgram'),
@@ -11,12 +11,13 @@ const assert = require('assert'),
     dns = require("dns"),
     os = require('os'),
     net = require('net'),
-    fs = require('fs'),
+    // fs = require('fs'),
     cp = require('child_process'),
     stream = require('stream'),
     EventEmitter = require('events').EventEmitter;
 
-let macdb = require('./lib/vendors.json');
+//const macdb = require('./lib/vendors.json');
+const macdb1 = require('./lib/macaddress.io-db.json')
 
 class ReadLineStream extends stream.Transform {
     constructor(options) {
@@ -42,7 +43,7 @@ class ReadLineStream extends stream.Transform {
         }
 
         this.lineBuffer += chunk;
-        var lines = this.lineBuffer.match(/.*?(?:\r\n|\r|\n)|.*?$/g);
+        const lines = this.lineBuffer.match(/.*?(?:\r\n|\r|\n)|.*?$/g);
 
         while (lines.length > 1)
             this.push(lines.shift());
@@ -62,14 +63,16 @@ class ReadLineStream extends stream.Transform {
     }
 }
 
+const checkPath = new A.CacheP(async (item) => await A.exec('which ' + item).catch(() => item));
 class ScanCmd extends EventEmitter {
-    constructor(args, options) {
+    constructor(args, options, pid) {
         super();
         this._stdout = null;
         this._stop = false;
         this._args = args;
+        this._pid = pid;
         if (typeof args === 'string')
-            this._args = args.split(/\s+/);
+            this._args = args.split(/[\s\n]+/);
         options = options || {};
         this._options = Object.assign({
             killSignal: 'SIGINT',
@@ -84,67 +87,84 @@ class ScanCmd extends EventEmitter {
         this._linepart = '';
         this._timeout = null;
         this._matches = {};
-        ScanCmd._cnt = ScanCmd._cnt || 0;
-        ScanCmd._all = ScanCmd._all || {};
-        A.exec('which ' + this._args[0]).then(x => typeof x === 'string' && x.length ? x.trim() : this._args[0], () => this._args[0])
-            .then(x => this._args[0] = x)
-            .then(() => this.init());
         return this;
     }
 
     static runCmd(cmd, match, opt) {
-        opt = opt || {};
-        if (match)
+        if (typeof match == "object") {
+            opt = match;
+        } else opt = opt || {};
+        if (Array.isArray(match))
             opt.match = match;
-        return new Promise((res, rej) => {
-            let ret = [];
-            let pid = ++ScanCmd._cnt & 0xfffffff;
 
-            function finish(how, arg) {
-                how(arg);
+        async function checkInit(that) {
+            const x = await checkPath.cacheItem(that._args[0]);
+            that._args[0] = x.trim();
+            that.init();
+            return null;
+        }
 
+        return new Promise(async (res, rej) => {
+            const ret = [];
+            const pid = ++ScanCmd._cnt & 0xfffffff;
+            let resolved = false;
+            const proc = new ScanCmd(cmd, opt, pid);
+
+            async function finish(how, arg) {
+                if (resolved) return res(ret);
+                delete ScanCmd._all[pid];
+                resolved = true;
                 //                proc.removeAllListeners();
-                setImmediate(() => {
-                    delete ScanCmd._all[pid];
-                    ret = proc = null;
-                });
+                await A.wait(1);
+                return how(arg);
+                //                proc.removeAllListeners();
             }
-            let proc = new ScanCmd(cmd, opt);
+            checkInit(proc);
             ScanCmd._all[pid] = proc;
             A.Df('started #%s %s', pid, cmd);
-            proc.on('line', line => ret && ret.push(line));
-            proc.once('error', err => setTimeout(() => finish(rej, err), 100));
-            proc.once('exit', code => code ? finish(rej, code) : finish(res, ret));
+            proc.on('line', line => {
+                // A.Df("proc raised new Line in %s", cmd);
+                return ret && ret.push(line);
+            });
+            proc.on('error', err => {
+                // A.Df('proc raised error %j', err);
+                finish(rej, err);
+            });
+            proc.on('exit', code => {
+                // A.Df("proc raised exit: %j", code);
+                // code ? finish(rej, code) :
+                finish(res, ret);
+            });
         });
     }
 
     static stopAll() {
-        for (let x of Object.keys(ScanCmd._all)) {
+        for (const x of Object.keys(ScanCmd._all)) {
             ScanCmd._all[x].stop();
             delete ScanCmd._all[x];
         }
     }
 
     init() {
-        var self = this;
+        const self = this;
         this._cmd = null;
         this._matches = {};
 
         function match(data) {
-            //            A.Df('Data found for %s was %s',self._cmd,data);
+            //            A.Df('Data found for #%d was %s', self._pid, data);
             if (self._options.match) {
                 let m = data.match(self._options.match[0]);
                 if (m) {
-                    let r = {
+                    const r = {
                         by: self._options.match[1]
                     };
                     m = m.slice(1);
-                    let ma = m[0];
+                    const ma = m[0];
                     if (!self._matches[ma]) {
                         for (let x = 0; x < m.length; x++)
                             r[self._options.match[x + 2]] = m[x];
                         if (r.address)
-                            r.vendor = Network.getMacVendor(r.address);
+                            r.vendor = Network.getMacV(r.address);
                         self.emit('line', r);
                         //                        A.N(() => self.emit('line', r));
                         self._matches[ma] = m;
@@ -158,7 +178,7 @@ class ScanCmd extends EventEmitter {
         function error(data) {
             setImmediate(() => {
                 self.emit('error', data);
-                //                A.Df('ScanCmd err: %O', data);
+                A.Df('ScanCmd err: %s %O', self._args.join(", "), data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
@@ -187,21 +207,21 @@ class ScanCmd extends EventEmitter {
                 //                .on('close', () => A.I('stdout_close'))
                 //            self._cmd.stdout.on('close', () => A.I('stdout_close'))
                 //                .on('end', () => A.I('stdout_end'))
-                .on('error', err => error(err))
+                // .on('error', err => error(err))
                 //                .on('readable', () => readlines(self._cmd.stdout))
                 //                .on('data', data => readlines(self._cmd.stdout, data));
                 //                .on('data', data => A.If('stdout_data_line: %s', data.trim()));
-                .on('data', data => match(data));
+                .on('data', data => setImmediate(() => match(data)));
             //                self._cmd.stdout.on('data', data => A.If('stdout data: %s',data));
             //            self._cmd.stderr.on('readable', () => readlines(self._cmd.stderr));
             //            self._stderr.on('data', data => readlines(self._cmd.stderr, data));
-            self._cmd.stderr.on('data', data => error(data.toString().trim()));
+            //            self._cmd.stderr.on('data', data => error(data.toString().trim()));
             self._cmd
-                .on('close', () => self.cleanUp())
-                //                .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
+                // .on('close', () => self.cleanUp())
+                .on('disconnect', () => A.If('cmd_disconnect %O', self._args))
                 .on('error', err => error(err))
-                .on('exit', function (code) {
-                    //                    A.D(`${self._args} exit code: ${code}`);
+                .on('exit', (code) => {
+                    // A.D(`${self._args} exit code: ${code}`);
                     self.cleanUp();
                     self.emit('exit', code);
                     //                if (!self._stop && !self._single)
@@ -237,26 +257,24 @@ class ScanCmd extends EventEmitter {
             this._cmd = null;
             this._stdout = this._stderr = null;
         }
-        this.emit('exit', 0);
+        // this.emit('exit', 0);
         //        }, 100);
     }
 
     kill() {
-        if (this._timeout) {
-            clearTimeout(this._timeout);
-            this._timeout = null;
-        }
         if (this._cmd && !this._cmd.killed && !this._stop) {
-            A.Df('Kill %O with %s', this._args, this._options.killSignal);
+            // A.Df('Kill with %s #%d:%s', this._options.killSignal, this._pid, this._args.join(","));
+
             if (this._options.killSignal === '^C')
                 this._cmd.stdin.write('\0x03');
             else
                 this._cmd.kill(this._options.killSignal);
-            this.cleanUp();
+            //            A.wait(1).then(() => this.cleanUp());
         }
     }
 }
 
+ScanCmd._cnt = 0;
 ScanCmd._all = {};
 
 class Bluetooth extends EventEmitter {
@@ -291,60 +309,95 @@ class Bluetooth extends EventEmitter {
         return new Promise(res => this._device.listPairedDevices(ret => res(ret)));
     }
 
-    startScan(macs) {
-        if (this._device && this._scan)
-            return A.resolve(A.W(`BT already scanning!`));
-        let scans = [];
-        this._scan = true;
-        //        A.D(`start scanning!`);
-        if (this._noble)
-            scans.push(this.startNoble());
-        else if (this._doHci)
-            scans.push(this.resetHci().then(() => ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', this._doHci), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'], {
-                timeout: this._len
-            }).then(res => res.map(res => A.N(() => {
-                res.btVendor = res.vendor;
-                res.address = res.address.toLowerCase();
-                delete res.vendor;
-                this.emit('found', res);
-            })), A.nop)));
-        else A.D('Neither noble nor hcitool available!');
-
-        if (this._dol2ping) {
-            if (macs && macs.length)
-                scans.push(A.seriesOf(macs, mac => ScanCmd.runCmd(this._dol2ping + mac, [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address']).then(res => {
-                    //                    A.Df('L2Ping returned for mac%s = %O', mac, res);
+    async startScan(macs) {
+        async function scanmacs(that) {
+            for (const mac of macs) {
+                await A.wait(1);
+                try {
+                    const res = await ScanCmd.runCmd(that._dol2ping + mac, {
+                        match: [/^.*\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+from\s+.*$/im, 'l2ping', 'address'],
+                        timeout: 4000
+                    }).catch(() => null);
                     if (res && res.length) {
-                        res = res[0];
-                        res.address = res.address.toLowerCase();
-                        res.btVendor = res.vendor;
-                        delete res.vendor;
-                        this.emit('found', res);
+                        const ret = res[0];
+                        ret.address = ret.address.toLowerCase();
+                        ret.btVendor = ret.vendor;
+                        delete ret.vendor;
+                        that.emit('found', ret);
                     }
-                }, A.nop)));
-        } else if (this._device)
-            scans.push(A.Ptime(this._device.scan()).then(x => x < 1000 ? this._device.scan() : Promise.resolve()).catch(A.nop));
-        /*            ScanCmd.runCmd(A.f('hcitool -i %s scan --flush --length=%s', this._doHci, Math.floor(this._len / 1300)), [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'])
-                   .then(res => res.map(res => A.N(() => {
-                       res.btVendor = res.vendor;
-                       res.address = res.address.toLowerCase();
-                       delete res.vendor;
-                       this.emit('found', res);
-                   })), A.nop)
-         */
-        else A.D('Neither BT scan nor l2ping are available to scan normal BT devices!');
-        if (!scans.length)
-            scans.push(Promise.resolve(A.Wf('Neither noble nor hcitool available to scan bluetooth!')));
+                } catch (e) {
+                    // emptyfind ouit if connection refused can be used!
+                }
+                //                    A.Df('L2Ping returned for mac%s = %O', mac, res);
+            }
+        }
 
-        return Promise.all(scans).catch(A.nop).then(() => this._scan = false);
+        async function scanhci(that) {
+            const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', that._doHci), {
+                match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
+                timeout: that._len
+            }).catch(() => null);
+            //                    A.Df("lescan returned: %O", res);
+            if (res)
+                for (const item of res) {
+                    await A.wait(0);
+                    item.btVendor = item.vendor;
+                    item.address = item.address.toLowerCase();
+                    delete item.vendor;
+                    that.emit('found', item);
+                }
+        }
+
+        // async function scannodebt(that) {
+        //     try {
+        //         const x = A.Ptime(that._device.scan());
+        //         if (x < 1000) await that._device.scan();
+        //     } catch (e) {
+        //         //empty
+        //     }
+        // }
+
+        if (this._device && this._scan)
+            return A.W(`BT already scanning!`);
+        const scans = [];
+        this._scan = true;
+
+        //        A.I(`start scanning BT!`); // REM
+        if (this._noble) {
+            // A.D("startScan prepare noble");
+            scans.push(Promise.resolve(this.startNoble()));
+        }
+        if (this._doHci) {
+            A.D("startScan prepare doHci");
+            await this.resetHci();
+            scans.push(scanhci(this));
+        } else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
+
+        if (this._dol2ping && macs && macs.length) {
+            // A.D("startScan prepare noble");
+            scans.push(scanmacs(this));
+        }
+        // if (this._device && !this._dol2ping)
+        //     scans.push(scannodebt(this));
+        if (!scans.length)
+            return A.Df('No BT scan because no entry available!');
+        // A.Df("startScan before Promise.all with %s", A.O(scans));
+        const res = await Promise.all(scans).catch(err => A.Wf("Scan Error: %O", err));
+        // A.Df("startScan returned Promise.All %j", res);
+        this._scan = false;
+        return res;
     }
 
-    resetHci() {
-        return Promise.resolve(typeof this._doHci !== 'string' ? false :
-                ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE)
-                .then(() => A.wait(100))
-                .then(() => ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci))).catch(A.pE))
-            .catch(A.nop);
+    async resetHci() {
+        if (typeof this._doHci !== 'string')
+            return false;
+        // await ScanCmd.runCmd(A.f('hciconfig %s reset', this._doHci)).catch(A.pE);
+        // await A.wait(200);
+        let x = await ScanCmd.runCmd(A.f('hciconfig %s down', this._doHci)).catch(A.pE);
+        x = await A.wait(100);
+        x = await ScanCmd.runCmd(A.f('hciconfig %s up', this._doHci)).catch(A.pE);
+        x = await A.wait(100);
+        return x;
     }
 
     get scanTime() {
@@ -354,7 +407,7 @@ class Bluetooth extends EventEmitter {
         this._len = (isNaN(parseInt(len)) || !len || len < 0) ? 10000 : parseInt(len);
     }
 
-    init(options) {
+    async init(options) {
         const self = this;
         const nid = 'NOBLE_HCI_DEVICE_ID';
         options = Object.assign({
@@ -367,106 +420,118 @@ class Bluetooth extends EventEmitter {
         this._doHci = options.doHci;
         this._btid = isNaN(parseInt(options.btid)) ? -1 : parseInt(options.btid);
         this.len = options.scanTime;
-        return Promise.resolve(this._doL2p ? A.isLinuxApp('l2ping') : false)
-            .then(res => this._dol2ping = res && 'l2ping ' + (this._btid < 0 ? '' : '-i hci' + this._btid) + ' -c 1 ', A.nop)
-            .then(() => {
-                if (this._dol2ping)
-                    return A.I('Will use l2Ping for BT scans.');
-                try {
-                    this._nbt = require('node-bluetooth');
-                    this._device = new this._nbt.DeviceINQ();
-                    this._device.on('found', (address, name) => self.emit('found', {
-                        address: address,
-                        btName: name,
-                        btVendor: Network.getMacVendor(address),
-                        by: 'scan'
-                    }));
-                    A.I("found and will use 'node-bluetooth scan'");
-                } catch (e) {
-                    this._device = null;
-                    A.W('node-bluetooth not found!');
-                }
-                return this._device;
-            }).then(() => this._doHci && A.isLinuxApp('hcitool'))
-            .then(x => {
-                if (x)
-                    return ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address'])
-                        .then(res =>
-                            this._btid < 0 && res.length ? res[0].name : res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ? 'hci' + this._btid : 'hci0', () => 'hci0')
-                        .then(res =>
-                            A.Ir(this._doHci = res, 'Will run hcitool-mode and not noble on device %s!', res))
-                        .then(() =>
-                            this.resetHci());
-                this._doHci = false;
-                if (this._btid >= 0)
-                    // eslint-disable-next-line no-process-env
-                    process.env[nid] = this._btid;
+        try {
+            const res = A.isLinuxApp('l2ping');
+            if (res)
+                this._dol2ping = 'l2ping ' + (this._btid < 0 ? '' : '-i hci' + this._btid) + ' -c 1 ';
+        } catch (e) {
+            // empty
+        }
+        if (this._dol2ping) A.I('Will use l2Ping for BT scans.');
+        else A.I("cannot search for bluetooth (non-BLE) devices!");
+        // else try {
+        //     this._nbt = require('@frankjoke/node-bluetooth');
+        //     this._device = new this._nbt.DeviceINQ();
+        //     this._device.on('found', (address, name) => self.emit('found', {
+        //         address: address,
+        //         btName: name,
+        //         btVendor: Network.getMacV(address),
+        //         by: 'scan'
+        //     }));
+        //     A.I("found and will use 'node-bluetooth scan'");
+        // } catch (e) {
+        this._device = null;
+        // A.I('node-bluetooth not found!');
+        // }
+        if (this._doHci && await A.isLinuxApp('hcitool')) {
 
-                try {
-                    this._noble = require('@abandonware/noble');
-                    this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
-                    //        this._noble.on('scanStart', () => A.D('Noble scan started'));
-                    //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
-                    this._noble.on('discover', function (per) {
-                        //                if (isStopping)
-                        //                    return res(stopNoble(idf));
-                        //                        A.D(`-myNoble discovers: ${A.O(per)}`);
-                        if (per && per.address)
-                            self.emit('found', {
-                                address: per.address.toLowerCase(),
-                                btName: (per.advertisement && per.advertisement.localName) ? per.advertisement.localName : "NaN",
-                                rssi: per.rssi,
-                                btVendor: Network.getMacVendor(per.address),
-                                by: 'noble'
-                                //                        vendor: Network.getMacVendor(per.address)
-                            });
-                    });
-                    //            this._noble.stopScanning();
-                    A.I("found and will use '@abandonware/noble'");
-                } catch (e) {
-                    A.W(`Noble not available, Error: ${A.O(e)}`);
-                    this._noble = null;
-                }
-                return null;
-            }).catch(A.pE);
-        //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+            const res = await ScanCmd.runCmd('hcitool dev', [/^\s*(\S+)\s+((?:[\dA-F]{2}:){5}[\dA-F]{2})\s*$/im, 'dev', 'name', 'address']);
+            this._doHci = this._btid < 0 && res.length ?
+                res[0].name :
+                res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ?
+                'hci' + this._btid : 'hci0', () => 'hci0';
+            if (this._doHci) {
+                A.If('Will run hcitool-mode and not noble on device %s!', res);
+                await this.resetHci();
+            }
+        } else {
+            if (this._btid >= 0)
+                // eslint-disable-next-line no-process-env
+                process.env[nid] = this._btid;
 
+            if (!this._doHci) try {
+                this._noble = require('@abandonware/noble');
+                this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
+                //        this._noble.on('scanStart', () => A.D('Noble scan started'));
+                //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
+                this._noble.on('discover', function (per) {
+                    //                if (isStopping)
+                    //                    return res(stopNoble(idf));
+                    const {
+                        address,
+                        advertisement,
+                        rssi
+                    } = per;
+                    const btVendor = Network.getMacV(address);
+                    //                A.Df("-myNoble discovers %s, %j %s", address, advertisement, rssi, btVendor); // REM
+                    if (per && address)
+                        self.emit('found', {
+                            address: address.toLowerCase(),
+                            btName: (advertisement && advertisement.localName) ? advertisement.localName : "N/A",
+                            rssi,
+                            btVendor,
+                            by: 'noble'
+                        });
+                });
+                //            this._noble.stopScanning();
+                A.I("found and will use '@abandonware/noble'");
+            } catch (e) {
+                A.W(`Noble not available, Error: ${A.O(e)}`);
+                this._noble = null;
+            }
+            //        this._l2cmd = `!sudo l2ping -i hci${btid} -c1 `;
+            if (!this._noble)
+                A.W('Neither hcitool nor noble available to scan Bluetooth!');
+        }
     }
 
     stopNoble() {
         this._nobleRunning = null;
+        //        A.I('Stop Noble'); // REM
         if (this._noble)
             this._noble.stopScanning();
         //        A.D('Noble stopped scanning now.');
     }
 
-    startNoble(len) {
-        var self = this;
+    async startNoble(len) {
+        const self = this;
+        if (!this._noble) return {};
+        //        A.I("STart Noble"); // REM
         if (this._nobleRunning)
             this.stopNoble();
         //        this._noble
-        len = len || self._len;
-        if (!this._noble) return Promise.resolve({});
-        //        if (this._noble.state !== 'poweredOn') return Promise.reject('Noble not powered ON!');
-        return A.retry(20, () => self._noble.state === 'poweredOn' ? Promise.resolve() : A.wait(100).then(() => Promise.reject('not powered on')))
-            .then(() => {
-                //            A.D(`starting noble for ${len/1000} seconds`);
-                self._nobleRunning = true;
-                try {
+        len = len || this._len;
+        for (let count = 20; count >= 0 && this._noble.state !== 'poweredOn'; count--)
+            await A.wait(100);
+        if (this._noble.state === 'poweredOn') {
+            this._nobleRunning = true;
+            try {
 
                 self._noble.startScanning();
                 return A.wait(len).then(() => self.stopNoble());
-                } catch(e) {
-                    self._nobleRunning = false;
-                    self.stopNoble();
-                }
-            }).catch(err => A.I(`Noble scan Err ${A.O(err)}`, err));
+            } catch (e) {
+                self._nobleRunning = false;
+                self.stopNoble();
+            }
+        }
+        return {};
+        //        if (this._noble.state !== 'poweredOn') return Promise.reject('Noble not powered ON!');
     }
 
-    stop() {
+    async stop() {
         this.stopNoble();
         this._noble = null;
-        ScanCmd.stopAll();
+        A.resolve(ScanCmd.stopAll());
     }
 
 }
@@ -505,11 +570,11 @@ class Dhcp extends EventEmitter {
     }
 
     _trybind(addr) {
-        var self = this;
+        const self = this;
 
         function parseUdp(msg) {
             function trimNulls(str) {
-                var idx = str.indexOf('\u0000');
+                const idx = str.indexOf('\u0000');
                 return (idx === -1) ? str : str.substr(0, idx);
             }
 
@@ -526,7 +591,7 @@ class Dhcp extends EventEmitter {
 
             function readIp(msg, offset, obj, name) {
                 //            console.log(`Read IP = ${msg.length} offset = ${offset}, name = ${name} `)
-                var len = msg.readUInt8(offset++);
+                const len = msg.readUInt8(offset++);
                 assert.strictEqual(len, 4);
                 obj[name] = readIpRaw(msg, offset);
                 return offset + len;
@@ -534,17 +599,17 @@ class Dhcp extends EventEmitter {
 
             function readString(msg, offset, obj, name) {
                 //            console.log(`Read String bl = ${msg.length} offset = ${offset}, name = ${name} `)
-                var len = msg.readUInt8(offset++);
+                const len = msg.readUInt8(offset++);
                 obj[name] = msg.toString('ascii', offset, offset + len);
                 offset += len;
                 return offset;
             }
 
             function readAddressRaw(msg, offset, len) {
-                var addr = '';
+                let addr = '';
                 //            console.log(`Address Raw bl = ${msg.length} offset = ${offset}, len = ${len} `)
                 while (len-- > 0) {
-                    var b = 0;
+                    let b = 0;
                     try {
                         b = msg.readUInt8(offset++);
                     } catch (e) {
@@ -565,10 +630,10 @@ class Dhcp extends EventEmitter {
                 });
             }
 
-            var BOOTPMessageType = ['NA', 'BOOTPREQUEST', 'BOOTPREPLY'];
-            var ARPHardwareType = ['NA', 'HW_ETHERNET', 'HW_EXPERIMENTAL_ETHERNET', 'HW_AMATEUR_RADIO_AX_25', 'HW_PROTEON_TOKEN_RING', 'HW_CHAOS', 'HW_IEEE_802_NETWORKS', 'HW_ARCNET', 'HW_HYPERCHANNEL', 'HW_LANSTAR'];
-            var DHCPMessageType = ['NA', 'DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPDECLINE', 'DHCPACK', 'DHCPNAK', 'DHCPRELEASE', 'DHCPINFORM'];
-            var p = {
+            const BOOTPMessageType = ['NA', 'BOOTPREQUEST', 'BOOTPREPLY'];
+            const ARPHardwareType = ['NA', 'HW_ETHERNET', 'HW_EXPERIMENTAL_ETHERNET', 'HW_AMATEUR_RADIO_AX_25', 'HW_PROTEON_TOKEN_RING', 'HW_CHAOS', 'HW_IEEE_802_NETWORKS', 'HW_ARCNET', 'HW_HYPERCHANNEL', 'HW_LANSTAR'];
+            const DHCPMessageType = ['NA', 'DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPDECLINE', 'DHCPACK', 'DHCPNAK', 'DHCPRELEASE', 'DHCPINFORM'];
+            const p = {
                 op: BOOTPMessageType[msg.readUInt8(0)],
                 // htype is combined into chaddr field object
                 hlen: msg.readUInt8(2),
@@ -589,11 +654,11 @@ class Dhcp extends EventEmitter {
                 options: {}
             };
 
-            var offset = 240;
-            var code = 0;
+            let offset = 240;
+            let code = 0;
             while (code !== 255 && offset < msg.length) {
                 code = msg.readUInt8(offset++);
-                var len;
+                let len;
                 switch (code) {
                     case 0:
                         // eslint-disable-next-line no-continue
@@ -611,7 +676,7 @@ class Dhcp extends EventEmitter {
                     case 53: { // dhcpMessageType
                         len = msg.readUInt8(offset++);
                         assert.strictEqual(len, 1);
-                        var mtype = msg.readUInt8(offset++);
+                        const mtype = msg.readUInt8(offset++);
                         assert.ok(mtype >= 1);
                         assert.ok(mtype <= 8);
                         p.options.dhcpMessageType = DHCPMessageType[mtype];
@@ -686,7 +751,7 @@ class Dhcp extends EventEmitter {
                 }
                 //                A.D('dhcp triggered: ' + A.O(data.options));
                 if (data && data.op === 'BOOTPREQUEST' && data.options.dhcpMessageType === 'DHCPREQUEST' && !data.ciaddr && data.options.clientIdentifier) {
-                    var req = {
+                    const req = {
                         hostName: data.options.hostName,
                         type: data.options.clientIdentifier.type,
                         macAddress: data.options.clientIdentifier.address,
@@ -725,6 +790,7 @@ class Dhcp extends EventEmitter {
         }
     }
 }
+
 class Network extends EventEmitter {
     constructor(dodhcp) {
         super();
@@ -739,7 +805,6 @@ class Network extends EventEmitter {
         this._nif = os.networkInterfaces();
         this._iprCache = this._dnsCache = null;
         this._netping = null;
-        Network.matchMac = /(([\dA-F]{2}:){5}[\dA-F]{2})/i;
 
     }
     get iflist() {
@@ -757,7 +822,7 @@ class Network extends EventEmitter {
     }
 
     static isMac(str) {
-        if (!str)
+        if (!str || typeof str != "string")
             return null;
         str = str.trim().toLowerCase();
         return Network.matchMac.test(str) ? str : null;
@@ -794,14 +859,18 @@ class Network extends EventEmitter {
         return ping;
     }
 
+    static get matchMac() {
+        return /^(([\dA-F]{2}:){5}[\dA-F]{2})$/i;
+    }
+
     static isLocal(address) {
         if (!Network.isIP4(address))
             return false;
         return (/10\.\d+\.\d+\.\d+/).test(address) || (/192\.168\.\d+\.\d+/).test(address) || (/172\.16\.\d+\.\d+/).test(address);
     }
 
-    init(dhcp, pingopt) {
-        var self = this;
+    async init(dhcp, pingopt) {
+        const self = this;
         pingopt = pingopt || {
             retries: 4,
             //    sessionId: (process.pid % 65535),
@@ -858,11 +927,11 @@ class Network extends EventEmitter {
 
         this.clearCache();
 
-        for (let nif in this._nif)
-            for (let addr of this._nif[nif])
+        for (const nif in this._nif)
+            for (const addr of this._nif[nif])
                 if (addr.internal !== undefined && !addr.internal) {
                     this._iflist.push([
-                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacVendor(addr.mac)
+                        nif, addr.family, addr.mac, addr.address, addr.scopeid, addr.cidr, Network.getMacV(addr.mac)
                     ]);
                     this.combine(addr.mac, addr.address);
                 }
@@ -872,6 +941,7 @@ class Network extends EventEmitter {
         self._listener.on('error', e => self.emit('error', e))
             .on('listenState', s => self.emit('listenState', s))
             .on('request', (req) => {
+                // A.Df("Dhcp got request: %j", req); // REM
                 self.combine(req.macAddress, req.ipAddress, req.hostName);
                 self.emit('request', req);
             })
@@ -879,10 +949,10 @@ class Network extends EventEmitter {
     }
 
 
-    ping(ips) {
-        var that = this;
-        let ret = [];
-        let pip = [];
+    async ping(ips) {
+        const that = this;
+        const ret = [];
+        const pip = [];
 
         function pres(ip) {
             //            A.If('should ping %O', ip);
@@ -898,7 +968,7 @@ class Network extends EventEmitter {
         if (!Array.isArray(ips))
             ips = [ips];
 
-        for (let i of ips)
+        for (const i of ips)
             pip.push(pres(i.trim()).catch(e => A.Wf('error in %s ping: %O', i, e)));
         return Promise.race(pip).then(() => ret, () => ret);
     }
@@ -929,29 +999,33 @@ class Network extends EventEmitter {
         mac = mac.toLowerCase().trim();
         ip = ip.toLowerCase().trim();
 
-        var names = [];
+        let names = [];
         if (!this._ips.has(ip))
             this._ips.set(ip, {});
         else names = this._ips.get(ip).names;
-        if (name && !names.includes(name))
-            names.push(name);
-        var im = this._ips.get(ip);
+        name = name || [];
+        if (typeof name === "string")
+            name = [name];
+        for (const n of name)
+            if (!names.includes(n))
+                names.push(n);
+        const im = this._ips.get(ip);
         if (!im[mac]) {
-            im[mac] = Network.getMacVendor(mac);
+            im[mac] = Network.getMacV(mac);
             im.names = names;
         }
         if (names.length === (name ? 1 : 0)) this.dnsReverse(ip).then(list => {
             //            if (list)
-            for (let l of list)
+            for (const l of list)
                 if (!names.includes(l))
                     names.push(l);
         });
         if (!this._macs.has(mac))
             this._macs.set(mac, {});
-        var wm = this._macs.get(mac);
+        const wm = this._macs.get(mac);
         if (!wm[ip]) {
             wm[ip] = names;
-            wm.vendor = Network.getMacVendor(mac);
+            wm.vendor = Network.getMacV(mac);
         }
     }
 
@@ -963,134 +1037,149 @@ class Network extends EventEmitter {
     dnsResolve(name) {
         return this._dnsCache.cacheItem(name);
     }
+    /*
+        static async updateMacdb() {
+            const filename = __dirname + '/lib/vendors.json';
 
-    static updateMacdb() {
-        const filename = __dirname + '/lib/vendors.json';
+            let j;
+            try {
+                // eslint-disable-next-line no-sync
+                j = fs.statSync(filename);
+            } catch (e) {
+                A.Wf('no %s, reading file from web because of error %O', filename, e);
+            }
+            if (j && j.size > 1000) {
+                let td = Date.now() - new Date(j.mtime).getTime();
+                td = td / 1000 / 60 / 60 / 24 / 30;
+                A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
+                if (td >= 1) {
+                    try {
+                        let res = await A.get('https://linuxnet.ca/ieee/oui.txt');
+                        if (!res) res = await A.get('http://standards-oui.ieee.org/oui/oui.txt');
+                        res = res || "";
+                        if (res) {
+                            let n = 0;
+                            const arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
+                            if (arr && arr.length > 0)
+                                for (const l of arr) {
+                                    const lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
+                                    if (lm && lm.length >= 3)
+                                        macdb[lm[1].toLowerCase(++n)] = lm[2];
+                                }
+                            A.I('macdb created entries: ' + n);
+                            const db = JSON.stringify(macdb);
+                            try {
+                                await A.c2p(fs.writeFile)(filename, db, 'utf8');
+                            } catch (e) {
+                                A.Wf('could not write vendor file %s because of %O:', filename, e);
 
-        function readmacs() {
-            return A.get('https://linuxnet.ca/ieee/oui.txt').then(res => res, () => A.get('http://standards-oui.ieee.org/oui/oui.txt').then(res => res, () => ''))
-                .then(res => {
-                    let n = 0;
-                    let arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
-                    if (arr && arr.length > 0)
-                        for (let l of arr) {
-                            let lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
-                            if (lm && lm.length >= 3)
-                                macdb[lm[1].toLowerCase(++n)] = lm[2];
-                        }
-                    A.I('macdb has entries: ' + n);
-                    return macdb;
-                }).then(db => {
-                    db = JSON.stringify(db);
-                    return A.c2p(fs.writeFile)(filename, db, 'utf8').catch(e => A.Wf('could not write vendor file %s because of %O:', filename, e));
-                }).catch(e => A.W('Could not init MacDb! ' + e));
-        }
-        let j;
-        try {
-            // eslint-disable-next-line no-sync
-            j = fs.statSync(filename);
-        } catch (e) {
-            A.Wf('no %s, reading file from web because of error %O', filename, e);
-        }
-        if (j && j.size > 1000) {
-            let td = Date.now() - new Date(j.mtime).getTime();
-            td = td / 1000 / 60 / 60 / 24 / 30;
-            A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
-            if (td >= 1)
-                readmacs();
-            /*
-                        try {
-                            // eslint-disable-next-line no-sync
-                            let f = fs.readFileSync(filename, 'utf8');
-                            f = JSON.parse(f);
-                            if (A.ownKeys(f).length > 1000) {
-                                macdb = f;
-                                if (td >= 1)
-                                    f = readmacs();
-                                return Promise.resolve();
                             }
-                        } catch (e) {
-                            A.Wf('reading file %s error %O', filename, e);
                         }
-            */
-        }
-        //        return readmacs();
-        return Promise.resolve();
+                    } catch (e) {
+                        A.Wf('Could not init MacDb! %O', e);
+                    }
+                }
 
+            }
+            //        return readmacs();
+            return true;
+
+        }
+    */
+    static getMacVendor(mac) {
+        mac = mac.trim().toLowerCase();
+        // const smac = mac.split(':').slice(0, 3).join('');
+        // const r = Network.isMac(mac) && macdb[smac];
+        // if (r)
+        //     return macdb[smac];
+        mac = mac.toUpperCase();
+        for (const i of macdb1)
+            if (mac.startsWith(i.oui))
+                return i.companyName;
+        return 'N/A';
     }
 
-    static getMacVendor(mac) {
-        let r = Network.isMac(mac) && macdb[mac.toLowerCase().split(':').slice(0, 3).join('')];
-        return r ? r : 'Vendor N/A';
+    static getMacV(mac) {
+        return mvcache.cacheSync(mac.trim().toLowerCase());
     }
 
     ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 
         return this._iflist.filter((addr) => addr[1] === 'IPv4').map((i) => i[what ? what : 0]);
     }
 
-    static getExtIP() {
+    static async getExtIP() {
         let oldip = "";
         let sameip = 0;
 
-        function getIP(site) {
-            return A.get(site, 2)
-                .then(chunk => {
+        async function getIP(site) {
+            try {
+                const chunk = await A.get(site);
+                if (chunk) {
                     const ip = chunk.trim();
                     if (ip === oldip)
                         ++sameip;
                     else
                         oldip = ip;
-                    return Promise.resolve(sameip);
-                }, err => A.I(`MyIP Error ${A.O(err)}`, Promise.resolve(sameip)));
+                    return sameip;
+                }
+            } catch (err) {
+                A.Df("MyIP Error on site %s: %j", site, err);
+                return sameip;
+            }
+            //            err => A.I(`MyIP Error ${A.O(err)}`, Promise.resolve(sameip)));
         }
-
-        return getIP('http://icanhazip.com/?x=2')
-            .then(() => getIP('http://wtfismyip.com/text'))
-            .then(() => sameip < 1 ? getIP('http://nst.sourceforge.net/nst/tools/ip.php') : Promise.resolve(oldip),
-                err => A.I(`scanExtIP error ${A.F(err)}`, Promise.resolve("")));
+        await getIP('http://icanhazip.com/?x=2');
+        await getIP('http://wtfismyip.com/text');
+        if (sameip < 1) await getIP('http://nst.sourceforge.net/nst/tools/ip.php');
+        return oldip;
     }
 
 
-    arpScan(args) {
-        function scan(cmd, self) {
+    async arpScan(args) {
+        const self = this;
+
+        async function scan(cmd) {
             //            A.D(`arp-scan with ${cmd}`);
             //            var st = Date.now();
-            return A.exec('arp-scan ' + cmd).then(res => {
-                var r = null;
-                if (res)
-                    r = res.match(/([0-9.]+)\s+seconds\s+.+\s+(\d+)\s+responded/mi);
-                else A.W('arp-scan maybe without rights because no data returned!');
-                if (r)
-                    A.D(`arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
-                return res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}:){5}[\dA-F]{2}/gi);
-            }, e => A.W('arp-scan returned error: ' + A.O(e), null)).then(x => {
-                //                A.I(`Arp-Scan found ${x}`)
-                if (x) {
-                    for (let y of x) {
-                        var found = y.split('\t');
-                        self.combine(found[1], found[0]);
-                        A.N(self.emit.bind(self), 'arp-scan', found);
-                    }
+            const res = await A.exec('arp-scan ' + cmd);
+            let r = null;
+            if (res)
+                r = res.match(/([0-9.]+)\s+seconds\s+.+\s+(\d+)\s+responded/mi);
+            else A.W('arp-scan maybe without rights because no data returned!');
+            if (r)
+                A.D(`arp-scan ${cmd} executed for ${r[1]} seconds and returned ${r[2]} hosts.`);
+            const x = res && res.match(/(\d+\.){3}\d+\s+([\dA-F]{2}:){5}[\dA-F]{2}/gi);
+            if (x) {
+                for (const y of x) {
+                    const found = y.split('\t');
+                    self.combine(found[1], found[0]);
+                    await A.wait(0);
+                    self.emit('arp-scan', found);
                 }
-                //             A.I(`arp-scan took ${(Date.now()-st)/1000.0}`);
-            });
+            }
+            //             A.I(`arp-scan took ${(Date.now()-st)/1000.0}`);
+            return x;
         }
 
+        //        A.Df("Arp-scan with %j", args);
         if (args.indexOf('--interface=') !== -1 || args.indexOf('-I') !== -1)
-            return scan(args, this);
-        var ifl = this.ip4addrs();
-        //        A.D(`arp-scan Interfaces: ${A.F(ifl)}`);
-        return Promise.all(ifl.map((i) => scan(args + ` --interface=${i}`, this)));
+            return scan(args);
+        const ifl = this.ip4addrs();
+        // A.D(`arp-scan Interfaces: ${A.F(ifl)}`);
+        return ifl.map(async (i) => await scan(args + ` --interface=${i}`));
     }
 
-    stop() {
+    async stop() {
         this._init = false;
         if (this._listener) this._listener.close();
         if (this._ping4session) this._ping4session.close();
         if (this._ping6session) this._ping6session.close();
         this._ping4session = this._ping6session = this._listener = null;
+        return true;
     }
 }
+
+const mvcache = new A.CacheP(Network.getMacVendor);
 
 exports.Network = Network;
 exports.Bluetooth = Bluetooth;
