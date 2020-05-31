@@ -474,6 +474,14 @@ A.timer = [];
    });
    
  */
+process.on('uncaughtException', err => {
+    A.W(`Uncaught Exception: ${err.message}`);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    A.W('Unhandled rejection at ', promise, `reason: ${promise.message}`);
+  });
+
 // eslint-disable-next-line no-unused-vars
 async function main(adapter) {
 
