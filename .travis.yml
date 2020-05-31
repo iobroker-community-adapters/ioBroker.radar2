@@ -33,7 +33,7 @@ addons:
       - libbluetooth-dev
       - libudev-dev
 script:
-  - npm run test:package
   - export DEBUG=testing:*
-  - node testme
+  - npm run test:package
+  - npm run test:unit
   - npm run test:integration
