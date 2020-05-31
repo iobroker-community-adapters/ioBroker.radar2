@@ -459,7 +459,7 @@ class Bluetooth extends EventEmitter {
                 // eslint-disable-next-line no-process-env
                 process.env[nid] = this._btid;
 
-            try {
+            if (!this._doHci) try {
                 this._noble = require('@abandonware/noble');
                 this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
                 //        this._noble.on('scanStart', () => A.D('Noble scan started'));
@@ -1037,55 +1037,55 @@ class Network extends EventEmitter {
     dnsResolve(name) {
         return this._dnsCache.cacheItem(name);
     }
-/*
-    static async updateMacdb() {
-        const filename = __dirname + '/lib/vendors.json';
+    /*
+        static async updateMacdb() {
+            const filename = __dirname + '/lib/vendors.json';
 
-        let j;
-        try {
-            // eslint-disable-next-line no-sync
-            j = fs.statSync(filename);
-        } catch (e) {
-            A.Wf('no %s, reading file from web because of error %O', filename, e);
-        }
-        if (j && j.size > 1000) {
-            let td = Date.now() - new Date(j.mtime).getTime();
-            td = td / 1000 / 60 / 60 / 24 / 30;
-            A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
-            if (td >= 1) {
-                try {
-                    let res = await A.get('https://linuxnet.ca/ieee/oui.txt');
-                    if (!res) res = await A.get('http://standards-oui.ieee.org/oui/oui.txt');
-                    res = res || "";
-                    if (res) {
-                        let n = 0;
-                        const arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
-                        if (arr && arr.length > 0)
-                            for (const l of arr) {
-                                const lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
-                                if (lm && lm.length >= 3)
-                                    macdb[lm[1].toLowerCase(++n)] = lm[2];
-                            }
-                        A.I('macdb created entries: ' + n);
-                        const db = JSON.stringify(macdb);
-                        try {
-                            await A.c2p(fs.writeFile)(filename, db, 'utf8');
-                        } catch (e) {
-                            A.Wf('could not write vendor file %s because of %O:', filename, e);
-
-                        }
-                    }
-                } catch (e) {
-                    A.Wf('Could not init MacDb! %O', e);
-                }
+            let j;
+            try {
+                // eslint-disable-next-line no-sync
+                j = fs.statSync(filename);
+            } catch (e) {
+                A.Wf('no %s, reading file from web because of error %O', filename, e);
             }
+            if (j && j.size > 1000) {
+                let td = Date.now() - new Date(j.mtime).getTime();
+                td = td / 1000 / 60 / 60 / 24 / 30;
+                A.Df('mtime of %s is %s stats are %d', filename, new Date(j.mtime), td);
+                if (td >= 1) {
+                    try {
+                        let res = await A.get('https://linuxnet.ca/ieee/oui.txt');
+                        if (!res) res = await A.get('http://standards-oui.ieee.org/oui/oui.txt');
+                        res = res || "";
+                        if (res) {
+                            let n = 0;
+                            const arr = res.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/gim);
+                            if (arr && arr.length > 0)
+                                for (const l of arr) {
+                                    const lm = l.match(/^([\da-f]{6})\s+\(base 16\)\s+(.*)$/i);
+                                    if (lm && lm.length >= 3)
+                                        macdb[lm[1].toLowerCase(++n)] = lm[2];
+                                }
+                            A.I('macdb created entries: ' + n);
+                            const db = JSON.stringify(macdb);
+                            try {
+                                await A.c2p(fs.writeFile)(filename, db, 'utf8');
+                            } catch (e) {
+                                A.Wf('could not write vendor file %s because of %O:', filename, e);
+
+                            }
+                        }
+                    } catch (e) {
+                        A.Wf('Could not init MacDb! %O', e);
+                    }
+                }
+
+            }
+            //        return readmacs();
+            return true;
 
         }
-        //        return readmacs();
-        return true;
-
-    }
-*/
+    */
     static getMacVendor(mac) {
         mac = mac.trim().toLowerCase();
         // const smac = mac.split(':').slice(0, 3).join('');
