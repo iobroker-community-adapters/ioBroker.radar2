@@ -262,14 +262,8 @@
             ]
         }
     ],
-    "translation": {
-        "getMissing": {
-            "de": "FehlendeTexte"
-        }
-    },
     "icon": "radar2.png",
     "readme": {
-        "de": "README_de.md",
         "en": "README.md"
     }
 }
