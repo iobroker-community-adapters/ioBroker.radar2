@@ -35,5 +35,5 @@ addons:
 script:
   - export DEBUG=testing:*
   - npm run test:package
-  - npmmm run test:unit
+  - npmmmm run test:unit
   - npm run test:integration
