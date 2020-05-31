@@ -17,7 +17,7 @@ const assert = require('assert'),
     EventEmitter = require('events').EventEmitter;
 
 //const macdb = require('./lib/vendors.json');
-const macdb1 = require('./vendors.json');
+const macdb1 = require('./lib/vendors.json');
 
 class ReadLineStream extends stream.Transform {
     constructor(options) {
