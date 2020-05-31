@@ -45,6 +45,8 @@ let scanDelay = 30 * 1000, // in ms = 30 sec
     scanBt = false,
     devices = null;
 
+const isTesting = process.env.DEBUG && process.env.DEBUG.startsWith("testing:");
+
 A.init(module, {
     name: "radar2",
     onUnload: async (how) => {
@@ -482,8 +484,14 @@ process.on('uncaughtException', err => {
     A.W('Unhandled rejection at ', promise, `reason: ${promise.message}`);
   });
 
+
+
 // eslint-disable-next-line no-unused-vars
 async function main(adapter) {
+
+    if (isTesting)
+        A.I("adapter in desting mode!");
+        
 
     network.on('request', items => {
         items.macVendor = Network.getMacV(items.macAddress);
@@ -542,11 +550,11 @@ async function main(adapter) {
     await bluetooth.init({
         btid: btid,
         scanTime: Math.floor(scanDelay * 0.85),
-        doHci: A.C.hcionly,
+        doHci: A.C.hcionly || isTesting,
         doL2p: A.C.l2ponly
     });
     //    bluetooth.on('stateChange', (what) => A.D(`Noble state changed: ${what}`));
-    await network.init(true);
+    await network.init(!isTesting);
 
     function updatedelaway(delayAway) {
         delayAway = delayAway < 1 ? 1 : delayAway;
