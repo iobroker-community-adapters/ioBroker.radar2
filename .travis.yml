@@ -16,6 +16,14 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6
+      - libcap2-bin
+      - libusb-1.0-0.dev
+      - libudev-dev
+      - arp-scan
+      - bluetooth
+      - bluez
+      - libbluetooth-dev
+      - libudev-dev
 
 before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then CC=gcc-6; fi'
@@ -24,6 +32,8 @@ before_script:
   - export NPMVERSION=$(echo "$($(which npm) -v)"|cut -c1)
   - 'if [[ $NPMVERSION == 5 ]]; then npm install -g npm; fi'
   - npm -v
+  - npm install winston@3.2.1
+  - 'if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo setcap ''cap_net_admin,cap_net_raw,cap_net_bind_service=+eip'' $(eval readlink -f `which node`); echo set caps; fi'
 script:
   - npm run test:package
   - npm run test:unit
