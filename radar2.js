@@ -490,7 +490,7 @@ process.on('uncaughtException', err => {
 async function main(adapter) {
 
     if (isTesting)
-        A.I("adapter in desting mode!");
+        A.I("adapter in testing mode, no noble and DHCP!");
         
 
     network.on('request', items => {
