@@ -204,7 +204,7 @@ async function setItem(item) {
     let anw = true;
     const idn = item.id;
     const whathere = "" + (item.ipHere ? "IP" : "") + (item.btHere ? (item.ipHere ? "+BT" : "BT") : "");
-    const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.btHere) : item.ipHere || item.btHere;
+    const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.ipHere) : item.ipHere || item.btHere;
     if (here) {
         item.lasthere = here;
         //        A.I(A.F('item:',item.id,', anw:',anw, ', bht', item.btHere, ', iph: ',item.ipHere,', itemlh:', item.lasthere));
