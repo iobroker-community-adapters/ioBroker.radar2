@@ -134,7 +134,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 * Updated scan methot to reduce process load and also increase hit rate
 * Completely re-written config page with new option
 * Added possibility to switch off storing of _unknown's
-* Changed comutation of `._here` from boolean to number showing number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
+* Added  `._nHere` for each item showing the number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
 * Changes to adapter to run on latest js-controller versions (and on older ones as well)
 
 ### 1.2.5
