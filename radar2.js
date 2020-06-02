@@ -101,7 +101,7 @@ async function scanExtIP() {
 
 async function scanECBs() {
     for (const item of devices)
-        if (item.type === 'ECB' && item.enabled) try {
+        if (item.type === 'ECB' && !!item.enabled) try {
             const idn = item.id + '.';
             //    A.I(`ScanECB: ${item.id}`);
             const body = await A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2);
@@ -124,7 +124,7 @@ async function scanECBs() {
 
 async function scanHPs() {
     for (const pitem of devices)
-        if (pitem && pitem.type === 'printer' && pitem.enabled) try {
+        if (pitem && pitem.type === 'printer' && !!pitem.enabled) try {
             const idn = pitem.id + '.';
             const below10 = [];
             const body = await A.get('http://' + pitem.ip[0] + '/DevMgmt/ConsumableConfigDyn.xml', 2);
@@ -202,6 +202,7 @@ async function setItem(item) {
     const wasanw = !!item.anwesend;
     let lasthere = item.lasthere;
     let anw = true;
+    const nDel = item.enabled < 0 ? delayAway : item.enabled;
     const idn = item.id;
     const whathere = "" + (item.ipHere ? "IP" : "") + (item.btHere ? (item.ipHere ? "+BT" : "BT") : "");
     const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.ipHere) : item.ipHere || item.btHere;
@@ -211,11 +212,11 @@ async function setItem(item) {
     } else {
         let n = Date.now();
         if (!lasthere)
-            lasthere = item.lasthere = new Date(n - (delayAway * 1001 * 60));
+            lasthere = item.lasthere = new Date(n - (nDel * 1001 * 60));
 
         n -= lasthere.getTime();
         //                    A.I(A.F('item ',item.name, item.lasthere, d));
-        if (n > (delayAway * 1000 * 60))
+        if (n > (nDel * 1000 * 60))
             anw = false;
     }
     //    if (!item.lasthere)
@@ -386,15 +387,18 @@ async function scanAll() {
         //            A.D(`Promise all  returned ${res}  ${res}:${A.O(res)}`);
         if (item.type !== 'IP' && item.type !== 'BT' && item.type !== 'URL')
             continue;
+        if (!item.enabled)
+            continue;
+        const nDel = item.enabled < 0 ? delayAway : item.enabled;
 
         const d = new Date(),
             n = d.getTime();
         if (!item.lasthere)
-            item.lasthere = new Date(n - (delayAway * 1001 * 60));
+            item.lasthere = new Date(n - (nDel * 1001 * 60));
 
         const dd = n - item.lasthere.getTime();
         //                    A.I(A.F('item ',item.name, item.lasthere, d));
-        if (dd > (delayAway * 1000 * 60))
+        if (dd > (nDel * 1000 * 60))
             item.anwesend = false;
         if (item.anwesend) {
             allHere.push(item.id);
@@ -610,8 +614,12 @@ async function main(adapter) {
     try {
         // eslint-disable-next-line complexity
         for (const item of devices) {
-            if (typeof item.enabled !== "boolean")
-                item.enabled = true;
+            if (typeof item.enabled === "string")
+                item.enabled = Number(item.enabled);
+            else if (typeof item.enabled !== "number")
+                item.enabled = -1;
+            if (isNaN(item.enabled))
+                item.enabled = -1;
             if (item.name)
                 item.name = item.name.trim().replace(/[\s.]/g, '_');
             if (!item.name || item.name.length < 2) {
@@ -634,8 +642,9 @@ async function main(adapter) {
             if (mmacs.length == 1 && !mmacs[0])
                 mmacs.splice(0, 1);
             for (const val of mmacs) {
-                const mac = val && (typeof val === 'string') ? val.toLowerCase() : null;
+                const mac = val && (typeof val === 'string') ? val : null;
                 if (mac && Network.isMac(mac)) {
+                    // A.Df("Found mac %s in device %s", mac, item.name);
                     item.type = 'IP';
                     item.hasMAC = item.hasMAC ? item.hasMAC.concat(mac) : [mac];
                     item.ipVendor = Network.getMacV(mac);
@@ -713,7 +722,7 @@ async function main(adapter) {
                     }
                 }
                 delete item.ip;
-            } else if (!item.bluetooth.length && !item.hasMAC) {
+            } else if (!item.type) {
                 A.W(`Invalid Device '${item.name}' should have IP or BT set!`);
                 continue;
             }
@@ -768,7 +777,7 @@ async function main(adapter) {
             await scanHPs();
         }
 
-        A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)}) and ${Object.entries(scanList).filter(i => i[1].enabled).length} enabled.`);
+        A.I(`radar2 found ${Object.keys(scanList).length} devices in config (${Object.keys(scanList)}) and ${Object.entries(scanList).filter(i => !!i[1].enabled).length} enabled.`);
         A.I(`radar2 set use of noble(${!!bluetooth.hasNoble}), doArp(${doArp}), btid(${btid}) and doUwz(${doUwz},${delayuwz},${numuwz},${lang},${longuwz}).`);
         const ms = await A.Ptime(scanAll());
         A.I(`first scan took ${ms/1000} seconds`);

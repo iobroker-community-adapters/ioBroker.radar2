@@ -442,5 +442,29 @@
     "es": "Habilitado",
     "pl": "Włączone",
     "zh-cn": "已启用"
+  },
+  "AwayTime": {
+    "en": "AwayTime",
+    "de": "AwayTime",
+    "ru": "AwayTime",
+    "pt": "AwayTime",
+    "nl": "Afwezig",
+    "fr": "AwayTime",
+    "it": "AwayTime",
+    "es": "AwayTime",
+    "pl": "AwayTime",
+    "zh-cn": "离开时间"
+  },
+  "Away delay in minutes , -1= default, 0=item disabled": {
+    "en": "Away delay in minutes , -1= default, 0=item disabled",
+    "de": "Abwesenheitsverzögerung in Minuten, -1 = Standard, 0 = Element deaktiviert",
+    "ru": "Задержка на выезд в минутах, -1 = по умолчанию, 0 = элемент отключен",
+    "pt": "Atraso ausente em minutos, -1 = padrão, 0 = item desativado",
+    "nl": "Afwezigheidsvertraging in minuten, -1 = standaard, 0 = item uitgeschakeld",
+    "fr": "Délai d'absence en minutes, -1 = par défaut, 0 = élément désactivé",
+    "it": "Ritardo assente in minuti, -1 = impostazione predefinita, 0 = elemento disabilitato",
+    "es": "Retraso en minutos, -1 = predeterminado, 0 = elemento deshabilitado",
+    "pl": "Opóźnienie w minutach, -1 = domyślnie, 0 = pozycja wyłączona",
+    "zh-cn": "离开延迟（以分钟为单位），-1 =默认值，0 =禁用项目"
   }
 }

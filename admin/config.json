@@ -211,7 +211,7 @@
                             "sortable": true,
                             "divider": true,
                             "default": "device",
-                            "width": "15%"
+                            "width": "12%"
                         },
                         {
                             "text": "IP",
@@ -247,15 +247,21 @@
                             "convertold": "stringToArrayWith"
                         },
                         {
-                            "text": "Enabled",
-                            "type": "checkbox",
+                            "text": "AwayTime",
+                            "type": "number",
+                            "min": -1,
+                            "max": 30,
                             "value": "enabled",
                             "sortable": false,
                             "align": "center",
-                            "default": true,
+                            "default": -1,
                             "divider": true,
-                            "width": "4%",
-                            "convertold": "value[item.value] = typeof value[item.value] !== 'boolean' ? true : value[item.value]"
+                            "width": "8%",
+                            "rules": [
+                                "numberRule"
+                            ],
+                            "hint": "Away delay in minutes , -1= default, 0=item disabled",
+                            "convertold": "value[item.value] = typeof value[item.value] !== 'number' ? -1 : value[item.value]"
                         }
                     ]
                 }

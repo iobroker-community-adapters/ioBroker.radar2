@@ -333,7 +333,7 @@ class Bluetooth extends EventEmitter {
         }
 
         async function scanhci(that) {
-            const res = await ScanCmd.runCmd(A.f('hcitool -i %s lescan --duplicates', that._doHci), {
+            const res = await ScanCmd.runCmd(`hcitool -i ${that._doHci} lescan --duplicates`, {
                 match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'lescan', 'address', 'btName'],
                 timeout: that._len
             }).catch(() => null);
@@ -347,7 +347,23 @@ class Bluetooth extends EventEmitter {
                     that.emit('found', item);
                 }
         }
-
+/* 
+        async function scanoldhci(that) {
+            const res = await ScanCmd.runCmd(`hcitool -i ${that._doHci} scan`, {
+                match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'],
+                timeout: Math.floor(that._len / 2),
+            }).catch(() => null);
+            //                    A.Df("lescan returned: %O", res);
+            if (res)
+                for (const item of res) {
+                    await A.wait(0);
+                    item.btVendor = item.vendor;
+                    item.address = item.address.toLowerCase();
+                    delete item.vendor;
+                    that.emit('found', item);
+                }
+        }
+*/
         // async function scannodebt(that) {
         //     try {
         //         const x = A.Ptime(that._device.scan());
@@ -368,7 +384,7 @@ class Bluetooth extends EventEmitter {
             scans.push(Promise.resolve(this.startNoble()));
         }
         if (this._doHci) {
-            A.D("startScan prepare doHci");
+            // A.D("startScan prepare doHci");
             await this.resetHci();
             scans.push(scanhci(this));
         } else if (!this._noble) A.D('Neither noble nor hcitool for BLE available!');
