@@ -16,6 +16,7 @@
 This adapter tries to find the devices specified on the network or with bluetooth. It also shows the current external IP of the network, can read ink status of HP printers and also Weather warnings from UWZ for several european countries. It also can read daily currency exchange rates from ECB.
 
 It works by:
+
 * Using arp-scan and ping to lookup devices on the network with IPv4 und IPv6!
 * Listening to dhcp messages which announces new devices coming to the network.
 * It works on multiple interfaces which mean iof your system has Wlan and lan on different networks it can see both lans.
@@ -25,6 +26,7 @@ It works by:
 * UWZ Weather warnings for the area where ioBroker is set to
 * Uses arp-scan and ping on network as only expernal programs, everything else is internal to nodejs.
 * The adapter works also without root rights but some configuration actions are required before installation
+* Each item can now configured with individual time before it goes away or it can be disabled as well.
 
 If you put a `-` at the end of a name the device will not be counted in the _notHere or _isHere.
 
@@ -84,6 +86,7 @@ On Osx also bluetooth may not work at all!
 After installation setup adapter config, you can remove the demo line items.
 
 ### Special information for arp-scan:
+
 There is a standard command line `-lgq --retry=5 --timeout=400` defined which would scan on all IPv4 interfaces all 254 addresses if it won't answer within 400ms it would retry 5 times!
 If you need to scan s specific interface only you can add for example ` --interface=br0` but normally bridge interfaces are used now rightfully, but still in docker environments iot might be necessary.The repeat=5 can be changed to 6 or 7 for better detection, above 7 I did not find improvement! The same is with the timeout, above 500 I could not find any improvement. 
 
@@ -102,6 +105,7 @@ If you need to scan s specific interface only you can add for example ` --interf
 This methodology of moving settings is working also between systems but may not work if other adapter has different structure. The device list is the same for radar and radar2, the only difference is that in radar2 you can have multiple ip addresses/entry separated by ','.
 
 ## Important/Wichtig
+
 * Adapter needs node >= v10.1! and npm >=6.4
 * Adapter may not be available to use bluetooth and arp-scan on osx, only ping ror ip which cannot detect IP mac adresses!
 * Adapter may have problems with bluetooth on windows as well, also arp-scan is not available on windows, will use only ping then which cannot detect IP mac adresses!.
@@ -128,13 +132,13 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 ## Changelog
 
-### 1.9.9 = beta for V2.0.0
+### V2.0.0
 
 * Removed node-blöuetooth because package is not updated to run on recent nodejs versions
 * Updated noble to more recent version
 * Completely rewritten logic for pinging BT with l2ping, or hcitool lescan
 * Updated scan methot to reduce process load and also increase hit rate
-* Completely re-written config page with new option
+* Completely re-written config page with new options
 * Added possibility to switch off storing of _unknown's
 * Added  `._nHere` for each item showing the number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
 * Changes to adapter to run on latest js-controller versions (and on older ones as well)
