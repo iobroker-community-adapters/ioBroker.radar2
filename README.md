@@ -7,8 +7,6 @@
 [![Downloads](https://img.shields.io/npm/dm/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
 [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.radar2/master.svg)](https://travis-ci.org/frankjoke/ioBroker.radar2)
 
-[German manual - Deutsche Anleitung](README_de.md)
-
 ## ioBroker radar2 visibility testing for network and bluetooth devices, HP printers, UWZ-warnungs and ECB-currencies
 
 This adapter tries to find the devices specified on the network or with bluetooth. It also shows the current external IP of the network, can read ink status of HP printers and also Weather warnings from UWZ for several european countries. It also can read daily currency exchange rates from ECB.
@@ -136,7 +134,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 * Added possibility to switch off storing of _unknown's
 * Added  `._nHere` for each item showing the number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
 * Changes to adapter to run on latest js-controller versions (and on older ones as well)
-* Added `away time` in config for each item, with this you can set time until item is flagged for away individually for different items. Possible settings are -1 for default configured away time, 0 for item disabled or 1-30 for minutes until item is flagged away.
+* Added `away time` in config for each item, with this you can set time until item is flagged for away individually for different items. Possible settings are -1 for default configured away time, 0 for item disabled or 1-30 for minutes until item is flagged as away.
 
 ### 1.2.5
 
