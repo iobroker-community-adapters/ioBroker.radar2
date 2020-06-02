@@ -444,15 +444,15 @@
     "zh-cn": "已启用"
   },
   "AwayTime": {
-    "en": "AwayTime",
-    "de": "AwayTime",
-    "ru": "AwayTime",
-    "pt": "AwayTime",
-    "nl": "Afwezig",
-    "fr": "AwayTime",
-    "it": "AwayTime",
-    "es": "AwayTime",
-    "pl": "AwayTime",
+    "en": "away time",
+    "de": "Abwesenheitszeit",
+    "ru": "время выезда",
+    "pt": "tempo ausente",
+    "nl": "weg tijd",
+    "fr": "temps libre",
+    "it": "tempo di trasferta",
+    "es": "tiempo fuera",
+    "pl": "czas nieobecności",
     "zh-cn": "离开时间"
   },
   "Away delay in minutes , -1= default, 0=item disabled": {
