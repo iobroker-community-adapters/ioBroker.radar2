@@ -136,6 +136,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 * Added possibility to switch off storing of _unknown's
 * Added  `._nHere` for each item showing the number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
 * Changes to adapter to run on latest js-controller versions (and on older ones as well)
+* Added `away time` in config for each item, with this you can set time until item is flagged for away individually for different items. Possible settings are -1 for default configured away time, 0 for item disabled or 1-30 for minutes until item is flagged away.
 
 ### 1.2.5
 
