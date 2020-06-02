@@ -261,7 +261,7 @@
                                 "numberRule"
                             ],
                             "hint": "Away delay in minutes , -1= default, 0=item disabled",
-                            "convertold": "value[item.value] = typeof value[item.value] !== 'string' || !value[item.value] ? '-1' : value[item.value]"
+                            "convertold": "value[item.value] = typeof value[item.value] !== 'number' ? '-1' : value[item.value]"
                         }
                     ]
                 }
