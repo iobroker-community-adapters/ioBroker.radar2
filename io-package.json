@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "2.0.0",
+        "version": "2.0.1",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": {
             "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -57,6 +57,10 @@
             "Ink"
         ],
         "news": {
+            "2.0.1": {
+                "en": "defaults for new adapter installation updated!",
+                "de": "Defaultwerte für neuinstallation upgedated!"
+            },
             "2.0.0": {
                 "en": "Rewritten adapter with bug fixes and updated to node 10.x+ included fj-adapter-core awhich should work on js-controller 2.x and 3.x.",
                 "de": "Neuer Adapter auf nodejs 10.x+ umgeschrieben und Fehler korrigiert. Mit js-controller 2 und 3 arbeiten."
@@ -161,49 +165,49 @@
             "ip": "localhost",
             "macs": "",
             "bluetooth": "",
-            "enabled": true
+            "enabled": -1
           },
           {
             "name": "Fritzbox",
             "ip": ["fritz.box", "192.168.178.1"],
             "macs": ["18:10:d5:08:1e:18"],
             "bluetooth": [],
-            "enabled": true
+            "enabled": -1
           },
           {
             "name": "G-Tags-",
             "ip": [],
             "macs": [],
             "bluetooth": ["01:23:45:56:78:89"],
-            "enabled": true
+            "enabled": -1
           },
           {
             "name": "HP-5230-",
             "ip": ["192.168.178.100"],
             "macs": [],
             "bluetooth": [],
-            "enabled": true
+            "enabled": -1
           },
           {
             "name": "ECB-",
             "ip": ["USD","RUB","GBP"],
             "macs": [],
             "bluetooth": [],
-            "enabled": true
+            "enabled": -1
           },
           {
             "name": "Forum",
             "ip": ["https://forum.iobroker.net"],
             "macs": [],
             "bluetooth": [],
-            "enabled": true
+            "enabled": 10
           },
           {
             "name": "Handy-Paul",
             "ip": ["192.168.178.99"],
             "macs": ["04:d6:aa:05:70:1e"],
             "bluetooth": ["AC:A7:B9:9D:BA:1B"],
-            "enabled": false
+            "enabled": 0
           }
         ],
         "scandelay": "30",
