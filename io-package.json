@@ -196,13 +196,6 @@
             "enabled": -1
           },
           {
-            "name": "Forum",
-            "ip": ["https://forum.iobroker.net"],
-            "macs": [],
-            "bluetooth": [],
-            "enabled": 10
-          },
-          {
             "name": "Handy-Paul",
             "ip": ["192.168.178.99"],
             "macs": ["04:d6:aa:05:70:1e"],
