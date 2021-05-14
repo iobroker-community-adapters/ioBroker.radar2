@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "radar2",
-        "version": "2.0.1",
+        "version": "2.0.2",
         "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
         "titleLang": {
             "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -57,6 +57,10 @@
             "Ink"
         ],
         "news": {
+            "2.0.2": {
+                "en": "Fix for js-controller 3.3",
+                "de": "Fix für js-controller 3.3"
+            },
             "2.0.1": {
                 "en": "defaults for new adapter installation updated!",
                 "de": "Defaultwerte für neuinstallation upgedated!"
