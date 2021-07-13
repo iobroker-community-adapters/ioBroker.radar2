@@ -1,4 +1,4 @@
-# radar2 network and bloutooth availability
+# radar2 network and bluetooth availability
 
 ![Logo](admin/radar2.png)
 
