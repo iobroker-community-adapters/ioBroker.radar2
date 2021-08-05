@@ -438,9 +438,9 @@ async function scanAll() {
     A.Df("radar2 found uIP's: %O", uip);
     if (suBt)
         for (const mac of ubt)
-            await A.makeState('_uBTs.' + makeId(mac, ukBt[mac].btName), A.f(ukBt[mac]), true);
+            await A.makeState(JSON.stringify('_uBTs.' + makeId(mac, ukBt[mac].btName), A.f(ukBt[mac]), true));
     ukBt = {};
-    await A.makeState('_uBTs', ubt, true);
+    await A.makeState(JSON.stringify('_uBTs', ubt, true));
 
     if (suIp)
         for (const ip of uip)
