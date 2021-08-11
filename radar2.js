@@ -86,12 +86,12 @@ async function scanExtIP() {
             state = state.val;
         if (oldip !== '' && state !== oldip) {
             A.I(`New external IP address ${oldip}`, oldip);
-            await A.makeState('_ExternalNetwork.lastChanged', A.dateTime(new Date(time)));
+            await A.makeState('_ExternalNetwork.lastChanged', A.dateTime(new Date(time)), true);
         } else if (oldip === '') {
-            await A.makeState('_ExternalNetwork.lastChanged', A.W(`Not connected to external network!`, 0));
+            await A.makeState('_ExternalNetwork.lastChanged', A.W(`Not connected to external network!`, 0), true);
         } else
             A.D(`Same external IP address ${oldip}`);
-        await A.makeState('_ExternalNetwork', oldip);
+        await A.makeState('_ExternalNetwork', oldip, true);
         //                .then(() => A.makeState('ExternalNetwork.status', ++sameip));
     } catch (err) {
         A.If("scanExtIP error: %O", err);
@@ -107,13 +107,13 @@ async function scanECBs() {
             const body = await A.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml', 2);
             const ecb = await xmlParseString(body);
             if (ecb && ecb.Envelope.Cube.Cube) {
-                await A.makeState(item.id, ecb.Envelope.Cube.Cube.$.time);
+                await A.makeState(item.id, ecb.Envelope.Cube.Cube.$.time, true);
                 for (const cur of ecb.Envelope.Cube.Cube.Cube) {
                     const ccur = cur.$.currency;
                     const rate = parseFloat(cur.$.rate);
                     if (item.ip.indexOf(ccur) < 0)
                         continue;
-                    await A.makeState(idn + ccur, rate);
+                    await A.makeState(idn + ccur, rate, true);
                 }
             }
         } catch (e) {
@@ -152,8 +152,8 @@ async function scanHPs() {
                     await A.makeState(idnc, ss);
                     await A.wait(1);
                 }
-            await A.makeState(idn + 'ink', below10.length > 0 ? below10.join(', ') : 'All >10%');
-            await A.makeState(pitem.id, '' + A.dateTime(new Date()));
+            await A.makeState(idn + 'ink', below10.length > 0 ? below10.join(', ') : 'All >10%', true);
+            await A.makeState(pitem.id, '' + A.dateTime(new Date()), true);
         } catch (e) {
             A.Wf("Had error when reaching printer '%s'. Check link address!", pitem.id);
         }
@@ -180,12 +180,12 @@ async function getUWZ() {
             A.I(`UWZ found the following (changed) warnings: ${wt}`);
             if (numuwz > 0) {
                 for (const x in w)
-                    if (x < numuwz) await A.makeState('_UWZ' + x, w[x]);
+                    if (x < numuwz) await A.makeState('_UWZ' + x, w[x], true);
                     else break;
 
                 for (let n = w.length; n < numuwz; n++)
-                    await A.makeState('_UWZ' + n, '');
-            } else await A.makeState('_UWZ', wlast);
+                    await A.makeState('_UWZ' + n, '', true);
+            } else await A.makeState('_UWZ', wlast, true);
         }
     } catch (e) {
         A.W(`Error in getUWZ: ${e}`);
@@ -225,11 +225,11 @@ async function setItem(item) {
     if (item.anwesend !== anw || anw !== wasanw || lasthere !== item.lasthere) {
         item.anwesend = anw;
         //        A.I(A.F('lasthere:',item.lasthere, ' locDate:', A.dateTime(item.lasthere),' anwesend:', anw, ' iphere: ',!!item.ipHere, ' bthere:',!!item.btHere))
-        await A.makeState(idn + '._lastHere', A.dateTime(item.lasthere));
+        await A.makeState(idn + '._lastHere', A.dateTime(item.lasthere), true);
         //        A.makeState(idn + '.lasthere', item.lasthere)
-        await A.makeState(item.id, !!anw);
-        await A.makeState(item.id + '._here', !!anw);
-        await A.makeState(item.id + '._whatHere', whathere);
+        await A.makeState(item.id, !!anw, true);
+        await A.makeState(item.id + '._here', !!anw, true);
+        await A.makeState(item.id + '._whatHere', whathere, true);
         //            .then(() => A.makeState(idn + '.here', (item.ipHere ? 'IP ' : '') + (item.btHere ? 'BT' : '')))
         //            .then(() => item.hasIP ? A.makeState(idn + '.ipHere', !!item.ipHere) : false)
         //            .then(() => item.hasBT ? A.makeState(idn + '.btHere', !!item.btHere) : false);
@@ -408,13 +408,13 @@ async function scanAll() {
             notHere.push(item.id);
 
         //            A.I(A.F('item:',item.id,',  anwesend', item.anwesend, ', here: ',item.here, ', dd: ',dd, ', itemlh:', item.lasthere));
-        await A.makeState(item.id, !!item.anwesend);
-        await A.makeState(item.id + '._here', !!item.anwesend);
+        await A.makeState(item.id, !!item.anwesend, true);
+        await A.makeState(item.id + '._here', !!item.anwesend, true);
         if (!item.anwesend) item.countHere = 0;
         else item.countHere = (item.countHere || 0) + 1;
-        await A.makeState(item.id + '._nHere', item.countHere);
+        await A.makeState(item.id + '._nHere', item.countHere, true);
         if (!item.anwesend)
-            await A.makeState(item.id + '._whatHere', "");
+            await A.makeState(item.id + '._whatHere', "", true);
         await A.wait(1);
     }
     //            let wh = whoHere.join(', ');
@@ -422,30 +422,30 @@ async function scanAll() {
     //                oldWhoHere = wh;
     //                A.I(`ScanAll: From all ${allhere.length} devices dedected ${countHere} are whoHere: ${wh}`);
     //            }
-    await A.makeState('_nHere', whoHere.length);
+    await A.makeState('_nHere', whoHere.length, true);
     allHere = allHere.join(', ');
     notHere = notHere.join(', ');
     whoHere = whoHere.join(', ');
     A.D(`radar2 found here (${allHere})`);
     A.D(`and who here (${whoHere})`);
     A.D(`and not here (${notHere})`);
-    await A.makeState('_allHere', allHere);
-    await A.makeState('_notHere', notHere);
-    await A.makeState('_isHere', whoHere);
+    await A.makeState('_allHere', allHere, true);
+    await A.makeState('_notHere', notHere, true);
+    await A.makeState('_isHere', whoHere, true);
     const ubt = A.ownKeysSorted(ukBt);
     const uip = A.ownKeysSorted(ukIp);
     A.Df("radar2 found uBT's: %O", ubt);
     A.Df("radar2 found uIP's: %O", uip);
     if (suBt)
         for (const mac of ubt)
-            await A.makeState('_uBTs.' + makeId(mac, ukBt[mac].btName), A.f(ukBt[mac]));
+            await A.makeState('_uBTs.' + makeId(mac, ukBt[mac].btName), A.f(ukBt[mac]), true);
     ukBt = {};
-    await A.makeState('_uBTs', ubt);
+    await A.makeState('_uBTs', JSON.stringify(ubt), true);
 
     if (suIp)
         for (const ip of uip)
-            await A.makeState('_uIPs.' + makeId(ip, ukIp[ip].hosts), A.f(ukIp[ip]));
-    await A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp)));
+            await A.makeState('_uIPs.' + makeId(ip, ukIp[ip].hosts), A.f(ukIp[ip]), true);
+    await A.makeState('_uIPs', A.O(A.ownKeysSorted(ukIp)), true);
     ukIp = {};
 
     for (const item in scanList)
@@ -513,7 +513,7 @@ async function main(adapter) {
     }));
 
     network.on('listenState', listen =>
-        A.makeState('info.connection', !!listen));
+        A.makeState('info.connection', !!listen, true));
     bluetooth.on('found', what => foundBt(what));
 
     /*     A.unload = async (how) => {
@@ -729,7 +729,7 @@ async function main(adapter) {
             scanList[item.name] = item;
             const st = await A.myGetState(item.id + '._lastHere');
             if (st && st.ts)
-                await A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)));
+                await A.makeState(item.id + '._lastHere', A.dateTime(item.lasthere = new Date(st.ts)), true);
             await A.extendObject(item.id, {
                 type: 'state',
                 native: {
