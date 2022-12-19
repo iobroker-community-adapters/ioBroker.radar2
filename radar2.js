@@ -52,6 +52,8 @@ A.init(module, {
     onUnload: async (how) => {
         await network.stop().catch(A.nop);
         await bluetooth.stop().catch(A.nop);
+        A.timer.forEach(t => clearInterval(t));
+        A.timer = [];
         return A.If("Unload adapter now with %s", how);
     },
     // async objChange(id, obj) {
@@ -67,7 +69,7 @@ async function xmlParseString(body) {
             explicitArray: false,
             trim: true,
             tagNameProcessors: [item => ((item = item.split(':')), item.length == 2 ? item[1] : item[0])],
-            //                attrNameProcessors: [tagnames],  // can but not must be same as tagNameProcessor 
+            //                attrNameProcessors: [tagnames],  // can but not must be same as tagNameProcessor
             valueProcessors: [str => !isNaN(str) ? (str % 1 === 0 ? parseInt(str) : parseFloat(str)) : str]
         }).parseString)(body);
         return res;
@@ -163,7 +165,7 @@ async function scanHPs() {
 
 /// @name getUWZ
 /// @return Promise
-/// 
+///
 async function getUWZ() {
     try {
         const data = await A.get('http://feed.alertspro.meteogroup.com/AlertsPro/AlertsProPollService.php?method=getWarning&language=de&areaID=' + doUwz, 2);
@@ -196,8 +198,8 @@ async function getUWZ() {
 
 /// @name setItem
 /// Process any scanlist item after lasthere for ipHere or btHere was set to new Date
-/// 
-/// @param {item from scanList} item - scanlist entry which found to be here. 
+///
+/// @param {item from scanList} item - scanlist entry which found to be here.
 async function setItem(item) {
     const wasanw = !!item.anwesend;
     let lasthere = item.lasthere;
@@ -237,10 +239,10 @@ async function setItem(item) {
 }
 
 /// @name foundIpMac
-/// 
-/// 
-/// @param {object} what - object with one or more of {ipAddress, macAddress, by, ... } 
-/// @returns {void} - 
+///
+///
+/// @param {object} what - object with one or more of {ipAddress, macAddress, by, ... }
+/// @returns {void} -
 async function foundIpMac(what) {
     let found = false;
     const ip = what.ipAddress && Network.isIP(what.ipAddress) && what.ipAddress.trim().toLowerCase();
@@ -291,9 +293,9 @@ async function foundIpMac(what) {
     }
 }
 /// @name foundBt
-/// 
-/// 
-/// @param {object} what - object with one or more of {address, by, ... } 
+///
+///
+/// @param {object} what - object with one or more of {address, by, ... }
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
@@ -479,7 +481,7 @@ A.timer = [];
     if(!errorManagement.handler.isTrustedError(error))
     process.exit(1)
    });
-   
+
  */
 process.on('uncaughtException', err => {
     A.W(`Uncaught Exception: ${err.message}`);
@@ -496,7 +498,7 @@ async function main(adapter) {
 
     if (isTesting)
         A.I("adapter in testing mode, no noble and DHCP!");
-        
+
 
     network.on('request', items => {
         items.macVendor = Network.getMacV(items.macAddress);
@@ -522,7 +524,7 @@ async function main(adapter) {
             return A.If("Unload adapter now with %s", how);
         };
      */
-    /* 
+    /*
     A.unload = () => {
         network.stop();
         bluetooth.stop();
@@ -707,7 +709,7 @@ async function main(adapter) {
                     if (x)
                     // if (macList[x] && macList[x] !== item)
                     //     A.W(`mac address '${x}' was used already for another device ${macList[x].name}`);
-                    // else 
+                    // else
                     {
                         if (item.hasMAC) {
                             //                                            A.If('mac for %O is %O', item, item.hasMAC);
@@ -716,7 +718,7 @@ async function main(adapter) {
                         } else item.hasMAC = [x];
                         if (x && ip)
                             network.combine(x, ip);
-                        //                    A.I(A.F('ip %s has mac %s.',ip,x));      
+                        //                    A.I(A.F('ip %s has mac %s.',ip,x));
                         //                                        A.Df('add mac %s for ip %s in %s to %O and vendor: ', x, ip, item.name, item.hasMAC, item.mipVendor);
                         macList[x] = item;
                     }
