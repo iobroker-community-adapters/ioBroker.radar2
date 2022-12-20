@@ -628,6 +628,15 @@ async function main(adapter) {
                 A.Wf("Invalid item name '%s', must be at least 2 letters long!", item.name);
                 continue;
             }
+            if (item.name === 'Forum' && Array.isArray(item.ip) && item.ip[0] === 'https://forum.iobroker.net' && item.enabled > 0) {
+                if (item.enabled === 10) {
+                    A.Wf("Disable item '%s' because default and most likely unneeded", item.name);
+                    item.enabled = 0;
+                } else if (item.enabled < 600) {
+                    A.Wf("Item '%s' should not be checked faster than every 600s", item.name);
+                    item.enabled = 600;
+                }
+            }
             if (scanList[item.name]) {
                 A.Wf("Double item name '%s', names cannot be used more than once!", item.name);
                 continue;
@@ -635,13 +644,13 @@ async function main(adapter) {
             item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
             item.ip = !item.ip ? [] : Array.isArray(item.ip) ? item.ip : item.ip.split(",");
             item.ip = item.ip.map(i => i.trim());
-            if (item.ip.length == 1 && !item.ip[0])
+            if (item.ip.length === 1 && !item.ip[0])
                 item.ip.splice(0, 1);
             item.type = '';
             item.macs = item.macs ? item.macs : [];
             let mmacs = Array.isArray(item.macs) ? item.macs : item.macs.split(',');
             mmacs = mmacs.map(i => i.trim().toLowerCase());
-            if (mmacs.length == 1 && !mmacs[0])
+            if (mmacs.length === 1 && !mmacs[0])
                 mmacs.splice(0, 1);
             for (const val of mmacs) {
                 const mac = val && (typeof val === 'string') ? val : null;
@@ -660,7 +669,7 @@ async function main(adapter) {
             if (!Array.isArray(item.bluetooth))
                 item.bluetooth = item.bluetooth.split(',');
             item.bluetooth = item.bluetooth.map(x => x.trim().toLowerCase());
-            if (item.bluetooth.length == 1 && !item.bluetooth[0])
+            if (item.bluetooth.length === 1 && !item.bluetooth[0])
                 item.bluetooth.splice(0, 1);
             for (let b of item.bluetooth) {
                 const le = b.startsWith('!');
