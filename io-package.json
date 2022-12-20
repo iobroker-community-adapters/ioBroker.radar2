@@ -33,15 +33,19 @@
         "license": "MIT",
         "platform": "Javascript/Node.js",
         "mode": "daemon",
-        "availableModes": [
-            "daemon"
-        ],
         "materialize": true,
         "enabled": true,
         "readme": "https://github.com/frankjoke/ioBroker.radar2/blob/master/README.md",
         "loglevel": "info",
         "icon": "radar2.png",
         "dataSource": "push",
+        "connectionType": "local",
+        "tier": 2,
+        "dependencies": [
+            {
+                "js-controller": ">=2.0.0"
+            }
+        ],
         "keywords": [
             "ping",
             "ip",

@@ -78,7 +78,7 @@ class ScanCmd extends EventEmitter {
             killSignal: 'SIGINT',
             timeout: 0,
             spawnOptions: {
-                // detachment and ignored stdin are the key here: 
+                // detachment and ignored stdin are the key here:
                 detached: true,
                 stdio: ['ignore', 'pipe', 'pipe']
             }
@@ -247,7 +247,7 @@ class ScanCmd extends EventEmitter {
         }
         //        setImmediate(() => {
         if (this._cmd) {
-            /*                
+            /*
                             this._cmd.removeAllListeners();
                             if (this._cmd.stdout)
                                 this._cmd.stdout.removeAllListeners();
@@ -347,7 +347,7 @@ class Bluetooth extends EventEmitter {
                     that.emit('found', item);
                 }
         }
-/* 
+/*
         async function scanoldhci(that) {
             const res = await ScanCmd.runCmd(`hcitool -i ${that._doHci} scan`, {
                 match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'],
@@ -477,6 +477,11 @@ class Bluetooth extends EventEmitter {
 
             if (!this._doHci) try {
                 this._noble = require('@abandonware/noble');
+                if (typeof this._noble.on !== "function") {
+                    // The following commit broke the default exported instance of noble:
+                    // https://github.com/abandonware/noble/commit/b67eea246f719947fc45b1b52b856e61637a8a8e
+                    this._noble = this._noble({ extended: false });
+                }
                 this._noble.on('stateChange', (state) => self.emit('stateChange', A.D(A.F('Noble State Change:', state), state)));
                 //        this._noble.on('scanStart', () => A.D('Noble scan started'));
                 //        this._noble.on('scanStop', () => A.D('Noble scan stopped'));
@@ -1119,7 +1124,7 @@ class Network extends EventEmitter {
         return mvcache.cacheSync(mac.trim().toLowerCase());
     }
 
-    ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address, 
+    ip4addrs(what) { // 0 = interface, 1 = type:IPv4/IPv6, 2=mac-address, 3= address,
         return this._iflist.filter((addr) => addr[1] === 'IPv4').map((i) => i[what ? what : 0]);
     }
 
