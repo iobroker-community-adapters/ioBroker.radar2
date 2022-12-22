@@ -133,21 +133,8 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 2.0.4 (2022-12-22)
 * Update noble
-
-### V2.0.1
-
-* Removed node-bluetooth because package is not updated to run on recent nodejs versions
-* Updated noble to more recent version
-* Completely rewritten logic for pinging BT with l2ping, or hcitool lescan
-* Updated scan methot to reduce process load and also increase hit rate
-* Completely re-written config page with new options
-* Added possibility to switch off storing of _unknown's
-* Added  `._nHere` for each item showing the number of scans device was found, reset to `0` when not found in a scan. This allows to implement delayed here logic.
-* Changes to adapter to run on latest js-controller versions (and on older ones as well)
-* Added `away time` in config for each item, with this you can set time until item is flagged for away individually for different items. Possible settings are -1 for default configured away time, 0 for item disabled or 1-30 for minutes until item is flagged as away.
 
 ### 1.2.5
 
