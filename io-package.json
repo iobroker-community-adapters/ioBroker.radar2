@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.0.6",
+    "version": "2.0.7",
     "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
     "titleLang": {
       "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -61,6 +61,19 @@
       "Ink"
     ],
     "news": {
+      "2.0.7": {
+        "en": "Upgrade noble",
+        "de": "Upgrade edle",
+        "ru": "Обновить благородный",
+        "pt": "Atualizar nobre",
+        "nl": "Upgrade nobele",
+        "fr": "Niveau supérieur noble",
+        "it": "Aggiornamento nobile",
+        "es": "Moderno noble",
+        "pl": "Uproszczony",
+        "uk": "Покращений благородний",
+        "zh-cn": "崇高"
+      },
       "2.0.5": {
         "en": "Downgrade noble again",
         "de": "Hervorragend edel wieder",
