@@ -61,19 +61,6 @@
       "Ink"
     ],
     "news": {
-      "2.0.6": {
-        "en": "Upgrade noble",
-        "de": "Upgrade edle",
-        "ru": "Обновить благородный",
-        "pt": "Atualizar nobre",
-        "nl": "Upgrade nobele",
-        "fr": "Niveau supérieur noble",
-        "it": "Aggiornamento nobile",
-        "es": "Moderno noble",
-        "pl": "Uproszczony",
-        "uk": "Покращений благородний",
-        "zh-cn": "崇高"
-      },
       "2.0.5": {
         "en": "Downgrade noble again",
         "de": "Hervorragend edel wieder",
