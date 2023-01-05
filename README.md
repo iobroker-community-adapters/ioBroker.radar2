@@ -175,7 +175,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 The MIT License (MIT)
 
-Copyright (c) 2018-2022, frankjoke <frankjoke@hotmail.com>
+Copyright (c) 2018-2023, frankjoke <frankjoke@hotmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
