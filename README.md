@@ -133,6 +133,10 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Upgrade noble
+
 ### 2.0.5 (2022-12-31)
 * (Apollon77) Downgrade noble again
 
