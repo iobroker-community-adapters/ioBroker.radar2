@@ -69,7 +69,7 @@
   },
   "main": "radar2.js",
   "dependencies": {
-    "@iobroker/adapter-core": "^2.6.7",
+    "@iobroker/adapter-core": "^2.6.8",
     "axios": "^0.27.2",
     "node-arp": "^1.0.6",
     "node-ble": "^1.9.0",
