@@ -70,7 +70,7 @@
   "main": "radar2.js",
   "dependencies": {
     "@iobroker/adapter-core": "^2.6.8",
-    "axios": "^0.27.2",
+    "axios": "^1.4.0",
     "node-arp": "^1.0.6",
     "node-ble": "^1.9.0",
     "ping": "^0.4.4",
