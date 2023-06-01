@@ -74,7 +74,7 @@
     "node-arp": "^1.0.6",
     "node-ble": "^1.9.0",
     "ping": "^0.4.4",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.6.0"
   },
   "optionalDependencies": {
     "@abandonware/noble": "1.9.2-19",
