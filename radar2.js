@@ -591,7 +591,7 @@ async function main(adapter) {
     if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
         A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
     if (arpcmd && await testLinux('arp-scan'))
-        if (await A.exec('arp-scan'))
+        if (await A.exec('arp-scan --version'))
             doArp = `"${arpcmd}" on ${network.ip4addrs()}`;
         else A.W("Adapter not running as root or iobroker has no sudo right, cannot use arp-scan!");
 
