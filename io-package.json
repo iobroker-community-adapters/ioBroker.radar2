@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.0.7",
+    "version": "2.0.8",
     "title": "Radar2 for IP, Bluetooth, UWZ, ECB and HP-Printers",
     "titleLang": {
       "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
@@ -61,6 +61,10 @@
       "Ink"
     ],
     "news": {
+      "2.0.8": {
+        "en": "fix arp-scan detection for debian 12",
+        "de": "arp-scan Erkennung für debian 12 gefixt"
+      },
       "2.0.7": {
         "en": "Upgrade noble",
         "de": "Upgrade edle",

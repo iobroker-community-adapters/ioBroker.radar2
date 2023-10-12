@@ -133,6 +133,9 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 
 ## Changelog
+### 2.0.8
+* fix arp-scan detection for debian 12
+
 ### 2.0.7 (2023-01-05)
 * (Apollon77) Upgrade noble
 
