@@ -1,10 +1,17 @@
+# No dot-directories except github/vscode
+.*/
+!.vscode/
+!.github/
+
+*.code-workspace
 node_modules
-node_modules/**
-**/launch.json
-**/sftp.json
-.vscode
-.vscode/**
-.idea
-tmp
-*debug.log
-.idea
+nbproject
+
+# npm package files
+iobroker.*.tgz
+
+Thumbs.db
+
+# i18n intermediate files
+admin/i18n/flat.txt
+admin/i18n/*/flat.txt
