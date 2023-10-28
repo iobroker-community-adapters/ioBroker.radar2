@@ -32,7 +32,7 @@
     "node": ">=16"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^3.0.3",
+    "@iobroker/adapter-core": "^3.0.4",
     "axios": "^1.6.0",
     "node-arp": "^1.0.6",
     "node-ble": "^1.9.0",
