@@ -8,7 +8,7 @@
 /*jslint node: true, bitwise: true, sub:true */
 /* @ts-ignore:80006 */
 
-"use strict";
+'use strict';
 
 const A = require('./fjadapter-core'),
     xml2js = require('xml2js');
@@ -45,16 +45,16 @@ let scanDelay = 30 * 1000, // in ms = 30 sec
     scanBt = false,
     devices = null;
 
-const isTesting = process.env.DEBUG && process.env.DEBUG.startsWith("testing:");
+const isTesting = process.env.DEBUG && process.env.DEBUG.startsWith('testing:');
 
 A.init(module, {
-    name: "radar2",
+    name: 'radar2',
     onUnload: async (how) => {
         await network.stop().catch(A.nop);
         await bluetooth.stop().catch(A.nop);
         A.timer.forEach(t => clearInterval(t));
         A.timer = [];
-        return A.If("Unload adapter now with %s", how);
+        return A.If('Unload adapter now with %s', how);
     },
     // async objChange(id, obj) {
     //     A.Df("Should change obj %s to %O", id, obj);
@@ -74,7 +74,7 @@ async function xmlParseString(body) {
         }).parseString)(body);
         return res;
     } catch (e) {
-        A.Df("ParseXML-Error: %O", e);
+        A.Df('ParseXML-Error: %O', e);
         return null;
     }
 }
@@ -96,7 +96,7 @@ async function scanExtIP() {
         await A.makeState('_ExternalNetwork', oldip, true);
         //                .then(() => A.makeState('ExternalNetwork.status', ++sameip));
     } catch (err) {
-        A.If("scanExtIP error: %O", err);
+        A.If('scanExtIP error: %O', err);
     }
     return null;
 }
@@ -119,7 +119,7 @@ async function scanECBs() {
                 }
             }
         } catch (e) {
-            A.Wf("Error on accessing ECB data:", e);
+            A.Wf('Error on accessing ECB data:', e);
         }
     return A.wait(1);
 }
@@ -134,9 +134,9 @@ async function scanHPs() {
             if (!result) return null;
             result = result.ConsumableConfigDyn ? result.ConsumableConfigDyn : result;
             for (const item of result.ConsumableInfo)
-                if (item.ConsumableTypeEnum === "ink" ||
-                    item.ConsumableTypeEnum === "inkCartridge") {
-                    const p = "P" + item.ConsumableStation,
+                if (item.ConsumableTypeEnum === 'ink' ||
+                    item.ConsumableTypeEnum === 'inkCartridge') {
+                    const p = 'P' + item.ConsumableStation,
                         lc = item.ConsumableLabelCode,
                         idnc = idn + 'ink.' + lc,
                         d = item.Installation ? item.Installation.Date : null,
@@ -176,7 +176,7 @@ async function getUWZ() {
             (longuwz ? i.payload.translationsLongText.DE : i.payload.translationsShortText.DE) :
             (longuwz ? i.payload.longText : i.payload.shortText)) + (longuwz ? ': ' + i.payload.levelName : ''));
         let wt = w.join(numuwz < 0 ? '<br>\n' : '\n');
-        wt = wt === '' ? "No warnings" : wt;
+        wt = wt === '' ? 'No warnings' : wt;
         if (wt !== wlast) {
             wlast = wt;
             A.I(`UWZ found the following (changed) warnings: ${wt}`);
@@ -206,7 +206,7 @@ async function setItem(item) {
     let anw = true;
     const nDel = item.enabled < 0 ? delayAway : item.enabled;
     const idn = item.id;
-    const whathere = "" + (item.ipHere ? "IP" : "") + (item.btHere ? (item.ipHere ? "+BT" : "BT") : "");
+    const whathere = '' + (item.ipHere ? 'IP' : '') + (item.btHere ? (item.ipHere ? '+BT' : 'BT') : '');
     const here = (item.ipHere && item.btHere) ? (item.btHere > item.ipHere ? item.btHere : item.ipHere) : item.ipHere || item.btHere;
     if (here) {
         item.lasthere = here;
@@ -299,7 +299,7 @@ async function foundIpMac(what) {
 async function foundBt(what) {
     const mac = what.address.toLowerCase().trim(),
         item = btList[mac];
-    A.Df("-BtFound %s with %j", item && item.id || "unknown", what); // REM
+    A.Df('-BtFound %s with %j', item && item.id || 'unknown', what); // REM
     if (item) {
         if (!item.btHere) {
             item.btHere = new Date();
@@ -332,14 +332,15 @@ async function scanAll() {
     //    prom.push(btl ? bluetooth.startNoble(scanDelay * 0.8).catch(e => A.W(`noble error: ${A.O(e)}`)) : A.wait(1));
     prom.push(btl ? bluetooth.startScan(A.ownKeys(scansBTs)).catch(e => A.W(`bl scan error: ${A.O(e)}`)) : A.wait(1));
     prom.push(A.wait(1).then(async () => {
+        // eslint-disable-next-line no-unused-vars
         for (const [name, item] of Object.entries(scanList))
-            if (item.type === "URL") {
+            if (item.type === 'URL') {
                 for (const url of item.ip) {
                     await A.wait(10);
                     await A.get(url.trim(), {
-                            method: "HEAD"
-                        })
-                        .then(() => setItem(item, (item.ipHere = new Date())), () => null)
+                        method: 'HEAD'
+                    })
+                        .then(() => setItem(item, (item.ipHere = new Date())), () => null);
                 }
             }
         return true;
@@ -416,7 +417,7 @@ async function scanAll() {
         else item.countHere = (item.countHere || 0) + 1;
         await A.makeState(item.id + '._nHere', item.countHere, true);
         if (!item.anwesend)
-            await A.makeState(item.id + '._whatHere', "", true);
+            await A.makeState(item.id + '._whatHere', '', true);
         await A.wait(1);
     }
     //            let wh = whoHere.join(', ');
@@ -485,11 +486,11 @@ A.timer = [];
  */
 process.on('uncaughtException', err => {
     A.W(`Uncaught Exception: ${err.message}`);
-  });
+});
 
-  process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason, promise) => {
     A.W('Unhandled rejection at ', promise, `reason: ${promise.message}`);
-  });
+});
 
 
 
@@ -497,7 +498,7 @@ process.on('uncaughtException', err => {
 async function main(adapter) {
 
     if (isTesting)
-        A.I("adapter in testing mode, no noble and DHCP!");
+        A.I('adapter in testing mode, no noble and DHCP!');
 
 
     network.on('request', items => {
@@ -535,7 +536,7 @@ async function main(adapter) {
 
     //    Network.updateMacdb()
     //    A.wait(1)
-//    await Network.updateMacdb();
+    //    await Network.updateMacdb();
 
     if (A.C.debug)
         A.debug = A.C.debug;
@@ -579,11 +580,11 @@ async function main(adapter) {
     printerDelay = parseInt(A.C.printerdelay);
 
     if (A.C.knownBTs)
-        knownBTs = typeof A.C.knownBTs === "string" ? A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',') : A.C.knownBTs;
+        knownBTs = typeof A.C.knownBTs === 'string' ? A.C.knownBTs.toLowerCase().replace(/['[\]\s]/g, '').split(',') : A.C.knownBTs;
     A.D('use known BT list: ' + A.O(knownBTs));
 
     if (A.C.knownIPs)
-        knownIPs = typeof A.C.knownIPs === "string" ? A.C.knownIPs.replace(/['[\]\s]/g, '').split(',') : A.C.knownIPs;
+        knownIPs = typeof A.C.knownIPs === 'string' ? A.C.knownIPs.replace(/['[\]\s]/g, '').split(',') : A.C.knownIPs;
     A.D('use known IP list: ' + A.O(knownIPs));
 
     arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
@@ -593,18 +594,18 @@ async function main(adapter) {
     if (arpcmd && await testLinux('arp-scan'))
         if (await A.exec('arp-scan --version'))
             doArp = `"${arpcmd}" on ${network.ip4addrs()}`;
-        else A.W("Adapter not running as root or iobroker has no sudo right, cannot use arp-scan!");
+        else A.W('Adapter not running as root or iobroker has no sudo right, cannot use arp-scan!');
 
     A.D(`radar2 set to scan every ${A.C.scandelay} seconds and printers every ${printerDelay} minutes.`);
     suBt = Boolean(A.C.suBT);
     suIp = Boolean(A.C.suIP);
     A.Df("Will '%s' unknown BT devices and will '%s' unknown IP devices!",
-        suBt ? "save" : "not save",
-        suIp ? "save" : "not save");
+        suBt ? 'save' : 'not save',
+        suIp ? 'save' : 'not save');
     devices = A.C.devices;
     let x = await testLinux('hcitool');
     if (x) {
-        x = await A.exec('hcitool dev').catch(() => "");
+        x = await A.exec('hcitool dev').catch(() => '');
         if (x)
             x = x.slice(8).trim();
         if (x) {
@@ -616,9 +617,9 @@ async function main(adapter) {
     try {
         // eslint-disable-next-line complexity
         for (const item of devices) {
-            if (typeof item.enabled === "string")
+            if (typeof item.enabled === 'string')
                 item.enabled = Number(item.enabled);
-            else if (typeof item.enabled !== "number")
+            else if (typeof item.enabled !== 'number')
                 item.enabled = -1;
             if (isNaN(item.enabled))
                 item.enabled = -1;
@@ -642,7 +643,7 @@ async function main(adapter) {
                 continue;
             }
             item.id = item.name.endsWith('-') ? item.name.slice(0, -1) : item.name;
-            item.ip = !item.ip ? [] : Array.isArray(item.ip) ? item.ip : item.ip.split(",");
+            item.ip = !item.ip ? [] : Array.isArray(item.ip) ? item.ip : item.ip.split(',');
             item.ip = item.ip.map(i => i.trim());
             if (item.ip.length === 1 && !item.ip[0])
                 item.ip.splice(0, 1);

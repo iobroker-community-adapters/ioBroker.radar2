@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 // V 1.5 May 2020
 
@@ -8,7 +8,7 @@ const assert = require('assert'),
     dgram = require('dgram'),
     arp = require('node-arp'),
     ping = require('ping'),
-    dns = require("dns"),
+    dns = require('dns'),
     os = require('os'),
     net = require('net'),
     // fs = require('fs'),
@@ -91,7 +91,7 @@ class ScanCmd extends EventEmitter {
     }
 
     static runCmd(cmd, match, opt) {
-        if (typeof match == "object") {
+        if (typeof match == 'object') {
             opt = match;
         } else opt = opt || {};
         if (Array.isArray(match))
@@ -104,7 +104,7 @@ class ScanCmd extends EventEmitter {
             return null;
         }
 
-        return new Promise(async (res, rej) => {
+        return new Promise((res, rej) => {
             const ret = [];
             const pid = ++ScanCmd._cnt & 0xfffffff;
             let resolved = false;
@@ -130,7 +130,7 @@ class ScanCmd extends EventEmitter {
                 // A.Df('proc raised error %j', err);
                 finish(rej, err);
             });
-            proc.on('exit', code => {
+            proc.on('exit', _code => {
                 // A.Df("proc raised exit: %j", code);
                 // code ? finish(rej, code) :
                 finish(res, ret);
@@ -178,7 +178,7 @@ class ScanCmd extends EventEmitter {
         function error(data) {
             setImmediate(() => {
                 self.emit('error', data);
-                A.Df('ScanCmd err: %s %O', self._args.join(", "), data);
+                A.Df('ScanCmd err: %s %O', self._args.join(', '), data);
                 if (self._cmd && !self._stop)
                     self.stop();
             });
@@ -347,7 +347,7 @@ class Bluetooth extends EventEmitter {
                     that.emit('found', item);
                 }
         }
-/*
+        /*
         async function scanoldhci(that) {
             const res = await ScanCmd.runCmd(`hcitool -i ${that._doHci} scan`, {
                 match: [/^\s*((?:[\dA-F]{2}:){5}[\dA-F]{2})\s+(.*?)\s*$/im, 'scan', 'address', 'btName'],
@@ -398,7 +398,7 @@ class Bluetooth extends EventEmitter {
         if (!scans.length)
             return A.Df('No BT scan because no entry available!');
         // A.Df("startScan before Promise.all with %s", A.O(scans));
-        const res = await Promise.all(scans).catch(err => A.Wf("Scan Error: %O", err));
+        const res = await Promise.all(scans).catch(err => A.Wf('Scan Error: %O', err));
         // A.Df("startScan returned Promise.All %j", res);
         this._scan = false;
         return res;
@@ -444,7 +444,7 @@ class Bluetooth extends EventEmitter {
             // empty
         }
         if (this._dol2ping) A.I('Will use l2Ping for BT scans.');
-        else A.I("cannot search for bluetooth (non-BLE) devices!");
+        else A.I('cannot search for bluetooth (non-BLE) devices!');
         // else try {
         //     this._nbt = require('@frankjoke/node-bluetooth');
         //     this._device = new this._nbt.DeviceINQ();
@@ -465,7 +465,7 @@ class Bluetooth extends EventEmitter {
             this._doHci = this._btid < 0 && res.length ?
                 res[0].name :
                 res.length && res.map(x => x.name == 'hci' + this._btid).length == 1 ?
-                'hci' + this._btid : 'hci0', () => 'hci0';
+                    'hci' + this._btid : 'hci0', () => 'hci0';
             if (this._doHci) {
                 A.If('Will run hcitool-mode and not noble on device %s!', res);
                 await this.resetHci();
@@ -477,7 +477,7 @@ class Bluetooth extends EventEmitter {
 
             if (!this._doHci) try {
                 this._noble = require('@abandonware/noble');
-                if (typeof this._noble.on !== "function") {
+                if (typeof this._noble.on !== 'function') {
                     // The following commit broke the default exported instance of noble:
                     // https://github.com/abandonware/noble/commit/b67eea246f719947fc45b1b52b856e61637a8a8e
                     this._noble = this._noble({ extended: false });
@@ -498,7 +498,7 @@ class Bluetooth extends EventEmitter {
                     if (per && address)
                         self.emit('found', {
                             address: address.toLowerCase(),
-                            btName: (advertisement && advertisement.localName) ? advertisement.localName : "N/A",
+                            btName: (advertisement && advertisement.localName) ? advertisement.localName : 'N/A',
                             rssi,
                             btVendor,
                             by: 'noble'
@@ -843,7 +843,7 @@ class Network extends EventEmitter {
     }
 
     static isMac(str) {
-        if (!str || typeof str != "string")
+        if (!str || typeof str != 'string')
             return null;
         str = str.trim().toLowerCase();
         return Network.matchMac.test(str) ? str : null;
@@ -901,7 +901,7 @@ class Network extends EventEmitter {
         };
 
         try {
-            this._netping = require("net-ping");
+            this._netping = require('net-ping');
             this._ping4session = this._netping.createSession(Object.assign(pingopt, {
                 networkProtocol: this._netping.NetworkProtocol.IPv4
             }));
@@ -1025,7 +1025,7 @@ class Network extends EventEmitter {
             this._ips.set(ip, {});
         else names = this._ips.get(ip).names;
         name = name || [];
-        if (typeof name === "string")
+        if (typeof name === 'string')
             name = [name];
         for (const n of name)
             if (!names.includes(n))
@@ -1129,7 +1129,7 @@ class Network extends EventEmitter {
     }
 
     static async getExtIP() {
-        let oldip = "";
+        let oldip = '';
         let sameip = 0;
 
         async function getIP(site) {
@@ -1144,7 +1144,7 @@ class Network extends EventEmitter {
                     return sameip;
                 }
             } catch (err) {
-                A.Df("MyIP Error on site %s: %j", site, err);
+                A.Df('MyIP Error on site %s: %j', site, err);
                 return sameip;
             }
             //            err => A.I(`MyIP Error ${A.O(err)}`, Promise.resolve(sameip)));
