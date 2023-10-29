@@ -150,8 +150,13 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* (mcm1957) Adapter has been moved to iobroker-community-adapters area
+* (mcm1957) Adapter requires nodejs 16 now
+* (mcm1957) Dependencies have been updated
+
 ### 2.0.8
-* fix arp-scan detection for debian 12
+* (ta2k) fix arp-scan detection for debian 12
 
 ### 2.0.7 (2023-01-05)
 * (Apollon77) Upgrade noble
