@@ -1,17 +1,30 @@
-# radar2 network and bloutooth availability
-
 ![Logo](admin/radar2.png)
 
-![Number of Installations](http://iobroker.live/badges/radar2-installed.svg)
-![Number of Installations](http://iobroker.live/badges/radar2-stable.svg)
-[![NPM version](http://img.shields.io/npm/v/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
+# radar2 network and bloutooth availability
 
-![Test and Release](https://github.com/frankjoke/iobroker.radar2/workflows/Test%20and%20Release/badge.svg)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.radar2.svg)](https://www.npmjs.com/package/iobroker.radar2)
+![GitHub license](https://img.shields.io/github/license/iobroker-community-adapters/ioBroker.mqtt-client)](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/blob/master/LICENSE)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.mqtt-client.svg)](https://www.npmjs.com/package/iobroker.mqtt-client)
+![GitHub repo size](https://img.shields.io/github/repo-size/iobroker-community-adapters/ioBroker.mqtt-client)
+[![Translation status](https://weblate.iobroker.net/widgets/adapters/-/mqtt-client/svg-badge.svg)](https://weblate.iobroker.net/engage/adapters/?utm_source=widget)</br>
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/iobroker-community-adapters/ioBroker.mqtt-client)
+![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/iobroker-community-adapters/ioBroker.mqtt-client/latest)
+![GitHub last commit](https://img.shields.io/github/last-commit/iobroker-community-adapters/ioBroker.mqtt-client)
+![GitHub issues](https://img.shields.io/github/issues/iobroker-community-adapters/ioBroker.mqtt-client)
+</br>
+**Version:** </br>
+[![NPM version](http://img.shields.io/npm/v/iobroker.mqtt-client.svg)](https://www.npmjs.com/package/iobroker.mqtt-client)
+![Current version in stable repository](https://iobroker.live/badges/mqtt-client-stable.svg)
+![Number of Installations](https://iobroker.live/badges/mqtt-client-installed.svg)
+</br>
+**Tests:** </br>
+[![Test and Release](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/actions/workflows/test-and-release.yml/badge.svg)](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/actions/workflows/test-and-release.yml)
+[![CodeQL](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/actions/workflows/codeql.yml/badge.svg)](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/actions/workflows/codeql.yml)
 
-[Deutsche Anleitung translated by google](https://translate.google.com/translate?sl=en&tl=de&u=https%3A%2F%2Fgithub.com%2Ffrankjoke%2FioBroker.radar2%2Fblob%2Fmaster%2FREADME.md)
-
-[Русские инструкции переведены с гуглом](https://translate.google.com/translate?sl=en&tl=ru&u=https%3A%2F%2Fgithub.com%2Ffrankjoke%2FioBroker.radar2%2Fblob%2Fmaster%2FREADME.md)
+<!--
+## Sentry
+**This adapter uses Sentry libraries to automatically report exceptions and code errors to the developers.**
+For more details and for information how to disable the error reporting see [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is used starting with js-controller 3.0.
+-->
 
 ## ioBroker radar2 visibility testing for network and bluetooth devices, HP printers, UWZ-warnungs and ECB-currencies
 
@@ -133,6 +146,10 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 
 
 ## Changelog
+<!--
+    Placeholder for the next version (at the beginning of the line):
+    ### **WORK IN PROGRESS**
+-->
 ### 2.0.8
 * fix arp-scan detection for debian 12
 
