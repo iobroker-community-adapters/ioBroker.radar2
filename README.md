@@ -150,7 +150,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 2.1.0 (2023-10-29)
 * (mcm1957) Adapter has been moved to iobroker-community-adapters area
 * (mcm1957) Adapter requires nodejs 16 now
 * (mcm1957) Dependencies have been updated

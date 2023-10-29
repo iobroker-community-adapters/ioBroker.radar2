@@ -1,77 +1,82 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.0.8",
+    "version": "2.1.0",
     "news": {
-        "2.0.8": {
-            "en": "arp-scan detection for debian 12 has been fixed\n",
-            "de": "arp-scan-Erkennung für debian 12 wurde gefixed\n",
-            "ru": "arp-scan обнаружение для debian 12 было исправлено\n",
-            "pt": "detecção arp-scan para debian 12 foi corrigido\n",
-            "nl": "arp-scan detectie voor schuld 12 is gerepareerd\n",
-            "fr": "détection arp-scan pour debian 12 a été corrigé\n",
-            "it": "arp-scan rilevamento per debian 12 è stato fissato\n",
-            "es": "detección de arp-scan para debian 12 ha sido fijo\n",
-            "pl": "eksperymentacja na debianie 12 została ustalona\n",
-            "uk": "arp-scan виявлення для debian 12 було виправлено\n",
-            "zh-cn": "a 对12名非安非他明的探查是固定的。\n"
-        },
-        "2.0.7": {
-          "en": "Upgrade noble",
-          "de": "Upgrade edle",
-          "ru": "Обновить благородный",
-          "pt": "Atualizar nobre",
-          "nl": "Upgrade nobele",
-          "fr": "Niveau supérieur noble",
-          "it": "Aggiornamento nobile",
-          "es": "Moderno noble",
-          "pl": "Uproszczony",
-          "uk": "Покращений благородний",
-          "zh-cn": "崇高"
-        },
-        "2.0.5": {
-          "en": "Downgrade noble again",
-          "de": "Hervorragend edel wieder",
-          "ru": "Обновить благородный снова",
-          "pt": "Downgrade nobre novamente",
-          "nl": "Weer nobel",
-          "fr": "Encore noble",
-          "it": "Di nuovo nobile",
-          "es": "Noble de nuevo",
-          "pl": "Po raz kolejny szlachetny",
-          "uk": "Понград благородний знову",
-          "zh-cn": "D. 世俗"
-        },
-        "2.0.4": {
-          "en": "Update noble",
-          "de": "Aktualisieren",
-          "ru": "Обновление noble",
-          "pt": "Atualização nobre",
-          "nl": "Update nobele",
-          "fr": "Mise à jour noble",
-          "it": "Aggiornamento nobile",
-          "es": "Actualización noble",
-          "pl": "Update szlachta",
-          "uk": "Оновлення благородного",
-          "zh-cn": "最新消息"
-        },
-        "2.0.3": {
-          "en": "Fix for setStates",
-          "de": "Fix für SetStates"
-        },
-        "2.0.2": {
-          "en": "Fix for js-controller 3.3",
-          "de": "Fix für js-controller 3.3"
-        },
-        "2.0.1": {
-          "en": "defaults for new adapter installation updated!",
-          "de": "Defaultwerte für neuinstallation upgedated!"
-        },
-        "2.0.0": {
-          "en": "Rewritten adapter with bug fixes and updated to node 10.x+ included fj-adapter-core awhich should work on js-controller 2.x and 3.x.",
-          "de": "Neuer Adapter auf nodejs 10.x+ umgeschrieben und Fehler korrigiert. Mit js-controller 2 und 3 arbeiten."
-        }
+      "2.1.0": {
+        "en": "Adapter has been moved to iobroker-community-adapters area\nAdapter requires nodejs 16 now\nDependencies have been updated",
+        "de": "Adapter wurde auf iobroker-community-Adapter Bereich verschoben\nAdapter benötigt jetzt Nodejs 16\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Адаптер переехал в зону iobroker-community-adapters\nАдаптер требует nodejs 16 сейчас\nВ зависимости были обновлены",
+        "pt": "Adapter foi movido para iobroker-community-adapters area\nAdapter requer nodejs 16 agora\nAs dependências foram atualizadas",
+        "nl": "Adapter is verplaatst naar iobroker-community-papters gebied\nAdapter vereist nodej 16 nu\nAfhankelijkheid",
+        "fr": "L'adaptateur a été déplacé vers la zone d'iobroker-community-adapters\nAdaptateur nécessite nodejs 16 maintenant\nLes dépendances ont été mises à jour",
+        "it": "L'adattatore è stato spostato nell'area di hobroker-community-adapters\nAdattatore richiede nodejs 16 ora\nLe dipendenze sono state aggiornate",
+        "es": "Adaptador ha sido trasladado a la zona de ibroker-community-adapters\nAdaptador requiere nodejs 16 ahora\nSe han actualizado las dependencias",
+        "pl": "Adapter został przeniesiony do iobroker-kommunity-porządek\nAdapter wymaga już 16 węzłów\nZależności zostały zaktualizowane",
+        "uk": "Переміщено перехід на область iobroker-community-adapters\nАдаптер вимагає nodejs 16 тепер\nОновлено залежність",
+        "zh-cn": "已经向加勒比采掘器-社区-营运区转移了道歉。\n道歉现在需要16个不听众。\n已更新了属地"
       },
+      "2.0.8": {
+        "en": "arp-scan detection for debian 12 has been fixed\n",
+        "de": "arp-scan-Erkennung für debian 12 wurde gefixed\n",
+        "ru": "arp-scan обнаружение для debian 12 было исправлено\n",
+        "pt": "detecção arp-scan para debian 12 foi corrigido\n",
+        "nl": "arp-scan detectie voor schuld 12 is gerepareerd\n",
+        "fr": "détection arp-scan pour debian 12 a été corrigé\n",
+        "it": "arp-scan rilevamento per debian 12 è stato fissato\n",
+        "es": "detección de arp-scan para debian 12 ha sido fijo\n",
+        "pl": "eksperymentacja na debianie 12 została ustalona\n",
+        "uk": "arp-scan виявлення для debian 12 було виправлено\n",
+        "zh-cn": "a 对12名非安非他明的探查是固定的。\n"
+      },
+      "2.0.7": {
+        "en": "Upgrade noble",
+        "de": "Upgrade edle",
+        "ru": "Обновить благородный",
+        "pt": "Atualizar nobre",
+        "nl": "Upgrade nobele",
+        "fr": "Niveau supérieur noble",
+        "it": "Aggiornamento nobile",
+        "es": "Moderno noble",
+        "pl": "Uproszczony",
+        "uk": "Покращений благородний",
+        "zh-cn": "崇高"
+      },
+      "2.0.5": {
+        "en": "Downgrade noble again",
+        "de": "Hervorragend edel wieder",
+        "ru": "Обновить благородный снова",
+        "pt": "Downgrade nobre novamente",
+        "nl": "Weer nobel",
+        "fr": "Encore noble",
+        "it": "Di nuovo nobile",
+        "es": "Noble de nuevo",
+        "pl": "Po raz kolejny szlachetny",
+        "uk": "Понград благородний знову",
+        "zh-cn": "D. 世俗"
+      },
+      "2.0.4": {
+        "en": "Update noble",
+        "de": "Aktualisieren",
+        "ru": "Обновление noble",
+        "pt": "Atualização nobre",
+        "nl": "Update nobele",
+        "fr": "Mise à jour noble",
+        "it": "Aggiornamento nobile",
+        "es": "Actualización noble",
+        "pl": "Update szlachta",
+        "uk": "Оновлення благородного",
+        "zh-cn": "最新消息"
+      },
+      "2.0.3": {
+        "en": "Fix for setStates",
+        "de": "Fix für SetStates"
+      },
+      "2.0.2": {
+        "en": "Fix for js-controller 3.3",
+        "de": "Fix für js-controller 3.3"
+      }
+    },
     "titleLang": {
       "en": "Radar2 for IP & Bluetooth devices and infos mfrom UWZ, ECB and HP-Printers",
       "de": "Radar2 für IP & Bluetooth-Geräte und infos mfrom UWZ, EZB und HP-Drucker",
@@ -97,21 +102,21 @@
       "zh-cn": "这器可以扫描权和蓝牙地址可用性/在达和也得到的汇率从欧洲中央银行、天气预警，从UWZ，并得到墨水填写自惠普的打印机"
     },
     "authors": [
-        "iobroker-community-adapters <mcm57@gmx.at>",
-        "frankjoke <frankjoke@hotmail.com>"
+      "iobroker-community-adapters <mcm57@gmx.at>",
+      "frankjoke <frankjoke@hotmail.com>"
     ],
     "keywords": [
-        "ping",
-        "ip",
-        "mac",
-        "bluetooth",
-        "radar",
-        "UWZ",
-        "ECB",
-        "printer",
-        "HP",
-        "Ink"
-      ],
+      "ping",
+      "ip",
+      "mac",
+      "bluetooth",
+      "radar",
+      "UWZ",
+      "ECB",
+      "printer",
+      "HP",
+      "Ink"
+    ],
     "license": "MIT",
     "platform": "Javascript/Node.js",
     "main": "radar2.js",
@@ -128,15 +133,15 @@
     "materialize": true,
     "tier": 2,
     "dependencies": [
-        {
-          "js-controller": ">=4.0.24"
-        }
-      ],
-      "globalDependencies": [
-        {
-          "admin": ">=5.1.13"
-        }
-      ]
+      {
+        "js-controller": ">=4.0.24"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=5.1.13"
+      }
+    ]
   },
   "native": {
     "devices": [
