@@ -1,6 +1,6 @@
 ![Logo](admin/radar2.png)
 
-# radar2 network and bloutooth availability
+# radar2 network and bluetooth availability
 
 [![GitHub license](https://img.shields.io/github/license/iobroker-community-adapters/ioBroker.mqtt-client)](https://github.com/iobroker-community-adapters/ioBroker.mqtt-client/blob/master/LICENSE)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.mqtt-client.svg)](https://www.npmjs.com/package/iobroker.mqtt-client)
