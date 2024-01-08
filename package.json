@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.0.4",
-    "axios": "^1.6.3",
+    "axios": "^1.6.5",
     "node-arp": "^1.0.6",
     "node-ble": "^1.9.0",
     "ping": "^0.4.4",
