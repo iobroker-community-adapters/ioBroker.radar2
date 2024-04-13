@@ -102,7 +102,7 @@
       "zh-cn": "这器可以扫描权和蓝牙地址可用性/在达和也得到的汇率从欧洲中央银行、天气预警，从UWZ，并得到墨水填写自惠普的打印机"
     },
     "authors": [
-      "iobroker-community-adapters <mcm57@gmx.at>",
+      "iobroker-community-adapters <iobroker-community-adapters@gmx.de>",
       "frankjoke <frankjoke@hotmail.com>"
     ],
     "keywords": [
@@ -117,24 +117,26 @@
       "HP",
       "Ink"
     ],
-    "license": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
     "platform": "Javascript/Node.js",
-    "main": "radar2.js",
     "icon": "radar2.png",
     "enabled": true,
     "extIcon": "https://raw.githubusercontent.com/iobroker-community-adapters/ioBroker.radar2/master/admin/radar2.png",
     "readme": "https://github.com/iobroker-community-adapters/ioBroker.radar2/blob/master/README.md",
     "loglevel": "info",
+    "tier":2,
     "mode": "daemon",
     "type": "network",
     "compact": false,
     "connectionType": "local",
     "dataSource": "push",
     "materialize": true,
-    "tier": 2,
     "dependencies": [
       {
-        "js-controller": ">=4.0.24"
+        "js-controller": ">=5.0.0"
       }
     ],
     "globalDependencies": [
