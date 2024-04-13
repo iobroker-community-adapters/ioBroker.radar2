@@ -68,7 +68,7 @@
     "typescript": "~5.4.5"
   },
   "optionalDependencies": {
-    "@abandonware/noble": "1.9.2-23",
+    "@abandonware/noble": "1.9.2-24",
     "net-ping": "^1.2.4"
   },
   "main": "radar2.js",
