@@ -35,7 +35,7 @@
     "@iobroker/adapter-core": "^3.1.6",
     "axios": "^1.6.8",
     "node-arp": "^1.0.6",
-    "node-ble": "^1.10.0",
+    "node-ble": "^1.12.0",
     "ping": "^0.4.4",
     "xml2js": "^0.6.2"
   },
