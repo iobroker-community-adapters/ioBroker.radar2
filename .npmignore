@@ -11,3 +11,5 @@ sftp.json
 old*
 admin_o
 
+eslint.config.mjs
+prettier.config.mjs
