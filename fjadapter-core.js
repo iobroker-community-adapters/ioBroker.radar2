@@ -25,7 +25,7 @@ if (process.env.fjadapter != 'TESTING')
 
 
 class CacheP {
-    constructor(fun, delay) { // neue EintrÃ¤ge werden mit dieser Funktion kreiert
+    constructor(fun, delay) { // neue Einträge werden mit dieser Funktion kreiert
         if (typeof fun != 'function')
             throw 'CacheP needs an async function returning a Promise as first argument!';
         this._cache = {};
@@ -432,7 +432,7 @@ class MyAdapter {
         this.setForeignObject = adapter.setForeignObjectAsync.bind(adapter);
         this.getForeignObjects = adapter.getForeignObjectsAsync.bind(adapter);
         this.getObject = adapter.getObjectAsync.bind(adapter);
-        this.deleteState = (id) => adapter.deleteStateAsync(id).catch(res => res === 'Not exists' ? this.resolve() : this.reject(res));
+        this.delObject = (id) => adapter.delObjectAsync(id).catch(res => res === 'Not exists' ? this.resolve() : this.reject(res));
         this.delObject = (id, opt) => adapter.delObjectAsync(id, opt).catch(res => res === 'Not exists' ? this.resolve() : this.reject(res));
         this.delState = (id, opt) => adapter.delStateAsync(id, opt).catch(res => res === 'Not exists' ? this.resolve() : this.reject(res));
         this.removeState = (id, opt) => adapter.delStateAsync(id, opt).then(() => this.delObject((delete states[id], id), opt));
@@ -1186,20 +1186,17 @@ class MyAdapter {
     }
 
     static async cleanup(name) {
-        //        .then(() => A.I(A.F(A.sstate)))
-        //        .then(() => A.I(A.F(A.ownKeysSorted(A.states))))
         const res = await this.getObjects(name);
         for (const item of res) { // clean all states which are not part of the list
-            //            this.I(`Check ${this.O(item)}`);
             const id = item.id;
             if (!id || !id.startsWith(this.ain) || createdStates[id])
                 continue;
-            //            this.I(`check state ${item.id} and ${id}: ${states[item.id]} , ${states[id]}`);
+
             if (states[id]) {
-                this.Df('Cleanup delete state %s', id);
-                await adapter.deleteStateAsync(id).catch(MyAdapter.nop);
+                this.Df('Cleanup delete object %s', id);
+                await adapter.delObjectAsync(id).catch(MyAdapter.nop);
             }
-            //				.catch(err => this.D(`Del State err: ${this.O(err)}`));
+
             let found = false;
             for (const cs of Object.keys(createdStates))
                 if (cs.startsWith(id + '.')) {
@@ -1210,7 +1207,6 @@ class MyAdapter {
                 this.Df('Cleanup delete object %s', id);
                 await adapter.delObjectAsync(id).catch(MyAdapter.nop);
             }
-            //				.catch(err => this.D(`Del Object err: ${this.O(err)}`)); ///TC
             await this.wait(10);
         }
     }
