@@ -150,6 +150,11 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* (speebreaker12) Deprecated 'delObject' call have been replaced to meet current standards.
+* (mcm1957) Adapter requires node.js 20, js-controller >= 6.0.11 and admin >= 7.4.10 now
+* (mcm1957) Dependencies have been updated
+
 ### 2.2.0 (2024-04-13)
 * (mcm1957) Adapter requires node.js 18 and js-controller >= 5 now
 * (mcm1957) Dependencies have been updated
