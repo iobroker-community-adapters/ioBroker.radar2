@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "news": {
+      "2.3.0": {
+        "en": "Deprecated 'delObject' call have been replaced to meet current standards.\nAdapter requires node.js 20, js-controller >= 6.0.11 and admin >= 7.4.10 now\nDependencies have been updated",
+        "de": "Abgeschriebene 'delObject'-Anrufe wurden ersetzt, um die aktuellen Standards zu erfüllen.\nAdapter benötigt node.js 20, js-controller >= 6.0.11 und admin >= 7.4.10 jetzt\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Прежний призыв «delObject» был заменен в соответствии с действующими стандартами.\nАдаптер требует node.js 20, js-контроллер >= 6.0.11 и админ >= 7.4.10\nЗависимости были обновлены",
+        "pt": "A chamada \"delObject\" foi substituída para atender aos padrões atuais.\nAdapter requer node.js 20, js-controller >= 6.0.11 e admin >= 7.4.10 agora\nAs dependências foram atualizadas",
+        "nl": "Verouderde 'delObject' call zijn vervangen om te voldoen aan de huidige normen.\nVoor de adapter zijn node.js 20, js-controller < 6,0.11 en admin > 7,4.10 nodig\nAfhankelijkheden zijn bijgewerkt",
+        "fr": "L'appel «delObject» a été remplacé pour répondre aux normes actuelles.\nAdapter nécessite node.js 20, js-controller >= 6.0.11 et admin >= 7.4.10 maintenant\nLes dépendances ont été actualisées",
+        "it": "La chiamata deprecata \"delObject\" è stata sostituita per soddisfare gli standard attuali.\nAdattatore richiede node.js 20, js-controller >= 6.0.11 e admin >= 7.4.10 ora\nLe dipendenze sono state aggiornate",
+        "es": "La llamada \"delObjeto\" depredadada ha sido reemplazada para cumplir con los estándares actuales.\nAdaptador requiere node.js 20, js-controller н= 6.0.11 y admin= 7.4.10 ahora\nSe han actualizado las dependencias",
+        "pl": "Odwrócone wywołanie \"delObject\" zostało zastąpione w celu spełnienia obecnych standardów.\nAdapter wymaga node.js 20, kontroler js- > = 6.0.11 i admin > = 7.4.10 teraz\nZaktualizowano zależności",
+        "uk": "Зареєстрований дзвінок \"delObject\" було замінено на поточні стандарти.\nАдаптер вимагає node.js 20, js-controller >=6.0.11 і admin >=7.4.10 зараз\nЗалежність було оновлено",
+        "zh-cn": "已替换已过期的“ del Object” 呼叫, 以符合当前标准 .\n适配器需要节点.js 20,js控制器 >= 6.0.11和管理员 >= 7.4.10 现在\n依赖关系已更新"
+      },
       "2.2.0": {
         "en": "Adapter requires node.js 18 and js-controller >= 5 now\nDependencies have been updated",
         "de": "Adapter benötigt node.js 18 und js-controller >= 5 jetzt\nAbhängigkeiten wurden aktualisiert",
@@ -80,10 +93,6 @@
         "pl": "Update szlachta",
         "uk": "Оновлення благородного",
         "zh-cn": "最新消息"
-      },
-      "2.0.3": {
-        "en": "Fix for setStates",
-        "de": "Fix für SetStates"
       }
     },
     "titleLang": {
