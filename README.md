@@ -151,7 +151,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     ### **WORK IN PROGRESS**
 -->
 ## __WORK IN PROGRESS__
-* (Apollon77) Update dependencies
+* (Apollon77) Updates dependencies
 
 ### 2.3.0 (2025-05-14)
 * (speebreaker12) Deprecated 'delObject' call have been replaced to meet current standards.
