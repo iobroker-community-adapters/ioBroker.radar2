@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "news": {
+      "2.3.1": {
+        "en": "Updates dependencies",
+        "de": "Aktualisierung der Abhängigkeiten",
+        "ru": "Обновления зависимостей",
+        "pt": "Atualiza dependências",
+        "nl": "Updates afhankelijkheden",
+        "fr": "Mise à jour des dépendances",
+        "it": "Aggiornamenti dipendenze",
+        "es": "Actualización de las dependencias",
+        "pl": "Aktualizuje zależności",
+        "uk": "Оновлення залежності",
+        "zh-cn": "更新依赖关系"
+      },
       "2.3.0": {
         "en": "Deprecated 'delObject' call have been replaced to meet current standards.\nAdapter requires node.js 20, js-controller >= 6.0.11 and admin >= 7.4.10 now\nDependencies have been updated",
         "de": "Abgeschriebene 'delObject'-Anrufe wurden ersetzt, um die aktuellen Standards zu erfüllen.\nAdapter benötigt node.js 20, js-controller >= 6.0.11 und admin >= 7.4.10 jetzt\nAbhängigkeiten wurden aktualisiert",
@@ -80,19 +93,6 @@
         "pl": "Po raz kolejny szlachetny",
         "uk": "Понград благородний знову",
         "zh-cn": "D. 世俗"
-      },
-      "2.0.4": {
-        "en": "Update noble",
-        "de": "Aktualisieren",
-        "ru": "Обновление noble",
-        "pt": "Atualização nobre",
-        "nl": "Update nobele",
-        "fr": "Mise à jour noble",
-        "it": "Aggiornamento nobile",
-        "es": "Actualización noble",
-        "pl": "Update szlachta",
-        "uk": "Оновлення благородного",
-        "zh-cn": "最新消息"
       }
     },
     "titleLang": {

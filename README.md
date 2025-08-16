@@ -150,7 +150,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### __WORK IN PROGRESS__
+### 2.3.1 (2025-08-16)
 * (Apollon77) Updates dependencies
 
 ### 2.3.0 (2025-05-14)
