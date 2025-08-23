@@ -587,14 +587,18 @@ async function main(adapter) {
         knownIPs = typeof A.C.knownIPs === 'string' ? A.C.knownIPs.replace(/['[\]\s]/g, '').split(',') : A.C.knownIPs;
     A.D('use known IP list: ' + A.O(knownIPs));
 
-    arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
-        A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
-    if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
-        A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
-    if (arpcmd && await testLinux('arp-scan'))
-        if (await A.exec('arp-scan --version'))
-            doArp = `"${arpcmd}" on ${network.ip4addrs()}`;
-        else A.W('Adapter not running as root or iobroker has no sudo right, cannot use arp-scan!');
+    if (!A.C.knownIPs || !A.C.knownIPs.length) {
+        arpcmd = "";
+    } else {
+        arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
+            A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+        if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
+            A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
+        if (arpcmd && await testLinux('arp-scan'))
+            if (await A.exec('arp-scan --version'))
+                doArp = `"${arpcmd}" on ${network.ip4addrs()}`;
+            else A.W('Adapter not running as root or iobroker has no sudo right, cannot use arp-scan!');
+    }
 
     A.D(`radar2 set to scan every ${A.C.scandelay} seconds and printers every ${printerDelay} minutes.`);
     suBt = Boolean(A.C.suBT);
