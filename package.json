@@ -68,6 +68,17 @@
     "net-ping": "^1.2.4"
   },
   "main": "radar2.js",
+  "files": [
+    "admin{,/!(src)/**}/!(tsconfig|tsconfig.*|.eslintrc).{json,json5}",
+    "admin{,/!(src)/**}/*.{html,css,png,svg,jpg,js}",
+    "lib/",
+    "www/",
+    "io-package.json",
+    "LICENSE",
+    "radar2.js",
+    "fjadapter-core.js",
+    "myNetwork.js"
+  ],
   "scripts": {
     "postbuild": "cpy --cwd=admin --rename=index_m.html index.html .",
     "test:js": "mocha --config test/mocharc.custom.json \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
