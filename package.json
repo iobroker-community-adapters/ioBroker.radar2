@@ -77,7 +77,7 @@
     "LICENSE",
     "radar2.js",
     "fjadapter-core.js",
-    "myNetwork.js"
+    "myNetworks.js"
   ],
   "scripts": {
     "postbuild": "cpy --cwd=admin --rename=index_m.html index.html .",
