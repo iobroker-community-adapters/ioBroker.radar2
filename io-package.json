@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "radar2",
-    "version": "2.3.1",
+    "version": "2.4.0-alpha.0",
     "news": {
+      "2.4.0-alpha.0": {
+        "en": "Only execute arpscan if there are IPs configured",
+        "de": "Nur arpscan ausführen, wenn IPs konfiguriert sind",
+        "ru": "Выполняйте арпскан только в том случае, если IP-адреса настроены",
+        "pt": "Só execute o arpscan se existirem IPs configurados",
+        "nl": "Arpscan alleen uitvoeren als er IP's zijn ingesteld",
+        "fr": "Exécuter arpscan seulement s'il y a des IP configurés",
+        "it": "Eseguire solo arpscan se ci sono IP configurati",
+        "es": "Sólo ejecute arpscan si hay IPs configuradas",
+        "pl": "Wykonaj arpscan tylko wtedy, gdy są skonfigurowane IP",
+        "uk": "Тільки виконувати arpscan якщо є IP-адреси, налаштовані",
+        "zh-cn": "仅在配置了 IP 的情况下执行 arpscan"
+      },
       "2.3.1": {
         "en": "Updates dependencies",
         "de": "Aktualisierung der Abhängigkeiten",
@@ -80,19 +93,6 @@
         "pl": "Uproszczony",
         "uk": "Покращений благородний",
         "zh-cn": "崇高"
-      },
-      "2.0.5": {
-        "en": "Downgrade noble again",
-        "de": "Hervorragend edel wieder",
-        "ru": "Обновить благородный снова",
-        "pt": "Downgrade nobre novamente",
-        "nl": "Weer nobel",
-        "fr": "Encore noble",
-        "it": "Di nuovo nobile",
-        "es": "Noble de nuevo",
-        "pl": "Po raz kolejny szlachetny",
-        "uk": "Понград благородний знову",
-        "zh-cn": "D. 世俗"
       }
     },
     "titleLang": {

@@ -150,7 +150,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### __WORK IN PROGRESS__
+### 2.4.0-alpha.0 (2025-08-24)
 * (Apollon77) Only execute arpscan if there are IPs configured
 
 ### 2.3.1 (2025-08-16)
