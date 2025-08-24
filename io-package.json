@@ -3,45 +3,6 @@
     "name": "radar2",
     "version": "2.4.0-alpha.2",
     "news": {
-      "2.4.0-alpha.2": {
-        "en": "Only execute arpscan if there are IPs configured\nAdapter requires admin >= 7.6.17 now\n'debug:' logs are recorded with level 'debug' now [#391].\nSeveral issues reported by adapter checker have been fixed.\nDependencies have been updated",
-        "de": "Nur arpscan ausführen, wenn IPs konfiguriert sind\nAdapter benötigt admin >= 7.6.17 jetzt\n'debug:' protokolle werden jetzt mit level 'debug' aufgenommen [#391].\nMehrere Probleme, die von Adapter Checker gemeldet wurden, wurden behoben.\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Выполняйте арпскан только в том случае, если IP-адреса настроены\nАдаптер требует администратора >= 7.6.17\n'debug:' журналы регистрируются с уровнем 'debug' теперь [#391].\nБыли устранены некоторые проблемы, о которых сообщала проверка адаптера.\nЗависимости были обновлены",
-        "pt": "Só execute o arpscan se existirem IPs configurados\nAdaptador requer admin >= 7.6.17 agora\n'debug:' logs são gravados com nível 'debug' agora [#391].\nVários problemas relatados pelo verificador adaptador foram corrigidos.\nAs dependências foram atualizadas",
-        "nl": "Arpscan alleen uitvoeren als er IP's zijn ingesteld\nVoor adapter is admin < 7.6.17 nu nodig\n'debug:' logs worden nu opgenomen met niveau 'debug' [#391].\nVerschillende problemen gemeld door adapter checker zijn opgelost.\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Exécuter arpscan seulement s'il y a des IP configurés\nAdaptateur nécessite admin >= 7.6.17 maintenant\nles journaux 'debug:' sont enregistrés avec le niveau 'debug' maintenant [#391].\nPlusieurs problèmes signalés par le vérificateur d'adaptateurs ont été corrigés.\nLes dépendances ont été actualisées",
-        "it": "Eseguire solo arpscan se ci sono IP configurati\nAdattatore richiede admin >= 7.6.17 ora\n'debug:' i log sono registrati con il livello 'debug' ora [#391].\nDiversi problemi segnalati dall'adattatore checker sono stati fissati.\nLe dipendenze sono state aggiornate",
-        "es": "Sólo ejecute arpscan si hay IPs configuradas\nAdaptador requiere administración= 7.6.17 ahora\n'debug:' logs are recorded with level 'debug' now [#391].\nSe han fijado varias cuestiones comunicadas por el control de adaptador.\nSe han actualizado las dependencias",
-        "pl": "Wykonaj arpscan tylko wtedy, gdy są skonfigurowane IP\nAdapter wymaga admin > = 7.6.17\n'debug:' logi są rejestrowane z 'debug' poziomu [# 391].\nKilka problemów zgłoszonych przez sprawdzacz adaptera zostało naprawionych.\nZaktualizowano zależności",
-        "uk": "Тільки виконувати arpscan якщо є IP-адреси, налаштовані\nАдаптер вимагає адмін >= 7.6.17 тепер\n'debug:' журнали записані з рівнем 'debug' тепер [#391].\nВиправлено кілька питань, які повідомляються перевірником адаптера.\nЗалежність було оновлено",
-        "zh-cn": "仅在配置了 IP 的情况下执行 arpscan\n适任者需要行政主管 现在7.6.17\n'debug:' 日志现在被记录为级别'debug' [# 391].\n适配器检查器报告的几个问题已经解决.\n依赖关系已更新"
-      },
-      "2.4.0-alpha.1": {
-        "en": "Only execute arpscan if there are IPs configured\nAdapter requires admin >= 7.6.17 now\n'debug:' logs are recorded with level 'debug' now [#391].\nSeveral issues reported by adapter checker have been fixed.\nDependencies have been updated",
-        "de": "Nur arpscan ausführen, wenn IPs konfiguriert sind\nAdapter benötigt admin >= 7.6.17 jetzt\n'debug:' protokolle werden jetzt mit level 'debug' aufgenommen [#391].\nMehrere Probleme, die von Adapter Checker gemeldet wurden, wurden behoben.\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Выполняйте арпскан только в том случае, если IP-адреса настроены\nАдаптер требует администратора >= 7.6.17\n'debug:' журналы регистрируются с уровнем 'debug' теперь [#391].\nБыли устранены некоторые проблемы, о которых сообщала проверка адаптера.\nЗависимости были обновлены",
-        "pt": "Só execute o arpscan se existirem IPs configurados\nAdaptador requer admin >= 7.6.17 agora\n'debug:' logs são gravados com nível 'debug' agora [#391].\nVários problemas relatados pelo verificador adaptador foram corrigidos.\nAs dependências foram atualizadas",
-        "nl": "Arpscan alleen uitvoeren als er IP's zijn ingesteld\nVoor adapter is admin < 7.6.17 nu nodig\n'debug:' logs worden nu opgenomen met niveau 'debug' [#391].\nVerschillende problemen gemeld door adapter checker zijn opgelost.\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Exécuter arpscan seulement s'il y a des IP configurés\nAdaptateur nécessite admin >= 7.6.17 maintenant\nles journaux 'debug:' sont enregistrés avec le niveau 'debug' maintenant [#391].\nPlusieurs problèmes signalés par le vérificateur d'adaptateurs ont été corrigés.\nLes dépendances ont été actualisées",
-        "it": "Eseguire solo arpscan se ci sono IP configurati\nAdattatore richiede admin >= 7.6.17 ora\n'debug:' i log sono registrati con il livello 'debug' ora [#391].\nDiversi problemi segnalati dall'adattatore checker sono stati fissati.\nLe dipendenze sono state aggiornate",
-        "es": "Sólo ejecute arpscan si hay IPs configuradas\nAdaptador requiere administración= 7.6.17 ahora\n'debug:' logs are recorded with level 'debug' now [#391].\nSe han fijado varias cuestiones comunicadas por el control de adaptador.\nSe han actualizado las dependencias",
-        "pl": "Wykonaj arpscan tylko wtedy, gdy są skonfigurowane IP\nAdapter wymaga admin > = 7.6.17\n'debug:' logi są rejestrowane z 'debug' poziomu [# 391].\nKilka problemów zgłoszonych przez sprawdzacz adaptera zostało naprawionych.\nZaktualizowano zależności",
-        "uk": "Тільки виконувати arpscan якщо є IP-адреси, налаштовані\nАдаптер вимагає адмін >= 7.6.17 тепер\n'debug:' журнали записані з рівнем 'debug' тепер [#391].\nВиправлено кілька питань, які повідомляються перевірником адаптера.\nЗалежність було оновлено",
-        "zh-cn": "仅在配置了 IP 的情况下执行 arpscan\n适任者需要行政主管 现在7.6.17\n'debug:' 日志现在被记录为级别'debug' [# 391].\n适配器检查器报告的几个问题已经解决.\n依赖关系已更新"
-      },
-      "2.4.0-alpha.0": {
-        "en": "Only execute arpscan if there are IPs configured",
-        "de": "Nur arpscan ausführen, wenn IPs konfiguriert sind",
-        "ru": "Выполняйте арпскан только в том случае, если IP-адреса настроены",
-        "pt": "Só execute o arpscan se existirem IPs configurados",
-        "nl": "Arpscan alleen uitvoeren als er IP's zijn ingesteld",
-        "fr": "Exécuter arpscan seulement s'il y a des IP configurés",
-        "it": "Eseguire solo arpscan se ci sono IP configurati",
-        "es": "Sólo ejecute arpscan si hay IPs configuradas",
-        "pl": "Wykonaj arpscan tylko wtedy, gdy są skonfigurowane IP",
-        "uk": "Тільки виконувати arpscan якщо є IP-адреси, налаштовані",
-        "zh-cn": "仅在配置了 IP 的情况下执行 arpscan"
-      },
       "2.3.1": {
         "en": "Updates dependencies",
         "de": "Aktualisierung der Abhängigkeiten",

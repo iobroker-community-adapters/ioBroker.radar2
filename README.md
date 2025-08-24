@@ -150,7 +150,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### 2.4.0-alpha.2 (2025-08-24)
+### **WORK IN PROGRESS**
 * (Apollon77) Only execute arpscan if there are IPs configured
 * (mcm1957) Adapter requires admin >= 7.6.17 now
 * (mcm1957) 'debug:' logs are recorded with level 'debug' now [#391].
