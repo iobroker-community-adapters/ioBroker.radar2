@@ -105,7 +105,8 @@
       "it": "Radar2 per IP e dispositivi Bluetooth e informazioni metri UWZ, BCE e HP-Stampanti",
       "es": "Radar2 para la propiedad intelectual y los dispositivos Bluetooth y infos mfrom UWZ, el BCE y el HP-Impresoras",
       "pl": "Radar2 IP urządzeń Bluetooth i M инфос znaleźć, EBC i HP-drukarki",
-      "zh-cn": "Radar2用于知识产权和蓝牙设备和相关信息mfrom UWZ，欧洲央行和HP-打印机"
+      "zh-cn": "Radar2用于知识产权和蓝牙设备和相关信息mfrom UWZ，欧洲央行和HP-打印机",
+      "uk": "Радар2 для пристроїв IP та Bluetooth та Infos MFROM UWZ, ECB та HP-принтерів"
     },
     "desc": {
       "en": "This adapter can scan IP and bluetooth addresses for availability/in reach and also get exchange rates from European Central Bank, Weather warning from UWZ  and get ink fill from HP printers",
@@ -117,7 +118,8 @@
       "it": "Questo adattatore è possibile eseguire la scansione IP e indirizzi bluetooth per la disponibilità/a raggiungere e anche ottenere tassi di cambio della Banca Centrale Europea, allerta Meteo da UWZ e ottenere riempire di inchiostro HP stampanti",
       "es": "Este adaptador puede escanear IP y bluetooth direcciones de disponibilidad/en llegar y también obtener los tipos de cambio del Banco Central Europeo, el Tiempo de advertencia de UWZ y obtener de relleno de tinta de impresoras HP",
       "pl": "Ten adapter może sprawdzić adresy IP i Bluetooth dla atrakcji w zasięgu ręki, a także uzyskać kursy od Europejskiego banku centralnego, ostrzeżenia pogodowe od znaleźć i zdobyć atramentu zatankować od drukarek HP",
-      "zh-cn": "这器可以扫描权和蓝牙地址可用性/在达和也得到的汇率从欧洲中央银行、天气预警，从UWZ，并得到墨水填写自惠普的打印机"
+      "zh-cn": "这器可以扫描权和蓝牙地址可用性/在达和也得到的汇率从欧洲中央银行、天气预警，从UWZ，并得到墨水填写自惠普的打印机",
+      "uk": "Цей адаптер може сканувати IP та Bluetooth -адреси для доступності/в досяжності, а також отримати обмінні курси від європейського центрального банку, попередження про погоду від UWZ та отримайте чорнильне заповнення від HP -принтерів"
     },
     "authors": [
       "iobroker-community-adapters <iobroker-community-adapters@gmx.de>",
