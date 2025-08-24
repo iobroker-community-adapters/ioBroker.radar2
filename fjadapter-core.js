@@ -528,7 +528,7 @@ class MyAdapter {
         if (!inDebug || curDebug > Number(inDebug))
             return val !== undefined ? val : str;
         return (inDebug ?
-            slog('info', `debug: ${str}`) :
+            slog('debug', `debug: ${str}`) :
             slog('debug', str), val !== undefined ? val : str);
     }
 
@@ -538,7 +538,7 @@ class MyAdapter {
         else {
             const s = this.f.apply(null, Array.prototype.slice.call(arguments, 1));
             if (inDebug)
-                slog('info', `debug: ` + s);
+                slog('debug', `debug: ` + s);
             else
                 slog('debug', s);
 
@@ -548,7 +548,7 @@ class MyAdapter {
     static Df(...str) {
         if (!(!inDebug && curDebug > Number(inDebug))) {
             str = this.f(...str);
-            return inDebug ? slog('info', 'debug: ' + str) : slog('debug', str);
+            return inDebug ? slog('debug', 'debug: ' + str) : slog('debug', str);
         }
     }
     static F() {
