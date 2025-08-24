@@ -1,6 +1,6 @@
 {
   "name": "iobroker.radar2",
-  "version": "2.4.0-alpha.2",
+  "version": "2.4.0",
   "description": "Radar2 to find status of IP, Bluetooth, UWZ, ECB and HP-Printers-devices",
   "author": {
     "name": "iobroker-community-adapters",
