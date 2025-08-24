@@ -154,6 +154,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
     ### **WORK IN PROGRESS**
 * (Apollon77) Only execute arpscan if there are IPs configured
 * (mcm1957) Adapter requires admin >= 7.6.17 now
+* (mcm1957) 'debug:' logs are recorded with level 'debug' now [#391].
 * (mcm1957) Several issues reported by adapter checker have been fixed.
 * (mcm1957) Dependencies have been updated
 
