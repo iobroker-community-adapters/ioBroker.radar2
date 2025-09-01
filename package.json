@@ -52,7 +52,7 @@
     "typescript": "~5.9.2"
   },
   "optionalDependencies": {
-    "@stoprocent/noble": "1.19.1",
+    "@stoprocent/noble": "2.3.5",
     "net-ping": "^1.2.4"
   },
   "main": "radar2.js",
