@@ -2,12 +2,10 @@
   "name": "iobroker.radar2",
   "version": "2.4.0",
   "description": "Radar2 to find status of IP, Bluetooth, UWZ, ECB and HP-Printers-devices",
-  "author": {
-    "name": "iobroker-community-adapters",
-    "email": "mcm57@gmx.at"
-  },
+  "author": "iobroker-community-adapters <mcm57@gmx.at>",
   "contributors": [
-    "frankjoke <frankjoke@hotmail.com>"
+    "frankjoke <frankjoke@hotmail.com>",
+    "iobroker-community-adapters <iobroker-community-adapters@gmx.de>"
   ],
   "homepage": "https://github.com/frankjoke/ioBroker.radar2",
   "license": "MIT",
