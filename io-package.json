@@ -206,7 +206,7 @@
       }
     ],
     "scandelay": "30",
-    "arp_scan_cmd": "-lgq --retry=5 --timeout=400",
+    "arp_scan_cmd": "-lgq --retry=5 --timeout=400 --interval=200",
     "btadapterid": "-1",
     "printerdelay": "720",
     "debug": true,
