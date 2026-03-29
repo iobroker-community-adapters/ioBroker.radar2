@@ -4,17 +4,17 @@
 
 const A = require('./fjadapter-core');
 
-const assert = require('assert'),
-    dgram = require('dgram'),
+const assert = require('node:assert'),
+    dgram = require('node:dgram'),
     arp = require('node-arp'),
     ping = require('ping'),
-    dns = require('dns'),
-    os = require('os'),
-    net = require('net'),
-    // fs = require('fs'),
-    cp = require('child_process'),
-    stream = require('stream'),
-    EventEmitter = require('events').EventEmitter;
+    dns = require('node:dns'),
+    os = require('node:os'),
+    net = require('node:net'),
+    // fs = require('node:fs'),
+    cp = require('node:child_process'),
+    stream = require('node:stream'),
+    EventEmitter = require('node:events').EventEmitter;
 
 //const macdb = require('./lib/vendors.json');
 const macdb1 = require('./lib/vendors.json');
