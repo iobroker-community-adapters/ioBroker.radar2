@@ -137,10 +137,10 @@ class Sequence {
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
 // adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.template.0
-const util = require('util'),
-    exec = require('child_process').exec,
-    os = require('os'),
-    assert = require('assert'),
+const util = require('node:util'),
+    exec = require('node:child_process').exec,
+    os = require('node:os'),
+    assert = require('node:assert'),
     axios = require('axios');
 
 const objects = {},
