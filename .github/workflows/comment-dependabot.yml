@@ -24,3 +24,6 @@ jobs:
         uses: iobroker-bot-orga/action-comment-dependabot@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: provide a PAT with security_events:read permission to enable
+          # security alert info and compatibility score in the PR comment.
+          pat: ${{ secrets.PAT_FOR_DEPENDABOT_INFO }}
