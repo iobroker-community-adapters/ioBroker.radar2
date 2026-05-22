@@ -1,6 +1,6 @@
 {
     "Scan Delay:": "Délai en secondes entre les analyses (>=15): ",
-    "Delay Away:": "Combien de temps (en minutes) doit être un périphérique non détecté avant qu'il est marqué comme' (>=1): ",
+    "Delay Away:": "Combien de temps (en minutes) doit être un périphérique non détecté avant qu'il est marqué comme absent (>=1): ",
     "BT adapter id:": "sur Linux: numéro de l'adaptateur Bluetooth (0 = hci0):",
     "debug:": "Commute sur le mode de débogage!",
     "hcionly": "utilisation Hcitool lescan au lieu de \"Noble\"",

@@ -1,6 +1,6 @@
 {
     "Scan Delay:": "Il ritardo in secondi tra le scansioni (>=15): ",
-    "Delay Away:": "Quanto tempo (in minuti) dovrebbe essere un dispositivo non viene rilevato prima è segnato come assente' (>=1): ",
+    "Delay Away:": "Quanto tempo (in minuti) dovrebbe essere un dispositivo non viene rilevato prima è segnato come assente (>=1): ",
     "BT adapter id:": "su Linux: numero di adattatore Bluetooth (0 = hci0):",
     "debug:": "Passa in modalità di debug!",
     "hcionly": "utilizzare Hcitool lescan invece di 'Nobile'",

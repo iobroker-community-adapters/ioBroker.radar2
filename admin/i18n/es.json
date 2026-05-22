@@ -1,6 +1,6 @@
 {
     "Scan Delay:": "De retardo, en segundos, entre las exploraciones (>=15): ",
-    "Delay Away:": "Cuánto tiempo (en minutos) debe ser un dispositivo no se detecta antes de que sea marcado como en la distancia' (>=1): ",
+    "Delay Away:": "Cuánto tiempo (en minutos) debe ser un dispositivo no se detecta antes de que sea marcado como en la distancia (>=1): ",
     "BT adapter id:": "en Linux: número de adaptador Bluetooth (0 = hci0):",
     "debug:": "Interruptores en modo de depuración!",
     "hcionly": "uso Hcitool lescan en lugar de 'Noble'",
