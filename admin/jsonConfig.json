@@ -111,7 +111,7 @@
         },
         "suIP": {
             "type": "checkbox",
-            "label": "Save unknow IP data",
+            "label": "Save unknown IP data",
             "xs": 12,
             "sm": 6,
             "md": 6,
@@ -130,7 +130,7 @@
         "numuwz": {
             "type": "text",
             "label": "Max UWZ vars:",
-            "help": "How many seperate messages  0=all messages together: ",
+            "help": "How many separate messages, 0=all messages together",
             "xs": 12,
             "sm": 6,
             "md": 4,
