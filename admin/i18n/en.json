@@ -10,7 +10,7 @@
     "UWZ Delay:": "Delay in minutes between UWZ scans 0=no UWZ scan: ",
     "known IP addresses:": "IP-addresses which are known and should not generate 'unknown' entries separated by ',':",
     "known BT addresses:": "BT-addresses which are known and should not generate 'unknown' entries separated by ',':",
-    "Max UWZ vars:": "How many seperate messages  0=all messages together: ",
+    "Max UWZ vars:": "How many separate messages 0=all messages together: ",
     "Long Warning Message:": "Use long message text with description for warnings: ",
     "description": "IP can be name or number (like fritz.box or 168.192.0.1). Bluetooth is always '01:23:45:67:89:ab', either or both of them have to be there.",
     "Device setup": "individual device setup"
