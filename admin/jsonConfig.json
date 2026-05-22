@@ -13,8 +13,8 @@
         },
         "delayaway": {
             "type": "text",
-            "label": "Delay Away:",
-            "help": "How long (in minutes) should be a device not detected before it's marked as away' (>=1): ",
+            "label": "Delay away:",
+            "help": "How long in minutes should a device not be detected before it is marked as away (>=1):",
             "xs": 12,
             "sm": 6,
             "md": 4,

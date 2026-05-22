@@ -1,6 +1,5 @@
 {
     "Scan Delay:": "Vertraging in seconden tussen de scans (>=15): ",
-    "Delay Away:": "Hoe lang (in minuten) moet een apparaat niet wordt gedetecteerd voordat het gemarkeerd als 'verwijderd' (>=1): ",
     "BT adapter id:": "op Linux: aantal Bluetooth-adapter (0 = hci0):",
     "debug:": "Schakelaars op de debug mode!",
     "hcionly": "gebruik Hcitool lescan in plaats van 'Nobele'",

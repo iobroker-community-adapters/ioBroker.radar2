@@ -1,6 +1,5 @@
 {
     "Scan Delay:": "Delay in seconds between scans (>=15): ",
-    "Delay Away:": "How long (in minutes) should be a device not detected before it's marked as away (>=1): ",
     "BT adapter id:": "on Linux: number of Bluetooth adapter (0 = hci0):",
     "debug:": "Switches on debug mode!",
     "hcionly": "use hcitool lescan instead of 'Noble'",

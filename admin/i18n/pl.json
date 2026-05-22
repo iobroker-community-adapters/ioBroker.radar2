@@ -1,6 +1,5 @@
 {
     "Scan Delay:": "Opóźnienie w sekundach pomiędzy skanami (>=15): ",
-    "Delay Away:": "Ile czasu (w minutach) powinno być urządzenie nie zostanie wykryte, zanim zostanie on oznaczony jako daleko (>=1): ",
     "BT adapter id:": "na Linux: ilość adapter Bluetooth (0 = hci0):",
     "debug:": "Zostanie włączony tryb debugowania!",
     "hcionly": "używać Hcitool lescan zamiast \"szlachetnych\"",

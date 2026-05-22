@@ -1,6 +1,5 @@
 {
     "Scan Delay:": "Verzögerung in Sekunden zwischen Abfragen (>=15): ",
-    "Delay Away:": "Wie lange (in Minuten) sollte ein Gerät nicht erkannt wird, bevor es markiert als Weg (>=1): ",
     "BT adapter id:": "bei Linux: nummer des Bluetooth-Adapters (0 = hci0):",
     "debug:": "Schaltet den debug-Modus!",
     "hcionly": "hcitool lescan anstelle von 'Noble' verwenden",
