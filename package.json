@@ -30,7 +30,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^3.3.2",
+    "@iobroker/adapter-core": "^3.4.1",
     "axios": "^1.11.0",
     "node-arp": "^1.0.6",
     "node-ble": "^1.13.0",
