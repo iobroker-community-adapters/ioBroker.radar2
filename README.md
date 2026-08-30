@@ -102,7 +102,7 @@ After installation setup adapter config, you can remove the demo line items.
 
 ### Special information for arp-scan:
 
-There is a standard command line `-lgq --retry=5 --timeout=400` defined which would scan on all IPv4 interfaces all 254 addresses if it won't answer within 400ms it would retry 5 times!
+There is a standard command line `-lgq --retry=5 --timeout=400 --interval=200` defined which would scan on all IPv4 interfaces all 254 addresses if it won't answer within 400ms it would retry 5 times!
 If you need to scan s specific interface only you can add for example ` --interface=br0` but normally bridge interfaces are used now rightfully, but still in docker environments iot might be necessary.The repeat=5 can be changed to 6 or 7 for better detection, above 7 I did not find improvement! The same is with the timeout, above 500 I could not find any improvement. 
 
 ### Tip for those moving from radar to radar2-adapter or from machine one to another machine
