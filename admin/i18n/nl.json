@@ -1,0 +1,16 @@
+{
+    "Scan Delay:": "Vertraging in seconden tussen de scans (>=15): ",
+    "BT adapter id:": "op Linux: aantal Bluetooth-adapter (0 = hci0):",
+    "debug:": "Schakelaars op de debug mode!",
+    "hcionly": "gebruik Hcitool lescan in plaats van 'Nobele'",
+    "arp-scan cmdline:": "Arp-Scan command line, moeten worden gewijzigd als de standaard interface is het niet de eerste",
+    "External Network Scan Delay:": "Vertraging in minuten tussen het Externe Netwerk IP-scan (0 = geen scan): ",
+    "Printer Delay:": "Vertraging in minuten tussen de printer vul controleren (>=100): ",
+    "UWZ Delay:": "Vertraging in minuten tussen UWZ scans 0=geen UWZ scan: ",
+    "known IP addresses:": "IP-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
+    "known BT addresses:": "BT-adressen die bekend zijn en mag niet het genereren van 'onbekende' items worden gescheiden door ',':",
+    "Max UWZ vars:": "Hoeveel afzonderlijke berichten 0=alle berichten samen: ",
+    "Long Warning Message:": "Gebruik lange tekst met beschrijving voor waarschuwingen: ",
+    "description": "IP kunt u het nummer of de naam (als fritz.box of 168.192.0.1). Bluetooth is altijd '01:23:45:67:89:ab', van een of beide van hen te zijn.",
+    "Device setup": "individuele apparaat instellen"
+}
