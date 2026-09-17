@@ -591,7 +591,7 @@ async function main(adapter) {
         arpcmd = "";
     } else {
         arpcmd = ((A.C.arp_scan_cmd && A.C.arp_scan_cmd.length > 0) ?
-            A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400'`, '-lgq --retry=4 --timeout=400'));
+            A.C.arp_scan_cmd : A.W(`arp-scan cmd line not configured in config! Will use '-lgq --retry=4 --timeout=400 --interval=200'`, '-lgq --retry=4 --timeout=400 --interval=200'));
         if (A.C.arp_scan_cmd.indexOf('--interface') < 0)
             A.I(`arp-scan will use the following interfaces: ` + A.O(network.ip4addrs()));
         if (arpcmd && await testLinux('arp-scan'))
