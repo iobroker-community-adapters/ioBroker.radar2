@@ -149,6 +149,7 @@ Also new is that intervals for HP-Printer, ECB-, UWZ- and normal scans can be de
 <!--
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
+- (copilot) **FIXED**: Migrated admin configuration to jsonConfig and short-form i18n files
 -->
 
 ### **WORK IN PROGRESS**

@@ -1,0 +1,16 @@
+{
+    "Scan Delay:": "Il ritardo in secondi tra le scansioni (>=15): ",
+    "BT adapter id:": "su Linux: numero di adattatore Bluetooth (0 = hci0):",
+    "debug:": "Passa in modalità di debug!",
+    "hcionly": "utilizzare Hcitool lescan invece di 'Nobile'",
+    "arp-scan cmdline:": "Arp-Scan riga di comando, deve essere cambiato se di default l'interfaccia non è il primo",
+    "External Network Scan Delay:": "Ritardo in minuti tra la Rete Esterna IP scan (0 = no scan): ",
+    "Printer Delay:": "Ritardo in minuti tra stampante di controllo di riempimento (>=100): ",
+    "UWZ Delay:": "Ritardo in minuti tra UWZ scansioni 0=no UWZ scansione: ",
+    "known IP addresses:": "Gli indirizzi IP che sono noti e non deve generare 'unknown' voci separati da ',':",
+    "known BT addresses:": "BT-gli indirizzi che sono noti e non deve generare 'unknown' voci separati da ',':",
+    "Max UWZ vars:": "Quante separata messaggi 0=tutti i messaggi insieme: ",
+    "Long Warning Message:": "Uso a lungo messaggio di testo con la descrizione avvertenze: ",
+    "description": "IP può essere il nome o il numero (come fritz.box o 168.192.0.1). Il Bluetooth è sempre '01:23:45:67:89:ab', uno o entrambi di loro devono essere lì.",
+    "Device setup": "individuale dispositivo di installazione"
+}
