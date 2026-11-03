@@ -66,7 +66,6 @@
     "myNetworks.js"
   ],
   "scripts": {
-    "postbuild": "cpy --cwd=admin --rename=index_m.html index.html .",
     "test:js": "mocha --config test/mocharc.custom.json \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit",

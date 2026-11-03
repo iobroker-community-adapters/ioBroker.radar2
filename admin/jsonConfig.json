@@ -1,0 +1,221 @@
+{
+    "type": "panel",
+    "items": {
+        "scandelay": {
+            "type": "text",
+            "label": "Scan Delay:",
+            "help": "Delay in seconds between scans (>=15): ",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "delayaway": {
+            "type": "text",
+            "label": "Delay away:",
+            "help": "How long in minutes should a device not be detected before it is marked as away (>=1):",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "btadapterid": {
+            "type": "text",
+            "label": "BT adapter id:",
+            "help": "on Linux: number of Bluetooth adapter (0 = hci0):",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "debug": {
+            "type": "checkbox",
+            "label": "debug:",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "hcionly": {
+            "type": "checkbox",
+            "label": "hcionly",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "arp_scan_cmd": {
+            "type": "text",
+            "label": "arp-scan cmdline:",
+            "help": "Arp-Scan command line, need to be changed if default interface is not first",
+            "xs": 12,
+            "sm": 12,
+            "md": 8,
+            "lg": 8,
+            "xl": 6
+        },
+        "external": {
+            "type": "text",
+            "label": "External Network Scan Delay:",
+            "help": "Delay in minutes between External Network IP scan (0 = no scan): ",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "printerdelay": {
+            "type": "text",
+            "label": "Printer Delay:",
+            "help": "Delay in minutes between printer fill check (>=100): ",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "delayuwz": {
+            "type": "text",
+            "label": "UWZ Delay:",
+            "help": "Delay in minutes between UWZ scans 0=no UWZ scan: ",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "knownIPs": {
+            "type": "chips",
+            "label": "known IP addresses:",
+            "help": "IP-addresses which are known and should not generate 'unknown' entries separated by ',':",
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 6,
+            "xl": 6
+        },
+        "knownBTs": {
+            "type": "chips",
+            "label": "known BT addresses:",
+            "help": "BT-addresses which are known and should not generate 'unknown' entries separated by ',':",
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 6,
+            "xl": 6
+        },
+        "suIP": {
+            "type": "checkbox",
+            "label": "Save unknown IP data",
+            "xs": 12,
+            "sm": 6,
+            "md": 6,
+            "lg": 6,
+            "xl": 6
+        },
+        "suBT": {
+            "type": "checkbox",
+            "label": "Save unknown BT data",
+            "xs": 12,
+            "sm": 6,
+            "md": 6,
+            "lg": 6,
+            "xl": 6
+        },
+        "numuwz": {
+            "type": "text",
+            "label": "Max UWZ vars:",
+            "help": "How many separate messages, 0=all messages together",
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "longuwz": {
+            "type": "select",
+            "label": "Long Warning Message:",
+            "help": "Use long message text with description for warnings: ",
+            "options": [
+                {
+                    "label": "false",
+                    "value": "false"
+                },
+                {
+                    "label": "true",
+                    "value": "true"
+                }
+            ],
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 4,
+            "xl": 3
+        },
+        "_deviceDescription": {
+            "type": "staticText",
+            "text": "description",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "devices": {
+            "type": "table",
+            "label": "Device setup",
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12,
+            "items": [
+                {
+                    "type": "text",
+                    "attr": "name",
+                    "title": "Name"
+                },
+                {
+                    "type": "chips",
+                    "attr": "ip",
+                    "title": "IP"
+                },
+                {
+                    "type": "chips",
+                    "attr": "macs",
+                    "title": "IP MAC"
+                },
+                {
+                    "type": "chips",
+                    "attr": "bluetooth",
+                    "title": "BlueTooth MAC"
+                },
+                {
+                    "type": "select",
+                    "attr": "enabled",
+                    "title": "Enabled",
+                    "options": [
+                        {
+                            "label": "-1",
+                            "value": -1
+                        },
+                        {
+                            "label": "0",
+                            "value": 0
+                        },
+                        {
+                            "label": "1",
+                            "value": 1
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
